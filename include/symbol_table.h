@@ -7,4 +7,7 @@
 
 #include "list.h"
 
+// TODO
+list_t *CreateSymbolTable();
+
 #endif /* __SYMBOL_TABLE__ */
