@@ -1,5 +1,6 @@
 #include "list.h"
-#include "stdlib"
+#include <stdlib.h> /* malloc, free */
+
 struct node {
   void *value; // pointer to symbol
   node_t *next;
@@ -11,39 +12,44 @@ struct list {
 };
 
 list_t *CreateList(void) {
-    list_t *newList = (list_t *)malloc(sizeof(list_t));
-    if (NULL == newList) {
+    list_t *new_list = (list_t *)malloc(sizeof(list_t));
+    if (NULL == new_list) {
         return NULL;
     }
 
-    newList->head = NULL;
-    newList->tail = NULL;
+    new_list->head = NULL;
+    new_list->tail = NULL;
 
-    return newList;
+    return new_list;
 }
+
 node_t *AddNode(list_t *list, void *value){
-   node_t *newNode =  (node_t *)malloc(sizeof(node_t));
-   if ( NULL == newNode) {
+   node_t *new_node =  (node_t *)malloc(sizeof(node_t));
+
+   if (NULL == new_node) {
         return NULL;
    }
-   newNode->value = value;
-   list->tail->next = newNode;
-   list->tail = newNode;
-   newNode->next = NULL;
-   return newNode;
+
+   new_node->value = value;
+   list->tail->next = new_node;
+   list->tail = new_node;
+   new_node->next = NULL;
+   return new_node;
 }
 
 node_t* Find(list_t *list, cmp_func func, void *key){
    node_t *pointer = list->head;
 
-   while (NULL != pointer ){
-	if (func (pointer->value, key)){
-	   return pointer;
-	}
-	pointer = pointer->next;
-   }
-   return NULL;
+   while (NULL != pointer ) {
+    if (func (pointer->value, key)) {
+      return pointer;
+    }
+    pointer = pointer->next;
+  }
+
+  return NULL;
 }
+
 void DestroyList(list_t *list) {
     if (NULL == list) {
         return; 
@@ -61,15 +67,17 @@ void DestroyList(list_t *list) {
 
     free(list);
 }
-node_t *GetNext(node_t *node){
-    if (NULL == node){
-	return NULL;
-    }	    
-    return node->next;
+
+node_t *GetNext(node_t *node) {
+  if (NULL == node) {
+    return NULL;
+  }	    
+  return node->next;
 }
+
 void *GetValue(node_t *node) {
-    if (NULL == node){
-	return NULL;
-    }	    
-    return node->value;
+  if (NULL == node) {
+    return NULL;
+  }	    
+  return node->value;
 }
