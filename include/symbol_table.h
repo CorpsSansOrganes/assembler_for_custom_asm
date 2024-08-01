@@ -5,6 +5,8 @@
  * @brief Data structure representing a symbol table.
  */
 
+#include "utils.h"
+
 typedef struct symbol_table symbol_table_t;
 typedef struct symbol symbol_t;
 
@@ -21,7 +23,7 @@ symbol_table_t *CreateSymbolTable(void);
  */
 void DestroySymbolTable(symbol_table_t *table);
 
-int AddSymbol(symbol_table_t *table, symbol_t symbol);
+result_t AddSymbol(symbol_table_t *table, symbol_t symbol);
 
 /*
  * @brief Looks for entry in the symbol table by symbol name.

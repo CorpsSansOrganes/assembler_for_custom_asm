@@ -11,6 +11,7 @@
  *
  */
 
+#include "utils.h"
 #include "list.h"
 #include "error.h"
 
@@ -28,12 +29,12 @@
  *
  * @returns 
  * 1. If no errors where detected, a corresponding .am file is created,
- *    and the function returns 0.
+ *    and the function returns SUCCESS
  * 2. If an error (or several errors) occur, the errors are printed to stdout,
- *    and the function returns 1
+ *    and the function returns FAILURE
  *
  */
-int PreprocessFile(char *file_path);
+result_t PreprocessFile(char *file_path);
 
 
 #endif /* __PREPROCESSING__ */
