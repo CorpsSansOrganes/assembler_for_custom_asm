@@ -27,6 +27,12 @@ int PreprocessFile(char *file_path) {
       Write to_write to buffer / new_file
   Write a new file.
   */
+
+  /*
+   * Syntax errors to check:
+   * 1. No extra characters at the end of macr or endmacr line.
+   * 2. Macro name isn't a reserved name.
+   */
   
   return total_errors;
 }

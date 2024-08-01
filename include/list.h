@@ -10,7 +10,7 @@ typedef struct list list_t;
 typedef int (*cmp_func)(void *, void *);
 
 /*
- * @brief Creates a new list
+ * @brief Creates a new empty list
  * @return Upon success, return a pointer to the newly created list.
  *         Upon failure, return NULL.
  */

@@ -20,7 +20,12 @@
  *     their definitions.
  *  2. Detect errors in macros.
  *
+ *  Assumptions made about macro are:
+ *  1. No nested macros.
+ *  2. Every macro definition has an endmacr line.
+ *
  * @param file_path - Path to the .as input file to be processed.
+ *
  * @returns 
  * 1. If no errors where detected, a corresponding .am file is created,
  *    and the function returns 0.

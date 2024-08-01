@@ -1,11 +1,11 @@
+#include "symbol_table.h"
 #include "list.h"
 
 struct {
   char *symbol_name;
-  int mem_address;
+  int address;
 } symbol;
 
 struct {
-  symbol_t cur;
-  symbol_t *next;
+  list_t *list; // EXAMPLE: using list as the underlying ds.
 } symbol_table;
