@@ -33,5 +33,16 @@ char *reserved_directive[] =
     ".string",
     ".extern",
   };
+  char *register_names[] =
+  {
+    "r0",
+    "r1",
+    "r2",
+    "r3",
+    "r4",
+    "r5",
+    "r6",
+    "r7",
+  };
 
 #endif /* __LANGUAGE_DEFINITIONS__ */
