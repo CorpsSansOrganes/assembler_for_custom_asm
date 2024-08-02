@@ -6,7 +6,9 @@
 #include "symbol_table.h"
 #include "list.h"
 
+// ~~--~~--~~--~~--~~
 // Preprocessor errors
+// ~~--~~--~~--~~--~~
 
 /*
  * @brief Checks if there are any characters after a certain point
@@ -27,6 +29,10 @@ bool_t DetectExtraCharacters(char *starting_from);
  * @return TRUE if is a reserved name, FALSE otherwise.
  */
 bool_t IsReservedName(char *name);
+
+// ~~--~~--~~--~~--~~
+// Instruction errors
+// ~~--~~--~~--~~--~~
 
 /*
  * @brief Checks if an instruction exist.
@@ -60,24 +66,35 @@ int CorrectNumberOfOperands(char *instruction, int num_of_operands);
  */
 bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_t type);
 
-bool_t RegisterNameDoesntExist(char *register_name);
-
+// ~~--~~--~~--~~--~~
+// Symbol (label) errors
+// ~~--~~--~~--~~--~~
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
 
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
-bool_t LabelIsIllegal(char *label);
+bool_t SymbolIsBothExternAndEntry(char *symbol, symbol_table_t *table);
 
-bool_t LabelExceedCharacterLimit(char *label);
+bool_t SymbolIsIllegal(char *symbol);
+
+bool_t SymbolExceedCharacterLimit(char *symbol);
 
 bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list);
 
+// ~~--~~--~~--~~--~~
+// Directive errors
+// ~~--~~--~~--~~--~~
 bool_t DirectiveDoesntExist(char *directive);
 
 bool_t DirectiveIsUpperCase(char *directive);
 
 bool_t CommaIsMissingInData(char *data);
 
+
+// ~~--~~--~~--~~--~~
+// General syntax
+// ~~--~~--~~--~~--~~
+bool_t RegisterNameDoesntExist(char *register_name);
 
 #endif /* __SYNTAX_ERRORS__ */
 
