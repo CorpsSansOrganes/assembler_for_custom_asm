@@ -1,12 +1,12 @@
 #include "preprocessing.h"
-#include "error.h"
+#include "syntax_errors.h"
 
 typedef struct {
   char *name;
   void *address;
 } macro_t;
 
-int PreprocessFile(char *file_path) {
+result_t PreprocessFile(char *file_path) {
   int total_errors = 0;
   list_t *macros = CreateList();
   /*
