@@ -3,6 +3,8 @@
 
 #include "utils.h"
 #include "language_definitions.h"
+#include "symbol_table.h"
+#include "list.h"
 
 // Preprocessor errors
 
@@ -20,7 +22,7 @@ bool_t DetectExtraCharacters(char *starting_from);
 /*
  * @brief Checks if name is reserved by the language.
  *
- * @param name - The nane to check.
+ * @param name - The name to check.
  *
  * @return TRUE if is a reserved name, FALSE otherwise.
  */
@@ -57,6 +59,25 @@ int CorrectNumberOfOperands(char *instruction, int num_of_operands);
  *   instruction, or FALSE otherwise.
  */
 bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_t type);
+
+bool_t RegisterNameDoesntExist(char *register_name);
+
+bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
+
+bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
+
+bool_t LabelIsIllegal(char *label);
+
+bool_t LabelExceedCharacterLimit(char *label);
+
+bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list);
+
+bool_t DirectiveDoesntExist(char *directive);
+
+bool_t DirectiveIsUpperCase(char *directive);
+
+bool_t CommaIsMissingInData(char *data);
+
 
 #endif /* __SYNTAX_ERRORS__ */
 
