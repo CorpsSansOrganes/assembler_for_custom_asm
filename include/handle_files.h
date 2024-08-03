@@ -1,6 +1,7 @@
 #ifndef __HANDLE_FILES__
 #define __HANDLE_FILES__
 
+#include <stdlib.h> /* size_t */
 #include "utils.h"
 
 /*
@@ -17,11 +18,12 @@ char *FileToString(char *file_path);
 /*
  * @brief Writes the content of a string into a file.
  *
- * @param file_path The path of the file we wish to write to.
- * @param string The string we wish to write into the file.
+ * @param file_path - The path of the file we wish to write to.
+ * @param string - The string we wish to write into the file.
+ * @param length - The length of the string (excluding '\0').
  *
  * @return An appropriate error code upon error, or SUCCESS.
  */
-result_t StringToFile(char *file_path, char *string);
+result_t StringToFile(char *file_path, char *string, size_t length);
 
 #endif /* __HANDLE_FILES__ */
