@@ -1,5 +1,7 @@
+#include <stdio.h> /* perror */
 #include "preprocessing.h"
 #include "syntax_errors.h"
+#include "handle_files.h"
 
 typedef struct {
   char *name;
@@ -9,6 +11,12 @@ typedef struct {
 result_t PreprocessFile(char *file_path) {
   int total_errors = 0;
   list_t *macros = CreateList();
+
+  char *file_content = FileToString(file_path);
+  if (NULL == file_content) {
+    perror("Error reading file content");
+  }
+
   /*
   Open file.
   For each line in file:

@@ -1,5 +1,5 @@
-#ifndef __HANDLE_FILES__
-#define __HANDLE_FILES__
+#ifndef __FILE_HANDLING__
+#define __FILE_HANDLING__
 
 #include <stdlib.h> /* size_t */
 #include "utils.h"
@@ -26,4 +26,4 @@ char *FileToString(char *file_path);
  */
 result_t StringToFile(char *file_path, char *string, size_t length);
 
-#endif /* __HANDLE_FILES__ */
+#endif /* __FILE_HANDLING__ */
