@@ -47,7 +47,7 @@ node_t *AddNode(list_t *list, void *value) {
   return new_node;
 }
 
-node_t* Find(list_t *list, cmp_func func, void *key) {
+node_t *Find(list_t *list, cmp_func func, void *key) {
   node_t *cur_node = GetHead(list);
 
   while (NULL != cur_node) {
