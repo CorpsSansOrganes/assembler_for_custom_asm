@@ -69,24 +69,113 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
 // ~~--~~--~~--~~--~~
 // Symbol (label) errors
 // ~~--~~--~~--~~--~~
+
+/*
+ * @brief Tell if a symbol defined more than once, i.e if a symbol already exists in the symbol table.
+ *
+ * @param symbol - The symbol which now defined
+ *        table - The symbol table.
+ *
+ * @return TRUE if the symbol has already been defined, or FALSE otherwise.
+ */
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
+
+/*
+ * @brief Tell if a symbol have been defined previously in symbol table before it got called
+ *
+  * @param symbol - The symbol which now been called
+ *         table - The symbol table.
+ *
+ * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
+ */
 
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
+/*
+ * @brief Tell if a symbol have been directed with both .extern and .entry directives
+ *
+  * @param symbol - The symbol that been checked
+ *         table - The symbol table.
+ *
+ * @return TRUE if the symbol got both directives, or FALSE otherwise.
+ */
+
 bool_t SymbolIsBothExternAndEntry(char *symbol, symbol_table_t *table);
+
+
+/*
+ * @brief Tell if a symbol has illegal characters in it (must be alphabetical or numerical characters only)
+ *
+  * @param symbol - The symbol.
+ *
+ * @return TRUE if the symbol is illegal, or FALSE otherwise.
+ */
 
 bool_t SymbolIsIllegal(char *symbol);
 
+/*
+ * @brief Tell if a symbol begins with illegal characters (must begin with alphabetical characters only)
+ *
+  * @param symbol - The symbol.
+ *
+ * @return TRUE if the symbol is illegal, or FALSE otherwise.
+ */
+
+bool_t SymbolPrefixIllegal(char *symbol);
+
+/*
+ * @brief Tell if the length of the symbol name exceeded the character limit (31).
+ *
+  * @param symbol - The symbol.
+ *
+ * @return TRUE if the symbol exceeded the character limit, or FALSE otherwise.
+ */
+
 bool_t SymbolExceedCharacterLimit(char *symbol);
+
+/*
+ * @brief Tell if a symbol name already used as a macro.
+ *
+  * @param symbol - The symbol 
+ *         macro_list - The list of macros.
+ *
+ * @return TRUE if the symbol name already used as a macro, or FALSE otherwise.
+ */
 
 bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list);
 
 // ~~--~~--~~--~~--~~
 // Directive errors
 // ~~--~~--~~--~~--~~
+
+
+/*
+ * @brief Tell if the directive that been called does not exist (directive always starts with '.'). 
+ * the existing directive are : .data , .string , .entry , .extern
+ *
+  * @param directive - The directive that have been called.
+ *
+ * @return TRUE if the dorective doesn't exist, or FALSE otherwise.
+ */
+
 bool_t DirectiveDoesntExist(char *directive);
+/*
+ * @brief Tell if the directive is exist but have been called with uppercase letters instead of lowercase letters
+ *
+  * @param directive - The directive that have been called.
+ *
+ * @return TRUE if the directive have been called with uppercase letters , or FALSE otherwise.
+ */
 
 bool_t DirectiveIsUpperCase(char *directive);
+
+/*
+ * @brief Tell if the .data directive line that been performed is missing commas between the parameters. 
+ *
+  * @param data - The .data directive line that have been performed.
+ *
+ * @return TRUE if the .data directive line is missing commas between the parameters, or FALSE otherwise.
+ */
 
 bool_t CommaIsMissingInData(char *data);
 
@@ -94,6 +183,16 @@ bool_t CommaIsMissingInData(char *data);
 // ~~--~~--~~--~~--~~
 // General syntax
 // ~~--~~--~~--~~--~~
+
+/*
+ * @brief Tell if a register name doesn't exist.
+ * the register names that exist are (r0 ... r7)
+ *
+  * @param register_name - The name of the register that been called
+ *
+ * @return TRUE if a register name doesn't exist, or FALSE otherwise.
+ */
+
 bool_t RegisterNameDoesntExist(char *register_name);
 
 #endif /* __SYNTAX_ERRORS__ */
