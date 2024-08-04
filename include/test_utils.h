@@ -6,9 +6,10 @@
  * Usage follows the following structure:
  
   test_info_t Test(...) {
-    test_info_t info = InitTestInfo("TestName");
+    test_info_t test_info = InitTestInfo("TestName");
 
     if (condition) { // Test failed
+      PrintTestInfo(test_info);
       RETURN_ERROR(TEST_FAILED);
     }
 
@@ -19,6 +20,8 @@
 
  * See tests under the "tests" for examples.
  */
+
+#include "utils.h"
 
 typedef enum {
   TEST_SUCCESSFUL,
@@ -41,5 +44,6 @@ typedef struct {
 
 void PrintTestInfo(test_info_t info);
 test_info_t InitTestInfo(const char *test_name);
+bool_t WasTestSuccessful(test_info_t info);
 
 #endif /* __TEST_UTILS__ */

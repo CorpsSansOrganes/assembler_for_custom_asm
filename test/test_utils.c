@@ -19,6 +19,13 @@ void PrintTestInfo(test_info_t info) {
 }
 
 test_info_t InitTestInfo(const char *test_name) {
-  test_info_t info = {test_name, TEST_SUCCESSFUL, 0};
+  test_info_t info;
+  info.test_name = test_name;
+  info.line = 0;
+  info.result = TEST_SUCCESSFUL;
   return info;
+}
+
+bool_t WasTestSuccesful(test_info_t info) {
+  return (TEST_SUCCESSFUL == info.result);
 }

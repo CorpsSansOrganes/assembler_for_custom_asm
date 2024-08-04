@@ -9,7 +9,7 @@ test_info_t CreateListTest(void) {
    * It may also be used w/ valgrind to check for memory leaks.
   */ 
 
-  test_info_t test_info = {"CreateListTest", TEST_SUCCESSFUL, 0};
+  test_info_t test_info = InitTestInfo("CreateListTest");
 
   list_t *list = CreateList();
   if (NULL == list) {
@@ -21,7 +21,7 @@ test_info_t CreateListTest(void) {
 }
 
 test_info_t AddNodeTest(void *value) {
-  test_info_t test_info = {"AddNodeTest", TEST_SUCCESSFUL, 0};
+  test_info_t test_info = InitTestInfo("AddNodeTest");
   list_t *list = CreateList();
   node_t *node = NULL;
   node_t *next_node = NULL;
@@ -63,7 +63,7 @@ static int SizeTCompare(void *a, void *b) {
 }
 
 test_info_t FindTest(void) {
-  test_info_t test_info = {"FindTest", TEST_SUCCESSFUL, 0};
+  test_info_t test_info = InitTestInfo("FindTest");
   list_t *list = CreateList();
   size_t i = 0;
   node_t *node = NULL;
@@ -93,7 +93,7 @@ test_info_t FindTest(void) {
 }
 
 test_info_t GetNextTest(void) {
-  test_info_t test_info = {"FindTest", TEST_SUCCESSFUL, 0};
+  test_info_t test_info = InitTestInfo("GetNextTest");
   list_t *list = CreateList();
   size_t i = 0;
   node_t *node = NULL;
