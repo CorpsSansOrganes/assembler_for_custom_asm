@@ -14,6 +14,6 @@
  *
  * @return SUCCESS upon success, or an appropriate error code.
  */
-result_t LintFile(char *input_path, char *output_path);
+result_t LintFile(const char *input_path, const char *output_path);
 
 #endif /* __LINTING__ */

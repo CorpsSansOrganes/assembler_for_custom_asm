@@ -15,8 +15,8 @@ OBJ_DEBUG := ./obj/debug
 INCLUDE := ./include
 
 # Dependencies
-LIST_OBJ := list.o list_test.o
-FILE_HANDLING_OBJ := file_handling.o file_handling_test.o
+LIST_OBJ := list.o list_test.o test_utils.o
+FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 
 # ----------
 # Executables
@@ -25,7 +25,8 @@ FILE_HANDLING_OBJ := file_handling.o file_handling_test.o
 file_handling_test: $(OBJ_DEBUG)/file_handling.o $(OBJ_DEBUG)/file_handling_test.o
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
-list_test: $(OBJ_DEBUG)/list.o $(OBJ_DEBUG)/list_test.o
+# List test rule
+list_test: $(OBJ_DEBUG)/list.o $(OBJ_DEBUG)/list_test.o $(OBJ_DEBUG)/test_utils.o
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
 # ----------
@@ -45,6 +46,10 @@ $(OBJ_DEBUG)/list.o: $(SRC)/list.c $(INCLUDE)/list.h
 
 # Compile list_test.o
 $(OBJ_DEBUG)/list_test.o: $(TEST)/list_test.c $(INCLUDE)/list.h
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
+
+# Compile test_utils.o
+$(OBJ_DEBUG)/test_utils.o: $(TEST)/test_utils.c $(INCLUDE)/test_utils.h
 	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
 # Clean up build artifacts

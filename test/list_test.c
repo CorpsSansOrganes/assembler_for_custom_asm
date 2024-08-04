@@ -1,42 +1,7 @@
-#include "list.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef enum {
-  TEST_SUCCESSFUL,
-  TEST_FAILED,
-  TECHNICAL_ERROR
-} test_result_t;
-
-typedef struct {
-  const char *test_name;
-  test_result_t result;
-  unsigned int line;
-} test_info_t;
-
-#define RETURN_ERROR(test_result) \
-    do { \
-        test_info.result = (test_result); \
-        test_info.line = (__LINE__); \
-        return test_info; \
-    } while (0)
-
-static void PrintTestInfo(test_info_t info) {
-  switch (info.result) {
-    case TEST_SUCCESSFUL:
-      printf("Test '%s' was successful\n", info.test_name);
-      break;
-
-    case TEST_FAILED:
-      printf("Test '%s' was failed in line %d\n", info.test_name, info.line);
-      break;
-
-    case TECHNICAL_ERROR:
-      printf("Test '%s' resulted in a technical error in line %d\n",
-             info.test_name, info.line);
-      break;
-  }
-}
+#include "list.h"
+#include "test_utils.h"
 
 test_info_t CreateListTest(void) {
   /* 

@@ -1,7 +1,14 @@
+#include <stdio.h> /* perror */
 #include "linting.h"
 #include "utils.h"
+#include "file_handling.h"
 
-void LintFile(char *file_path) {
+result_t LintFile(char *input_path, char *output_path) {
+  char *file_content = FileToString(input_path);
+  if (NULL == file_content) {
+    perror("Couldn't read input file to string");
+
+  }
   /*
   1. Open file.
   2. For each line in the file:
