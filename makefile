@@ -2,10 +2,10 @@
 CC := gcc
 
 # Release build flags
-CFLAGS := -Wall -ansi -pedantic
+CFLAGS_RELEASE := -Wall -ansi -pedantic
 
 # Debug build flags
-CFLAGS := -g -Wall -ansi -pedantic
+CFLAGS_DEBUG := -g -Wall -ansi -pedantic
 
 # Directories
 SRC := ./src
@@ -16,38 +16,37 @@ INCLUDE := ./include
 
 # Dependencies
 LIST_OBJ := list.o list_test.o
+FILE_HANDLING_OBJ := file_handling.o file_handling_test.o
 
-# By default, build in release mode
-mode := RELEASE
+# ----------
+# Executables
+#  ---------
+# File Handling test rule
+file_handling_test: $(OBJ_DEBUG)/file_handling.o $(OBJ_DEBUG)/file_handling_test.o
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
-# Set compilation flags & obj directory according to build mode.
-MODE_UPPER := $(shell echo $(mode) | tr '[:lower:]' '[:upper:]')
-ifeq ($(MODE_UPPER), RELEASE)
-	OBJ := $(OBJ_RELEASE)
-	FLAGS := $(CFLAGS)
-else ifeq ($(MODE_UPPER), DEBUG)
-	FLAGS := $(DFLAGS)
-	OBJ := $(OBJ_DEBUG)
-else
-	$(error Invalid mode: $(MODE_UPPER))
-endif
+list_test: $(OBJ_DEBUG)/list.o $(OBJ_DEBUG)/list_test.o
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
-# Executable recipe
-all : list
+# ----------
+# Object files 
+#  ---------
+# Compile file_handling.o
+$(OBJ_DEBUG)/file_handling.o: $(SRC)/file_handling.c $(INCLUDE)/file_handling.h
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-list: $(addprefix $(OBJ)/, $(LIST_OBJ))
-	@echo "Building $@ in $(MODE_UPPER) mode"
-	$(CC) $(FLAGS) -I$(INCLUDE) -o $@_$(MODE_UPPER).out $^
+# Compile file_handling_test.o
+$(OBJ_DEBUG)/file_handling_test.o: $(TEST)/file_handling_test.c $(INCLUDE)/file_handling.h
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-# Object creation rules.
-$(OBJ)/%.o: $(SRC)/%.cpp 
-	$(CC) $(FLAGS) -I$(INCLUDE) -c $< -o $@
+# Compile list.o
+$(OBJ_DEBUG)/list.o: $(SRC)/list.c $(INCLUDE)/list.h
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-$(OBJ)/%_test.o: $(TEST)/%_test.cpp 
-	$(CC) $(FLAGS) -I$(INCLUDE) -c $< -o $@
+# Compile list_test.o
+$(OBJ_DEBUG)/list_test.o: $(TEST)/list_test.c $(INCLUDE)/list.h
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-# Phony targets
+# Clean up build artifacts
 clean:
-	rm -rf $(OBJ_DEBUG)/*.o $(OBJ_RELEASE)/*.o ./*.out
-
-.PHONY: all clean 
+	rm -rf $(OBJ_DEBUG)/*.o file_handling_test

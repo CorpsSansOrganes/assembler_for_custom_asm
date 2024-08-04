@@ -16,6 +16,11 @@ typedef int (*cmp_func)(void *, void *);
  */
 list_t *CreateList(void);
 
+/*
+ * @brief Deallocates the memory of a list.
+ * @param list - the list we wish to deallocate
+ */
+void DestroyList(list_t *list);
 
 /*
  * @brief Creates a new node, and adds it to the end of the list.
@@ -36,12 +41,6 @@ node_t *AddNode(list_t *list, void *value);
  *         Upon failure, returns NULL.
  */
 node_t* Find(list_t *list, cmp_func func, void *key);
-
-/*
- * @brief Deallocates the memory of a list.
- * @param list - the list we wish to deallocate
- */
-void DestoryList(list_t *list);
 
 /*
  * @brief Get the node which comes after a given node.

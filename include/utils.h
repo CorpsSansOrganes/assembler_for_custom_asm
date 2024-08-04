@@ -3,7 +3,7 @@
 
 typedef enum {
   FALSE,
-  TRUE,
+  TRUE
 } bool_t;
 
 typedef enum {
@@ -12,7 +12,7 @@ typedef enum {
   MEM_ALLOCATION_ERROR,
   ERROR_OPENING_FILE,
   ERROR_WRITING_TO_FILE,
-  ERROR_CLOSING_FILE,
+  ERROR_CLOSING_FILE
 } result_t;
 
 #endif /* __UTILS__ */

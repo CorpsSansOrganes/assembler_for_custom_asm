@@ -1,6 +1,6 @@
 #include <stdio.h> /* fopen, fclose, fread, fwrite */
 #include <stdlib.h> /* perror, malloc */
-#include "handle_files.h"
+#include "file_handling.h"
 
 char *FileToString(char *file_path) {
   FILE *file = fopen(file_path, "r");
@@ -44,7 +44,8 @@ char *FileToString(char *file_path) {
 
 result_t StringToFile(char *file_path, char *string, size_t length) {
   FILE *file = fopen(file_path, "w");
-  if (NULL != file) {
+
+  if (NULL == file) {
     perror("Failed to open file");
     return ERROR_OPENING_FILE;
   }

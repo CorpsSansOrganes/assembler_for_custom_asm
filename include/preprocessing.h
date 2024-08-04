@@ -13,7 +13,6 @@
 
 #include "utils.h"
 #include "list.h"
-#include "error.h"
 
 /*
  * @brief Performs preprocessing on a .as file:
