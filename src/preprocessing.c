@@ -1,7 +1,7 @@
 #include <stdio.h> /* perror */
 #include "preprocessing.h"
 #include "syntax_errors.h"
-#include "handle_files.h"
+#include "file_handling.h"
 
 typedef struct {
   char *name;
