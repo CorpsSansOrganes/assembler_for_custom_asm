@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (0 == error_count) {
-    printf("Test successful: Linting");
+    printf("Test successful: Linting\n");
   }
 
   return error_count;

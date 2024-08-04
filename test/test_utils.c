@@ -26,6 +26,6 @@ test_info_t InitTestInfo(const char *test_name) {
   return info;
 }
 
-bool_t WasTestSuccesful(test_info_t info) {
+bool_t WasTestSuccessful(test_info_t info) {
   return (TEST_SUCCESSFUL == info.result);
 }

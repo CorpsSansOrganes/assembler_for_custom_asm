@@ -1,6 +1,6 @@
-#include "file_handling.h"
 #include <string.h> /* strlen */
 #include <stdio.h> /* printf */
+#include "file_handling.h"
 
 typedef enum {
   TEST_SUCCESSFUL,
