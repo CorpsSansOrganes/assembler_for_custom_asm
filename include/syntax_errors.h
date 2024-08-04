@@ -79,6 +79,15 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
+/*
+ * @brief Tell if a label was used without colon or with space between the label and the colon
+ *
+  * @param symbol - The symbol which now been called
+ *
+ * @return TRUE if a label was used without colon or with space between the label and the colon, or FALSE otherwise.
+ */
+
+bool_t ColonSyntaxError(char *symbol);
 
 /*
  * @brief Tell if a theres been an attempt to use a symbol that havent been defined previously
@@ -88,6 +97,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
  *
  * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
  */
+
 
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
