@@ -17,3 +17,8 @@ void PrintTestInfo(test_info_t info) {
       break;
   }
 }
+
+test_info_t InitTestInfo(const char *test_name) {
+  test_info_t info = {test_name, TEST_SUCCESSFUL, 0};
+  return info;
+}

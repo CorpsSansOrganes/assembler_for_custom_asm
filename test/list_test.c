@@ -3,6 +3,17 @@
 #include "list.h"
 #include "test_utils.h"
 
+test_info_t Test(...) {
+  test_info_t info = InitTestInfo("TestName");
+
+  if (condition) { // Test failed
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  // More tests...
+
+  return info;
+}
 test_info_t CreateListTest(void) {
   /* 
    * This is a smoke test.

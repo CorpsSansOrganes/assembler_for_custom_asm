@@ -3,6 +3,21 @@
 
 /*
  * Framework and utilities for testing.
+ * Usage follows the following structure:
+ 
+  test_info_t Test(...) {
+    test_info_t info = InitTestInfo("TestName");
+
+    if (condition) { // Test failed
+      RETURN_ERROR(TEST_FAILED);
+    }
+
+    // More tests...
+
+    return info;
+  }
+
+ * See tests under the "tests" for examples.
  */
 
 typedef enum {
@@ -25,5 +40,6 @@ typedef struct {
     } while (0)
 
 void PrintTestInfo(test_info_t info);
+test_info_t InitTestInfo(const char *test_name);
 
 #endif /* __TEST_UTILS__ */
