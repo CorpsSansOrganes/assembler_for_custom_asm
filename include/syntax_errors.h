@@ -71,7 +71,7 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
 // ~~--~~--~~--~~--~~
 
 /*
- * @brief Tell if a symbol defined more than once, i.e if a symbol already exists in the symbol table.
+ * @briefTell if theres been an attempt to define a symbol that have been defined previously 
  *
  * @param symbol - The symbol which now defined
  *        table - The symbol table.
@@ -81,7 +81,7 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
 
 /*
- * @brief Tell if a symbol have been defined previously in symbol table before it got called
+ * @brief Tell if a theres been an attempt to use a symbol that havent been defined previously
  *
   * @param symbol - The symbol which now been called
  *         table - The symbol table.
