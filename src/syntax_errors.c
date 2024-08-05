@@ -1,23 +1,23 @@
+#include <string.h> /* strchr */
 #include "syntax_errors.h"
 #include "utils.h"
 #include "symbol_table.h"
 #include "language_definitions.h"
 
-typedef bool bool_t;
+bool_t DetectExtraCharacters(const char *starting_from) {
+  const char *blank_chars = " \t";
+  char *ptr = (char *)starting_from;
+  bool_t result = FALSE;
 
-bool_t DetectExtraCharacters(char *starting_from) {
-    if (starting_from == NULL) {
-        return FALSE;
+  while ('\0' != *ptr) {
+    if (strchr(blank_chars, *ptr)) {
+      result = TRUE;
+      break;
     }
+    ++ptr;
+  }
 
-    while (*starting_from != '\0') {
-        if (*starting_from != ' ' && *starting_from != '\t') {
-            return TRUE;
-        }
-        starting_from++;
-    }
-
-    return FALSE;
+  return result;
 }
 
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table){
