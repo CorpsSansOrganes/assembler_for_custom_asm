@@ -19,7 +19,7 @@
  *
  * @return TRUE if extra characters were detected, FALSE otherwise.
  */
-bool_t DetectExtraCharacters(char *starting_from);
+bool_t DetectExtraCharacters(const char *starting_from);
 
 /*
  * @brief Checks if name is reserved by the language.

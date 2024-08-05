@@ -5,7 +5,7 @@
 #include "language_definitions.h"
 
 bool_t DetectExtraCharacters(const char *starting_from) {
-  const char *blank_chars = " \t";
+  const char blank_chars[] = {' ', '\t'};
   char *ptr = (char *)starting_from;
   bool_t result = FALSE;
 
