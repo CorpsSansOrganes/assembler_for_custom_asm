@@ -1,5 +1,12 @@
+# Ignore everything
 *
-!.gitignore
-!src/
-!include/
+
+# Except the directories and their contents
 !test/
+!include/
+!src/
+
+# Ensure that the directories themselves are tracked
+!test/**
+!include/**
+!src/**
