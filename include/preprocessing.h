@@ -23,6 +23,7 @@
  *  Assumptions made about macro are:
  *  1. No nested macros.
  *  2. Every macro definition has an endmacr line.
+ *  3. Macros are always defined before they're used.
  *
  * @param file_path - Path to the .as input file to be processed.
  *

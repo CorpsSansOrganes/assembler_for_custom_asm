@@ -2,7 +2,7 @@
 #include <stdlib.h> /* perror, malloc */
 #include "file_handling.h"
 
-char *FileToString(char *file_path) {
+char *FileToString(const char *file_path) {
   FILE *file = fopen(file_path, "r");
   size_t file_size = 0;
   char *string = NULL;

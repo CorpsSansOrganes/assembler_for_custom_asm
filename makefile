@@ -15,38 +15,45 @@ OBJ_DEBUG := ./obj/debug
 INCLUDE := ./include
 
 # Dependencies
-LIST_OBJ := list.o list_test.o
-FILE_HANDLING_OBJ := file_handling.o file_handling_test.o
+LIST_OBJ := list.o
+FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
+LINTING_OBJ := linting.o file_handling.o
+
+TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
+TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
+TEST_LINTING_OBJ := $(LINTING_OBJ) linting_test.o test_utils.o
 
 # ----------
 # Executables
 #  ---------
 # File Handling test rule
-file_handling_test: $(OBJ_DEBUG)/file_handling.o $(OBJ_DEBUG)/file_handling_test.o
+test_file_handling: $(addprefix $(OBJ_DEBUG)/, $(TEST_FILE_HANDLING_OBJ))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
-list_test: $(OBJ_DEBUG)/list.o $(OBJ_DEBUG)/list_test.o
+# List test rule
+test_list: $(addprefix $(OBJ_DEBUG)/, $(TEST_LIST_OBJ))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
+# Linting test rule
+test_linting: $(addprefix $(OBJ_DEBUG)/, $(TEST_LINTING_OBJ))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
 
 # ----------
 # Object files 
 #  ---------
-# Compile file_handling.o
-$(OBJ_DEBUG)/file_handling.o: $(SRC)/file_handling.c $(INCLUDE)/file_handling.h
+# Pattern for compiling source .o files
+$(OBJ_DEBUG)/%.o: $(SRC)/%.c $(INCLUDE)/%.h
 	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-# Compile file_handling_test.o
-$(OBJ_DEBUG)/file_handling_test.o: $(TEST)/file_handling_test.c $(INCLUDE)/file_handling.h
+# Pattern for compiling test .o files.
+$(OBJ_DEBUG)/%_test.o: $(TEST)/%_test.c $(INCLUDE)/%.h
 	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
-# Compile list.o
-$(OBJ_DEBUG)/list.o: $(SRC)/list.c $(INCLUDE)/list.h
-	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
-
-# Compile list_test.o
-$(OBJ_DEBUG)/list_test.o: $(TEST)/list_test.c $(INCLUDE)/list.h
+# Compile test_utils.o
+$(OBJ_DEBUG)/test_utils.o: $(TEST)/test_utils.c $(INCLUDE)/test_utils.h
 	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
 # Clean up build artifacts
 clean:
-	rm -rf $(OBJ_DEBUG)/*.o file_handling_test
+	rm -rf $(OBJ_DEBUG)/*.o test_*

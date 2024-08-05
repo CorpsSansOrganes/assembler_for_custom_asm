@@ -1,7 +1,14 @@
+#include <stdio.h> /* perror */
 #include "linting.h"
 #include "utils.h"
+#include "file_handling.h"
 
-void LintFile(char *file_path) {
+result_t LintFile(const char *input_path, const char *output_path) {
+  char *file_content = FileToString(input_path);
+  if (NULL == file_content) {
+    perror("Couldn't read input file to string");
+    return FILE_HANDLING_ERROR;
+  }
   /*
   1. Open file.
   2. For each line in the file:
@@ -9,6 +16,9 @@ void LintFile(char *file_path) {
     2. Check if its a blank line - if it is, remove it.
     3. Else
   */
+
+  free(file_content);
+  return SUCCESS;
 }
 
 /*
@@ -30,14 +40,15 @@ static int IsLineAComment(char *line);
  * @return TRUE if line is a blank line, FALSE otherwise.
  */
 static int IsLineBlank(char *line) {
-  // Use remove extranous spaces?
-  return 0; // TODO
+  /* Use remove extranous spaces? */
+  return 0; /* TODO */
 }
 
 static void RemoveExtraneousSpaces(char *line) {
-  // Blank characters = ' ', '\t'
+  /* Blank characters = ' ', '\t'
   // 1. While char is blank character, remove it. (Remove all blanks from the start).
   // 2. If more than 1 blank occurs:
   //     Remove excess blanks, until only 1 is left.
-  // 3. Check if last one is blank, if it is remove it.
+  // 3. Check if last one is blank, if it is remove it. 
+  */
 }

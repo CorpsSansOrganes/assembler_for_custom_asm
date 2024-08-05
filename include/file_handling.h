@@ -13,7 +13,7 @@
  *  into which the file's content have been written.
  *  Upon Failure, NULL is returned.
  */
-char *FileToString(char *file_path);
+char *FileToString(const char *file_path);
 
 /*
  * @brief Writes the content of a string into a file.
