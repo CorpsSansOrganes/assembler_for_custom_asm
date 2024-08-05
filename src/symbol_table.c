@@ -14,7 +14,7 @@ struct symbol_table {
 };
 
 static symbol_t *CreateSymbol(const char *symbol_name, address_t address);
-static int SymbolCompare (void *str, void *key);
+static int SymbolCompare (void *symbol_ptr, void *key);
 
 symbol_table_t *CreateSymbolTable(void) {
   symbol_table_t *new_symbol_table = (symbol_table_t *)malloc(sizeof(symbol_table_t));
@@ -73,8 +73,10 @@ void DestroySymbolTable(symbol_table_t *table){
   free(table);
 }
 
-static int SymbolCompare (void *str, void *key) {
-	return (0 == strcmp ((char *) str, (char *) key ));  
+static int SymbolCompare (void *symbol_ptr, void *key) {
+  symbol_t *symbol= (symbol_t *)symbol_ptr;
+  const char *symbol_name = symbol->symbol_name;
+  return (0 == strcmp (symbol_name, (char *) key));
 }
 
 static symbol_t *CreateSymbol(const char *symbol_name, address_t address) {
