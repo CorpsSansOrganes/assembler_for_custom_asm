@@ -1,6 +1,8 @@
 #ifndef __SYMBOL_TABLE__
 #define __SYMBOL_TABLE__
+
 #define SYMBOL_NOT_FOUND -1
+
 /*
  * @brief Data structure representing a symbol table.
  */
@@ -31,15 +33,21 @@ void DestroySymbolTable(symbol_table_t *table);
  *
  * @return SUCCESS if successful, or an error code upon failure.
  */
-result_t AddSymbol(symbol_table_t *table, char *symbol_name, address_t address);
+result_t AddSymbol(symbol_table_t *table,
+                   const char *symbol_name,
+                   address_t address);
 
 /*
  * @brief Looks for entry in the symbol table by symbol name.
  * @param table - The symbol table in which we search.
  *        symbol_name - The key of the symbol we're looking for.
  *        address - In which the address will be placed if found.
- * @return SUCCESS if a symbol with that name is found, FAILURE otherwise.
+ * @return SUCCESS if a symbol with that name is found, and address will be set
+ *         to the symbol's address.
+ *         FAILURE otherwise, and address will be set to SYMBOL_NOT_FOUND.
  */
-result_t FindSymbol(symbol_table_t *table, char *symbol_name, address_t *address);
+result_t FindSymbol(symbol_table_t *table,
+                    const char *symbol_name,
+                    address_t *address);
 
 #endif /* __SYMBOL_TABLE__ */

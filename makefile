@@ -18,10 +18,12 @@ INCLUDE := ./include
 LIST_OBJ := list.o
 FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 LINTING_OBJ := linting.o file_handling.o
+SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
 TEST_LINTING_OBJ := $(LINTING_OBJ) linting_test.o test_utils.o
+TEST_SYMBOL_TABLE := $(SYMBOL_TABLE_OBJ) symbol_table_test.o test_utils.o
 
 # ----------
 # Executables
@@ -36,6 +38,10 @@ test_list: $(addprefix $(OBJ_DEBUG)/, $(TEST_LIST_OBJ))
 
 # Linting test rule
 test_linting: $(addprefix $(OBJ_DEBUG)/, $(TEST_LINTING_OBJ))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
+# Symbol table test
+test_symbol_table: $(addprefix $(OBJ_DEBUG)/, $(TEST_SYMBOL_TABLE))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
 

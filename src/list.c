@@ -13,7 +13,6 @@ struct list {
 
 static node_t *CreateDummy(void);
 static node_t *CreateNode(node_t *next, void *value);
-static node_t *GetHead(list_t *list);
 
 list_t *CreateList(void) {
   list_t *new_list = (list_t *)malloc(sizeof(list_t));
@@ -73,6 +72,10 @@ void DestroyList(list_t *list) {
   free(list);
 }
 
+node_t *GetHead(list_t *list) {
+  return list->head->next; /* list->head is dummy */
+}
+
 node_t *GetNext(node_t *node) {
   return node->next;
 }
@@ -94,8 +97,4 @@ static node_t *CreateNode(node_t *next, void *value) {
   node->next = next;
   node->value = value;
   return node;
-}
-
-static node_t *GetHead(list_t *list) {
-  return list->head->next; /* list->head is dummy */
 }

@@ -43,8 +43,15 @@ node_t *AddNode(list_t *list, void *value);
 node_t* Find(list_t *list, cmp_func func, void *key);
 
 /*
+ * @brief Get the first node in the list.
+ * @param list - The list whose first node we wish to get.
+ * @return NULL if the list is empty, or the first node otherwise.
+ */
+node_t *GetHead(list_t *list);
+
+/*
  * @brief Get the node which comes after a given node.
- * @param node - the node from which we get the following node.
+ * @param node - The node from which we get the following node.
  * @return If a following node exists, a pointer to it is returned.
  *         Otherwise, NULL is returned.
  */
