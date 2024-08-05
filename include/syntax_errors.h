@@ -28,6 +28,7 @@ bool_t DetectExtraCharacters(char *starting_from);
  *
  * @return TRUE if is a reserved name, FALSE otherwise.
  */
+
 bool_t IsReservedName(char *name);
 
 // ~~--~~--~~--~~--~~
@@ -80,11 +81,11 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
  */
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
 /*
- * @brief Tell if a label was used without colon or with space between the label and the colon
+ * @brief Tell if a symbol was used without colon or with space between the symbol and the colon
  *
   * @param symbol - The symbol which now been called
  *
- * @return TRUE if a label was used without colon or with space between the label and the colon, or FALSE otherwise.
+ * @return TRUE if a symbol was used without colon or with space between the symbol and the colon, or FALSE otherwise.
  */
 
 bool_t ColonSyntaxError(char *symbol);
@@ -182,7 +183,7 @@ bool_t DirectiveIsUpperCase(char *directive);
 /*
  * @brief Tell if the .data directive line that been performed is missing commas between the parameters. 
  *
-  * @param data - The .data directive line that have been performed.
+ * @param data - The .data directive line that have been performed (starting from the first parameter, i.e not including the word '.data ' itself).
  *
  * @return TRUE if the .data directive line is missing commas between the parameters, or FALSE otherwise.
  */

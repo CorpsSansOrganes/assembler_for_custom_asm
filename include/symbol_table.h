@@ -1,6 +1,6 @@
 #ifndef __SYMBOL_TABLE__
 #define __SYMBOL_TABLE__
-
+#define SYMBOL_NOT_FOUND -1
 /*
  * @brief Data structure representing a symbol table.
  */
