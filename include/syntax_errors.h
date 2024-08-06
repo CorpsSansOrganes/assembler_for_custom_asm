@@ -45,15 +45,15 @@ bool_t IsReservedName(char *name);
 bool_t DoesInstructionExist(char *instruction);
 
 /*
- * @brief Check if number of operands is correct.
+ * @brief Check if number of operands is correct for a given instruction line.
  *
  * @param instruction - The operator
  *        num_of_operands - Number of operands handed to the operator.
  * 
- * @return -1 if too little operands, 0 if the correct number of operands or
- *         1 if too many operands.
+ * @return the number of operands minus the number of needed operands.
+ *         thus, return 0 if it fits. 
  */
-int CorrectNumberOfOperands(char *instruction, int num_of_operands);
+int WrongNumberOfOperands(char *instruction, int num_of_operands);
 
 /*
  * @brief Tell if an operand addressing method is viable for a given instruction.
@@ -105,16 +105,17 @@ bool_t ColonSyntaxError(char *symbol);
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
 /*
- * @brief Tell if a symbol have been directed with both .extern and .entry directives
+ * @brief Tell if a symbol that been directed as .extern was already defined as .entry
  *
-  * @param symbol - The symbol that been checked
+ * @param symbol - The symbol that been checked
  *         table - The symbol table.
  *
- * @return TRUE if the symbol got both directives, or FALSE otherwise.
+ * @return TRUE if the symbol was already defined as .entry, or FALSE otherwise.
  */
 
-bool_t SymbolIsBothExternAndEntry(char *symbol, symbol_table_t *table);
+bool_t SymbolAlreadyDefinedAsEntry(char *symbol, symbol_table_t *table);
 
+bool_t SymbolAlreadyDefinedAsExtern(char *symbol, symbol_table_t *table);
 
 /*
  * @brief Tell if a symbol has illegal characters in it (must be alphabetical or numerical characters only)

@@ -13,15 +13,15 @@
 
 typedef enum {
   SOURCE_OPERAND,
-  DESTINATION_OPERAND,
-  TOTAL_OPERANDS
+  DESTINATION_OPERAND
 } operand_type_t;
 
 typedef enum {
-  A,
-  B,
-  C,
-  D
+  IMMEDIATE,
+  DIRECT,
+  INDIRECT_REGISTER,
+  DIRECT_REGISTER,
+  INVALID
 } addressing_methods;
 
 /*
@@ -33,7 +33,7 @@ typedef enum {
 * if there is no operand, all the cells hold the value false, 
 * and the bool_t for the operand is also false.
 */
-typedef struct address_method_table {
+typedef struct {
     char *name;
     bool_t source_operand_methods[4];     
     bool_t destination_operand_methods[4];
