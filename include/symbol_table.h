@@ -69,22 +69,22 @@ result_t AddEntrySymbol(symbol_table_t *table,
  * @brief Looks for entry in the symbol table by symbol name.
  * @param table - The symbol table in which we search.
  *        symbol_name - The key of the symbol we're looking for.
- *        address - In which the address will be placed if found.
- * @return SUCCESS if a symbol with that name is found, and address will be set
- *         to the symbol's address.
- *         FAILURE otherwise, and address will be set to SYMBOL_NOT_FOUND.
+ *
+ * @return If a symbol with that name is found, it's returned. Otherwise NULL.
  */
-result_t FindSymbol(symbol_table_t *table,
-                    const char *symbol_name,
-                    address_t *address);
+symbol_t *FindSymbol(symbol_table_t *table,
+                    const char *symbol_name);
 
 /*
- * @brief Tells if symbol is of a certain type.
- * @param table - The symbol table in which we search for the symbol.
- *        symbol_name
+ * @brief Tell the type of a symbol.
+ * @return Symbol's type.
  */
-bool_t IsType(symbol_table_t *table,
-              const char *symbol_name,
-              symbol_type_t type);
+symbol_type_t GetSymbolType(symbol_t *symbol);
+
+/*
+ * @brief Tell the address of a symbol.
+ * @return Symbol's address.
+ */
+address_t GetSymbolAddress(symbol_t *symbol);
 
 #endif /* __SYMBOL_TABLE__ */
