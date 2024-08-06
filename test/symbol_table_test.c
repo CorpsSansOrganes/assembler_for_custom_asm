@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "symbol_table.h"
 #include "test_utils.h"
 
@@ -49,20 +50,14 @@ test_info_t FindSymbolTest(void) {
   const char *symbols[] = {"a", "b", "c", "a"};
   symbol_table_t *table = CreateSymbolTable();
   address_t address = 100;
-  address_t *result = (address_t *)malloc(sizeof(address_t));
-
-  if (NULL == result) {
-    RETURN_ERROR(TECHNICAL_ERROR);
-  }
+  symbol_t *symbol = NULL;
 
   if(NULL == table) {
-    free(result);
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (FAILURE != FindSymbol(table, "empty_table", result)) {
+  if (NULL != FindSymbol(table, "empty_table")) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
   
@@ -71,44 +66,40 @@ test_info_t FindSymbolTest(void) {
     ++address;
   }
 
-  if (SUCCESS != FindSymbol(table, "b", result)) {
+  symbol = FindSymbol(table, "b");
+  if (NULL == symbol) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
-  if (101 != *result) {
+  if (101 != GetSymbolAddress(symbol)) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
-  if (SUCCESS != FindSymbol(table, "a", result)) {
+  if (REGULAR != GetSymbolType(symbol)) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
-  if (100 != *result) {
+  symbol = FindSymbol(table, "a");
+  if (NULL == symbol) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
-  if (FAILURE != FindSymbol(table, "x", result)) {
+  if (100 != GetSymbolAddress(symbol)) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
-  if (SYMBOL_NOT_FOUND != *result) {
+  symbol = FindSymbol(table, "x");
+  if (NULL != symbol) {
     DestroySymbolTable(table);
-    free(result);
     RETURN_ERROR(TEST_FAILED);
   }
 
   DestroySymbolTable(table);
-  free(result);
   return test_info;
 }
 
