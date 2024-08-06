@@ -3,19 +3,32 @@
 #include "utils.h"
 #include "symbol_table.h"
 #include "language_definitions.h"
+#include  <ctype.h> 
+
+/*
+*@brief detects which type of addressing method fit to the operand, and returns invalid if neccessary.
+*@param operand - the operand
+*@return the type of addressing method for the operand
+*/
+static addressing_methods detect_addressing_method (char *operand);
+
+static int SymbolCompare (void *str,void *key );
+
 
 bool_t DetectExtraCharacters(const char *starting_from) {
   const char blank_chars[] = {' ', '\t'};
   char *ptr = (char *)starting_from;
+  bool_t result = FALSE;
 
   while ('\0' != *ptr) {
     if (strchr(blank_chars, *ptr)) {
-      return TRUE;
+      result = TRUE;
+      break;
     }
     ++ptr;
   }
 
-  return FALSE;
+  return result;
 }
 
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table){
@@ -44,6 +57,38 @@ bool_t ColonSyntaxError(char *symbol){
     return FALSE;
 }
 
+int WrongNumberOfOperands(char *instruction, int num_of_operands){
+    for (int i=0; i<NUM_OF_INSTRUCTIONS;i++){
+        if (address_method_table[i].name == *instruction)
+        {
+            return num_of_operands - (address_method_table[i].is_there_destination_operand+address_method_table[i].is_there_source_operand);
+        }
+    }
+}
+
+bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_t type){
+    int method = (int) detect_addressing_method (operand);
+        for (int i=0; i<NUM_OF_INSTRUCTIONS;i++){
+            if (address_method_table[i].name == *instruction){
+                if (type == SOURCE_OPERAND){
+                    return (!address_method_table[i].source_operand_methods[method]);
+                }
+                else if (type == DESTINATION_OPERAND){
+                    return (!address_method_table[i].destination_operand_methods[method]);
+                }
+            }
+        }
+}
+
+bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name, symbol_table_t *table){
+    symbol_t *extern_symbol = FindSymbol(table,symbol_name);
+    return (GetSymbolType(symbol_name) == ENTRY);
+}
+
+bool_t SymbolAlreadyDefinedAsExtern(char *symbol_name, symbol_table_t *table){
+    symbol_t *entry_symbol = FindSymbol(table,symbol_name);
+    return (GetSymbolType(symbol_name) == EXTERN);
+}
 
 bool_t DoesInstructionExist(char *instruction){
    for (int i = 0; i < NUM_OF_INSTRUCTIONS; i++) {
@@ -135,17 +180,11 @@ bool_t SymbolExceedCharacterLimit(char *symbol) {
 
     return FALSE;
 }
-bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list){
-   if (NULL != find (symbol, SymbolCompare, macro_list)){
+bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list){
+   if (NULL != Find (symbol, SymbolCompare, macro_list)){
 	return TRUE;
    }  
    return FALSE;
-}
-
-
-
-static int SymbolCompare (void *str,void *key ){
-   return (0 == strcmp ((char *) str, (char *) key ));  
 }
 
 bool_t CommaIsMissingInData(char *data){
@@ -158,4 +197,40 @@ bool_t CommaIsMissingInData(char *data){
    }
    return FALSE;
 }
+
+static int SymbolCompare (void *str,void *key ){
+   return (0 == strcmp ((char *) str, (char *) key ));  
+}
+
+static addressing_methods detect_addressing_method (char *operand){
+    if (*operand == '#'){
+        operand++;
+        if (*operand == '-' || *operand == '+'){
+            operand++;
+        }
+        if (strlen(operand)==0){
+            return INVALID;
+        }
+        for (int i = 0; i < strlen(operand); i++)
+        {
+           if ( ! isdigit (*operand+i))
+           {
+            return INVALID;
+           }
+        }
+                
+    }
+        return DIRECT;
+    if (*operand == '*'){
+        if (RegisterNameDoesntExist(*(operand+1))){
+            return INVALID;
+        }
+        return INDIRECT_REGISTER;
+    }
+    if (!RegisterNameDoesntExist(*operand)){
+        return DIRECT_REGISTER;
+    }
+    return DIRECT;
+}
+
    
