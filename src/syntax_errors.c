@@ -7,17 +7,15 @@
 bool_t DetectExtraCharacters(const char *starting_from) {
   const char blank_chars[] = {' ', '\t'};
   char *ptr = (char *)starting_from;
-  bool_t result = FALSE;
 
   while ('\0' != *ptr) {
     if (strchr(blank_chars, *ptr)) {
-      result = TRUE;
-      break;
+      return TRUE;
     }
     ++ptr;
   }
 
-  return result;
+  return FALSE;
 }
 
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table){
