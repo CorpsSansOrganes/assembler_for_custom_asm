@@ -50,7 +50,7 @@ bool_t DoesInstructionExist(char *instruction);
  * @param instruction - The operator
  *        num_of_operands - Number of operands handed to the operator.
  * 
- * @return -1 if too little operands, 0 if the correct number of operands or 
+ * @return -1 if too little operands, 0 if the correct number of operands or
  *         1 if too many operands.
  */
 int CorrectNumberOfOperands(char *instruction, int num_of_operands);
@@ -65,7 +65,9 @@ int CorrectNumberOfOperands(char *instruction, int num_of_operands);
  * @return TRUE if the addressing method of the operand is illegal in the given
  *   instruction, or FALSE otherwise.
  */
-bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_t type);
+bool_t IncorrectAddressingMethod(char *instruction,
+                                 char *operand,
+                                 operand_type_t type);
 
 // ~~--~~--~~--~~--~~
 // Symbol (label) errors
@@ -181,11 +183,14 @@ bool_t DirectiveDoesntExist(char *directive);
 bool_t DirectiveIsUpperCase(char *directive);
 
 /*
- * @brief Tell if the .data directive line that been performed is missing commas between the parameters. 
+ * @brief Tell if the .data directive line that been performed is missing commas
+ *        between the parameters. 
  *
- * @param data - The .data directive line that have been performed (starting from the first parameter, i.e not including the word '.data ' itself).
+ * @param data - The .data directive line that have been performed (starting 
+ *        from the first parameter, i.e not including the word '.data ' itself).
  *
- * @return TRUE if the .data directive line is missing commas between the parameters, or FALSE otherwise.
+ * @return TRUE if the .data directive line is missing commas between the parameters,
+ *         or FALSE otherwise.
  */
 
 bool_t CommaIsMissingInData(char *data);

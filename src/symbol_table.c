@@ -4,16 +4,19 @@
 #include "utils.h"
 #include "string.h"
 
-typedef struct {
+struct symbol_struct {
   const char *symbol_name;
   address_t address;
-} symbol_t;
+  symbol_type_t type;
+};
 
 struct symbol_table {
   list_t *list;
 };
 
-static symbol_t *CreateSymbol(const char *symbol_name, address_t address);
+static symbol_t *CreateSymbol(const char *symbol_name,
+                              address_t address,
+                              symbol_type_t type);
 static int SymbolCompare (void *symbol_ptr, void *key);
 
 symbol_table_t *CreateSymbolTable(void) {
@@ -35,7 +38,7 @@ result_t AddSymbol(symbol_table_t *table,
                    const char *symbol_name,
                    address_t address) {
 
-  symbol_t *symbol = CreateSymbol(symbol_name, address);
+  symbol_t *symbol = CreateSymbol(symbol_name, address, REGULAR);
   
   if (NULL == symbol) {
     return MEM_ALLOCATION_ERROR;
@@ -79,7 +82,9 @@ static int SymbolCompare (void *symbol_ptr, void *key) {
   return (0 == strcmp (symbol_name, (char *) key));
 }
 
-static symbol_t *CreateSymbol(const char *symbol_name, address_t address) {
+static symbol_t *CreateSymbol(const char *symbol_name,
+                              address_t address,
+                              symbol_type_t type) {
   symbol_t *symbol = (symbol_t *)malloc(sizeof(symbol_t));
   if (NULL == symbol) {
     return NULL;
@@ -87,5 +92,6 @@ static symbol_t *CreateSymbol(const char *symbol_name, address_t address) {
 
   symbol->symbol_name = symbol_name;
   symbol->address = address;
+  symbol->type = type;
   return symbol;
 }

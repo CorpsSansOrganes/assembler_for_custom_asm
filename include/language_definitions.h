@@ -14,38 +14,53 @@
 typedef enum {
   SOURCE_OPERAND,
   DESTINATION_OPERAND,
+  TOTAL_OPERANDS
 } operand_type_t;
+
+typedef enum {
+  A,
+  B,
+  C,
+  D
+} addressing_methods;
+
 /*
-*struct that holds the valid address method for a given instruction. the arrays holds the valid methods for each operand. if there is no operand, all the cells hold the value 
-false, and the bool_t for the operand is also false 
+* @brief struct that holds the valid addressing method for a given instruction.
+*
+* @param source_operand_methods - the arrays holds the valid methods for source operand. 
+* @param destination_operand_methods - the arrays holds the valid methods for destination operand. 
+*
+* if there is no operand, all the cells hold the value false, 
+* and the bool_t for the operand is also false.
 */
 typedef struct address_method_table {
     char *name;
-    bool_t first_operand_methods[4];
-    bool_t second_operand_methods[4];
-    bool_t is_there_first_operand;
-    bool_t is_there_second_operand;
+    bool_t source_operand_methods[4];     
+    bool_t destination_operand_methods[4];
+    bool_t is_there_source_operand;
+    bool_t is_there_destination_operand;
 } address_method_table_t;
 
 /*
 *table of the valid address method for each instruction 
 */
-address_method_table_t address_method_table [NUM_OF_INSTRUCTIONS] = {{"mov", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
-{"cmp", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
-{"add", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
-{"sub", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
-{"lea", {FALSE,TRUE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
-{"clr", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"not", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"inc", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"dec", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"jmp", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
-{"bne", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
-{"red", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"prn", {FALSE,FALSE,FALSE,FALSE},{TRUE,TRUE,TRUE,TRUE},FALSE,TRUE},
-{"jsr", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
-{"rts", {FALSE,FALSE,FALSE,FALSE},{FALSE,FALSE,FALSE,FALSE},FALSE,FALSE},
-{"stop", {FALSE,FALSE,FALSE,FALSE},{FALSE,FALSE,FALSE,FALSE},FALSE,FALSE}
+address_method_table_t address_method_table [NUM_OF_INSTRUCTIONS] = 
+  {{"mov", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
+  {"cmp", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
+  {"add", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
+  {"sub", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
+  {"lea", {FALSE,TRUE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
+  {"clr", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"not", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"inc", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"dec", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"jmp", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
+  {"bne", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
+  {"red", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"prn", {FALSE,FALSE,FALSE,FALSE},{TRUE,TRUE,TRUE,TRUE},FALSE,TRUE},
+  {"jsr", {FALSE,FALSE,FALSE,FALSE},{FALSE,TRUE,TRUE,FALSE},FALSE,TRUE},
+  {"rts", {FALSE,FALSE,FALSE,FALSE},{FALSE,FALSE,FALSE,FALSE},FALSE,FALSE},
+  {"stop", {FALSE,FALSE,FALSE,FALSE},{FALSE,FALSE,FALSE,FALSE},FALSE,FALSE}
 };
 char *reserved_instructions[] = 
   {
