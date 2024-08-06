@@ -14,13 +14,20 @@ struct macro_table {
   list_t *list;
 };
 
+/* ~~--~~--~~--~~--~~
+  Static function declarations
+ ~~--~~--~~--~~--~~ */
 static macro_table_t *CreateMacroTable(void);
 static result_t AddMacroIfUnique(macro_table_t *table,
                           const char *macro_name,
                           const char *macro_definition);
 static macro_t *CreateMacro(const char *macro_name, const char *macro_definition);
 static int CmpMacro(void *macro, void *key);
+static bool_t IsPrefix(const char *str, const char *prefix);
 
+/* ~~--~~--~~--~~--~~
+  Public functions
+ ~~--~~--~~--~~--~~ */
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   int total_errors = 0;
   char line[MAX_LINE_SIZE];
@@ -193,4 +200,8 @@ static macro_t *CreateMacro(const char *macro_name,
 static int CmpMacro(void *value, void *key) {
   macro_t *macro = (macro_t *)value;
   return (0 == strcmp(macro->macro_name, (const char *)key));
+}
+
+static bool_t IsPrefix(const char *str, const char *prefix) {
+  return (0 == strncmp(str, prefix, strlen(prefix)));
 }

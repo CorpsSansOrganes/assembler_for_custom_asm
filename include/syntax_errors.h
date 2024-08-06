@@ -6,9 +6,9 @@
 #include "symbol_table.h"
 #include "list.h"
 
-// ~~--~~--~~--~~--~~
-// Preprocessor errors
-// ~~--~~--~~--~~--~~
+/* ~~--~~--~~--~~--~~
+  Preprocessor errors
+ ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Checks if there are any characters after a certain point
@@ -31,9 +31,9 @@ bool_t DetectExtraCharacters(const char *starting_from);
 
 bool_t IsReservedName(char *name);
 
-// ~~--~~--~~--~~--~~
-// Instruction errors
-// ~~--~~--~~--~~--~~
+/* ~~--~~--~~--~~--~~
+  Instruction errors
+ ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Checks if an instruction exist.
@@ -69,9 +69,9 @@ bool_t IncorrectAddressingMethod(char *instruction,
                                  char *operand,
                                  operand_type_t type);
 
-// ~~--~~--~~--~~--~~
-// Symbol (label) errors
-// ~~--~~--~~--~~--~~
+/* ~~--~~--~~--~~--~~
+   Symbol (label) errors
+ ~~--~~--~~--~~--~~ */
 
 /*
  * @briefTell if theres been an attempt to define a symbol that have been defined previously 
@@ -158,10 +158,9 @@ bool_t SymbolExceedCharacterLimit(char *symbol);
 
 bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list);
 
-// ~~--~~--~~--~~--~~
-// Directive errors
-// ~~--~~--~~--~~--~~
-
+/* ~~--~~--~~--~~--~~
+   Directive errors
+ ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Tell if the directive that been called does not exist (directive always starts with '.'). 
@@ -197,9 +196,9 @@ bool_t DirectiveIsUpperCase(char *directive);
 bool_t CommaIsMissingInData(char *data);
 
 
-// ~~--~~--~~--~~--~~
-// General syntax
-// ~~--~~--~~--~~--~~
+/* ~~--~~--~~--~~--~~
+   General syntax
+ ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Tell if a register name doesn't exist.
