@@ -20,11 +20,8 @@ ILLEGAL_LABEL_CHARACTERS_ERROR,
 DIRECTIVE_NOT_EXIST_ERROR,
 UPPERCASE_DIRECTIVE_ERROR,
 MISSING_COMMA_ERROR,
-SYMBOL_NOT_EXIST_ERROR,
-OPEN_FILE_ERROR,
-CREATE_FILE_ERROR
- 
-} error_messages_t;
+SYMBOL_NOT_EXIST_ERROR
+} syntax_error_code_t;
 
 /*
  * @brief prints error message according to the type of the error.
@@ -32,6 +29,6 @@ CREATE_FILE_ERROR
 	  line - the line which the error occured
  */
 
-void print_error (error_messages_t error_num,int line);
+void print_error (syntax_error_code_t error_num,int line);
 
 #endif /* __PRINT_ERRORS__ */

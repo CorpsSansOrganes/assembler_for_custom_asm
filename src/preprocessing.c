@@ -29,6 +29,8 @@ static bool_t IsPrefix(const char *str, const char *prefix);
   Public functions
  ~~--~~--~~--~~--~~ */
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
+  bool_t should_write_line = TRUE;
+  int line_number = 1;
   int total_errors = 0;
   char line[MAX_LINE_SIZE];
   FILE *input_file = NULL;
@@ -57,6 +59,14 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   }
 
   while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
+    if(IsComment(line)) {
+      should_write_line = FALSE;
+    }
+    else if (IsMacro(line)) {
+      if (FAILURE == ReadMacro(input_file)) {
+
+      }
+    }
   }
 
   /*

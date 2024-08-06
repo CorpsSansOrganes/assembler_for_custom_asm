@@ -5,7 +5,6 @@
 #define NUM_OF_DIRECTIVES 4
 #define NUM_OF_REGISTERS 8
 
-
 /*
  * @brief Definitions for reserved words and other building blocks
  * of the supported assembly language.
