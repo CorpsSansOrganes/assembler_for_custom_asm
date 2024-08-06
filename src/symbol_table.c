@@ -89,7 +89,7 @@ address_t GetSymbolAddress(symbol_t *symbol) {
 }
 
 static int SymbolCompare (void *symbol_ptr, void *key) {
-  symbol_t *symbol= (symbol_t *)symbol_ptr;
+  symbol_t *symbol = (symbol_t *)symbol_ptr;
   const char *symbol_name = symbol->symbol_name;
   return (0 == strcmp (symbol_name, (char *) key));
 }
