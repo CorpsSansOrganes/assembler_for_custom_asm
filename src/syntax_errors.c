@@ -52,8 +52,8 @@ bool_t DoesInstructionExist(char *instruction){
        if (strcmp(instruction, reserved_instructions[i]) == 0) {
            return TRUE;
        }
+    }
 }
-
 
 bool_t SymbolIsIllegal(char *symbol) {
 
@@ -71,10 +71,10 @@ bool_t SymbolPrefixIllegal(char *symbol) {
 
     // Check if the first character is not an alphabetical character
     if (!((*symbol >= 'A' && *symbol <= 'Z') || (*symbol >= 'a' && *symbol <= 'z'))) {
-        return true;
+        return TRUE;
     }
 
-    return false;
+    return FALSE;
 }
 
 bool_t IsReservedName(char *name) {
@@ -83,6 +83,7 @@ bool_t IsReservedName(char *name) {
         if (strcmp(name, reserved_instructions[i]) == 0) {
             return TRUE;
         }
+    }
     for (int i = 0; i < NUM_OF_DIRECTIVES; i++) {
         if (strcmp(name, reserved_directives[i]) == 0) {
             return TRUE;
@@ -100,7 +101,7 @@ bool_t IsReservedName(char *name) {
 bool_t RegisterNameDoesntExist(char *register_name){
 
     for (int i = 0; i < NUM_OF_REGISTERS; i++) {
-        if (strcmp(name, register_names[i]) == 0) {
+        if (strcmp(register_name, register_names[i]) == 0) {
             return FALSE;
         }
     }
@@ -113,31 +114,31 @@ bool_t DirectiveDoesntExist(char *directive) {
 
     for (int i = 0; i < NUM_OF_DIRECTIVES; i++) {
         if (strcmp(directive, reserved_directives[i]) == 0) {
-            return false;
+            return FALSE;
         }
     }
 
-    return true;
+    return TRUE;
 }
 
 bool_t SymbolExceedCharacterLimit(char *symbol) {
     if (symbol == NULL) {
-        return false;
+        return FALSE;
     }
 
     int length = 0;
     while (*symbol != '\0') {
         length++;
         if (length > 31) {
-            return true;
+            return TRUE;
         }
         symbol++;
     }
 
-    return false;
+    return FALSE;
 }
 bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list){
-   if (null != find (symbol, symbolCompare, macro_list)){
+   if (NULL != find (symbol, SymbolCompare, macro_list)){
 	return TRUE;
    }  
    return FALSE;
@@ -151,10 +152,12 @@ static int SymbolCompare (void *str,void *key ){
 
 bool_t CommaIsMissingInData(char *data){
    while (*data != '\0') {
-	if (*data == ' ' || *data == '\t' ){
+	 if (*data == ' ' || *data == '\t' ){
 		if (*(data-1) != ','){
 			return TRUE;
-	}
+        }
+     }
+   }
    return FALSE;
 }
-
+   

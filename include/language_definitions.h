@@ -15,6 +15,10 @@ typedef enum {
   SOURCE_OPERAND,
   DESTINATION_OPERAND,
 } operand_type_t;
+/*
+*struct that holds the valid address method for a given instruction. the arrays holds the valid methods for each operand. if there is no operand, all the cells hold the value 
+false, and the bool_t for the operand is also false 
+*/
 typedef struct address_method_table {
     char *name;
     bool_t first_operand_methods[4];
@@ -23,7 +27,10 @@ typedef struct address_method_table {
     bool_t is_there_second_operand;
 } address_method_table_t;
 
-address_method_table_t address_method_table [16] = {{"mov", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
+/*
+*table of the valid address method for each instruction 
+*/
+address_method_table_t address_method_table [NUM_OF_INSTRUCTIONS] = {{"mov", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
 {"cmp", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
 {"add", {TRUE,TRUE,TRUE,TRUE},{TRUE,TRUE,TRUE,TRUE},TRUE,TRUE},
 {"sub", {TRUE,TRUE,TRUE,TRUE},{FALSE,TRUE,TRUE,TRUE},TRUE,TRUE},
