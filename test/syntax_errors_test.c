@@ -252,3 +252,67 @@ test_info_t SymbolExceedCharacterLimitTest(void) {
 *to do
 */
 test_info_t SymbolUsedAsAMacroTest(void); 
+test_info_t DirectiveDoesntExistTest(void) {
+  test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
+  const char *exist = ".entry";
+  const char *without_dot = "entry";
+  const char *not_exist = "aaaa";
+  if (TRUE == DirectiveDoesntExist(exist)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE == DirectiveDoesntExist(without_dot)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+    if (FALSE == DirectiveDoesntExist(not_exist)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  return test_info;
+}
+test_info_t DirectiveIsUpperCaseTest(void) {
+  test_info_t test_info = InitTestInfo("DirectiveIsUpperCase");
+  const char *exist = ".eNTry";
+  const char *without_dot = ".entry";
+  const char *not_exist = "aaaa";
+  if (FALSE == DirectiveIsUpperCase(exist)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE == DirectiveIsUpperCase(without_dot)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+    if (TRUE == DirectiveIsUpperCase(not_exist)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  return test_info;
+}
+test_info_t CommaIsMissingInDataTest(void) {
+  test_info_t test_info = InitTestInfo("CommaIsMissingInData");
+  const char *valid = "aaa, bbb, ccc";
+  const char *with_space = "aaaa , bbbb";
+  const char *no_comma = "aaaa bbbb";
+  if (FALSE == CommaIsMissingInData(no_comma)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE == CommaIsMissingInData(with_space)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+    if (TRUE == CommaIsMissingInData(valid)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  return test_info;
+}
+test_info_t RegisterNameDoesntExistTest(void) {
+  test_info_t test_info = InitTestInfo("RegisterNameDoesntExist");
+  const char *valid = "r0";
+  const char *not_exist = "r9";
+  const char *not_a_register = "aaaabbbb";
+  if (FALSE == RegisterNameDoesntExist(valid)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE == RegisterNameDoesntExist(not_exist)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+    if (TRUE == RegisterNameDoesntExist(not_a_register)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  return test_info;
+}

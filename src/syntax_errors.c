@@ -165,6 +165,13 @@ bool_t DirectiveDoesntExist(char *directive) {
 
     return TRUE;
 }
+bool_t DirectiveIsUpperCase(char *directive){
+    if (DirectiveDoesntExist(directive) && !DirectiveDoesntExist(tolower(directive)))
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 bool_t SymbolExceedCharacterLimit(char *symbol) {
     if (symbol == NULL) {
