@@ -1,8 +1,9 @@
 #include <stdio.h> /* perror */
 #include <stdlib.h> /* malloc, free */
-#include <string.h> /* strlen, strcpy */
+#include <string.h> /* strcpy */
 #include "preprocessing.h"
 #include "syntax_errors.h"
+#include "string_utils.h"
 #include "list.h"
 
 struct macro_struct {
@@ -23,7 +24,6 @@ static result_t AddMacroIfUnique(macro_table_t *table,
                           const char *macro_definition);
 static macro_t *CreateMacro(const char *macro_name, const char *macro_definition);
 static int CmpMacro(void *macro, void *key);
-static bool_t IsPrefix(const char *str, const char *prefix);
 
 /* ~~--~~--~~--~~--~~
   Public functions
@@ -210,8 +210,4 @@ static macro_t *CreateMacro(const char *macro_name,
 static int CmpMacro(void *value, void *key) {
   macro_t *macro = (macro_t *)value;
   return (0 == strcmp(macro->macro_name, (const char *)key));
-}
-
-static bool_t IsPrefix(const char *str, const char *prefix) {
-  return (0 == strncmp(str, prefix, strlen(prefix)));
 }
