@@ -14,11 +14,9 @@
  */
 
 #include "utils.h"
+#include "macro_table.h"
 
 #define MAX_LINE_SIZE 100
-
-typedef struct macro_table macro_table_t;
-typedef struct macro_struct macro_t;
 
 /*
  * @brief Performs preprocessing on a .as file:
@@ -46,30 +44,5 @@ typedef struct macro_struct macro_t;
  *
  */
 macro_table_t *PreprocessFile(char *input_path, char *output_path);
-
-
-/*
- * @brief Deallocates the memory of a macro table.
- * @param table - the table we wish to destroy.
- */
-void DestroyMacroTable(macro_table_t *table);
-
-/*
- * @brief Looks for entry in the macro table by macro name.
- * @param table - The macro table in which we search.
- *        macro_name - The key of the macro we're looking for.
- *
- * @return If a macro with that name is found, it's returned. Otherwise NULL.
- */
-macro_t *FindMacro(macro_table_t *table,
-                   const char *macro_name);
-
-/*
- * @brief Returns the definition for a given macro 
- * @param macro - The macro whose definition we're looking for.
- *
- * @return The macro's definition.
- */
-const char *GetMacroDefinition(macro_t *macro);
 
 #endif /* __PREPROCESSING__ */

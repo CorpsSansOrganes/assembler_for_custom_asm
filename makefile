@@ -19,6 +19,7 @@ LIST_OBJ := list.o
 FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 LINTING_OBJ := linting.o file_handling.o
 SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
+PREPROCESSING_OBJ := macro_table.o string_utils.o preprocessing.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 

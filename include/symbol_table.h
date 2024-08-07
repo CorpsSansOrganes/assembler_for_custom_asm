@@ -3,6 +3,9 @@
 
 /*
  * @brief Data structure representing a symbol table.
+ *
+ *        A symbol has 3 key attributes: (1) name, (2) address and (3) type.
+ *        The symbol's name acts as its key.
  */
 
 #include "utils.h"
