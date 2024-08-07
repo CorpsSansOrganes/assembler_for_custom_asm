@@ -7,9 +7,10 @@
 #include "list.h"
 #include "preprocessing.h"
 
-// ~~--~~--~~--~~--~~
-// Preprocessor errors
-// ~~--~~--~~--~~--~~
+
+/* ~~--~~--~~--~~--~~
+  Preprocessor errors
+  ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Checks if there are any characters after a certain point
@@ -20,6 +21,7 @@
  *
  * @return TRUE if extra characters were detected, FALSE otherwise.
  */
+
 bool_t DetectExtraCharacters(const char *starting_from);
 
 /*
@@ -32,9 +34,10 @@ bool_t DetectExtraCharacters(const char *starting_from);
 
 bool_t IsReservedName(char *name);
 
-// ~~--~~--~~--~~--~~
-// Instruction errors
-// ~~--~~--~~--~~--~~
+
+/* ~~--~~--~~--~~--~~
+  Instruction errors
+  ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Checks if an instruction exist.
@@ -43,6 +46,7 @@ bool_t IsReservedName(char *name);
  *
  * @return TRUE if the instruction exists, FALSE otherwise.
  */
+
 bool_t DoesInstructionExist(char *instruction);
 
 /*
@@ -54,6 +58,7 @@ bool_t DoesInstructionExist(char *instruction);
  * @return the number of operands minus the number of needed operands.
  *         thus, return 0 if it fits. 
  */
+
 int WrongNumberOfOperands(char *instruction, int num_of_operands);
 
 /*
@@ -66,13 +71,15 @@ int WrongNumberOfOperands(char *instruction, int num_of_operands);
  * @return TRUE if the addressing method of the operand is illegal in the given
  *   instruction, or FALSE otherwise.
  */
+
 bool_t IncorrectAddressingMethod(char *instruction,
                                  char *operand,
                                  operand_type_t type);
 
-// ~~--~~--~~--~~--~~
-// Symbol (label) errors
-// ~~--~~--~~--~~--~~
+
+/* ~~--~~--~~--~~--~~
+  Symbol (label) errors
+  ~~--~~--~~--~~--~~ */
 
 /*
  * @briefTell if theres been an attempt to define a symbol that have been defined previously 
@@ -82,7 +89,9 @@ bool_t IncorrectAddressingMethod(char *instruction,
  *
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
+
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table);
+
 /*
  * @brief Tell if a symbol was used without colon or with space between the symbol and the colon
  *
@@ -101,7 +110,6 @@ bool_t ColonSyntaxError(char *symbol);
  *
  * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
  */
-
 
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
@@ -168,10 +176,10 @@ bool_t SymbolExceedCharacterLimit(char *symbol);
 
 bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list);
 
-// ~~--~~--~~--~~--~~
-// Directive errors
-// ~~--~~--~~--~~--~~
 
+/* ~~--~~--~~--~~--~~
+  Directive errors
+  ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Tell if the directive that been called does not exist (directive always starts with '.'). 
@@ -183,6 +191,7 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list);
  */
 
 bool_t DirectiveDoesntExist(char *directive);
+
 /*
  * @brief Tell if the directive is exist but have been called with uppercase letters instead of lowercase letters
  *
@@ -207,9 +216,9 @@ bool_t DirectiveIsUpperCase(char *directive);
 bool_t CommaIsMissingInData(char *data);
 
 
-// ~~--~~--~~--~~--~~
-// General syntax
-// ~~--~~--~~--~~--~~
+/* ~~--~~--~~--~~--~~
+  General syntax
+  ~~--~~--~~--~~--~~ */
 
 /*
  * @brief Tell if a register name doesn't exist.
