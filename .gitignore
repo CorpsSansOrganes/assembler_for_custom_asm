@@ -5,6 +5,8 @@
 !test/
 !include/
 !src/
+!.gitignore
+!makefile
 
 # Ensure that the directories themselves are tracked
 !test/**
