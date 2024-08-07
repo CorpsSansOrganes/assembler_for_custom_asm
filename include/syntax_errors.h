@@ -5,10 +5,11 @@
 #include "language_definitions.h"
 #include "symbol_table.h"
 #include "list.h"
+#include "preprocessing.h"
 
-/* ~~--~~--~~--~~--~~
-  Preprocessor errors
- ~~--~~--~~--~~--~~ */
+// ~~--~~--~~--~~--~~
+// Preprocessor errors
+// ~~--~~--~~--~~--~~
 
 /*
  * @brief Checks if there are any characters after a certain point
@@ -31,9 +32,9 @@ bool_t DetectExtraCharacters(const char *starting_from);
 
 bool_t IsReservedName(char *name);
 
-/* ~~--~~--~~--~~--~~
-  Instruction errors
- ~~--~~--~~--~~--~~ */
+// ~~--~~--~~--~~--~~
+// Instruction errors
+// ~~--~~--~~--~~--~~
 
 /*
  * @brief Checks if an instruction exist.
@@ -69,9 +70,9 @@ bool_t IncorrectAddressingMethod(char *instruction,
                                  char *operand,
                                  operand_type_t type);
 
-/* ~~--~~--~~--~~--~~
-   Symbol (label) errors
- ~~--~~--~~--~~--~~ */
+// ~~--~~--~~--~~--~~
+// Symbol (label) errors
+// ~~--~~--~~--~~--~~
 
 /*
  * @briefTell if theres been an attempt to define a symbol that have been defined previously 
@@ -115,12 +116,21 @@ bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table);
 
 bool_t SymbolAlreadyDefinedAsEntry(char *symbol, symbol_table_t *table);
 
+/*
+ * @brief Tell if a symbol that been directed as .entry was already defined as .extern
+ *
+ * @param symbol - The symbol that been checked
+ *         table - The symbol table.
+ *
+ * @return TRUE if the symbol was already defined as .extern, or FALSE otherwise.
+ */
+
 bool_t SymbolAlreadyDefinedAsExtern(char *symbol, symbol_table_t *table);
 
 /*
  * @brief Tell if a symbol has illegal characters in it (must be alphabetical or numerical characters only)
  *
-  * @param symbol - The symbol.
+  * @param symbol - The symbol (without the colon at the end).
  *
  * @return TRUE if the symbol is illegal, or FALSE otherwise.
  */
@@ -156,11 +166,12 @@ bool_t SymbolExceedCharacterLimit(char *symbol);
  * @return TRUE if the symbol name already used as a macro, or FALSE otherwise.
  */
 
-bool_t SymbolUsedAsAMacro(char *symbol, list_t *macro_list);
+bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list);
 
-/* ~~--~~--~~--~~--~~
-   Directive errors
- ~~--~~--~~--~~--~~ */
+// ~~--~~--~~--~~--~~
+// Directive errors
+// ~~--~~--~~--~~--~~
+
 
 /*
  * @brief Tell if the directive that been called does not exist (directive always starts with '.'). 
@@ -196,9 +207,9 @@ bool_t DirectiveIsUpperCase(char *directive);
 bool_t CommaIsMissingInData(char *data);
 
 
-/* ~~--~~--~~--~~--~~
-   General syntax
- ~~--~~--~~--~~--~~ */
+// ~~--~~--~~--~~--~~
+// General syntax
+// ~~--~~--~~--~~--~~
 
 /*
  * @brief Tell if a register name doesn't exist.

@@ -78,6 +78,7 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
                 }
             }
         }
+    
 }
 
 bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name, symbol_table_t *table){
@@ -100,7 +101,8 @@ bool_t DoesInstructionExist(char *instruction){
 
 bool_t SymbolIsIllegal(char *symbol) {
 
-    while (*symbol != '\0') {
+    for (int i = 0; i < strlen(symbol); i++)
+     {
         if (!((*symbol >= 'A' && *symbol <= 'Z') || (*symbol >= 'a' && *symbol <= 'z') || (*symbol >= '0' && *symbol <= '9'))) {
             return TRUE;
         }
