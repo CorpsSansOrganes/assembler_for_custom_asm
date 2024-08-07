@@ -5,6 +5,13 @@
 #include "syntax_errors.h"
 #include "string_utils.h"
 
+static bool_t IsComment(const char *line);
+static bool_t IsNewMacro(const char *line);
+static syntax_error_code_t ReadMacro(FILE *file, macro_table_t *table);
+
+/* ~~--~~--~~--~~--~~
+  Preprocessor
+  ~~--~~--~~--~~--~~ */
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   bool_t should_write_line = TRUE;
   int line_number = 1;
@@ -12,6 +19,7 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   char line[MAX_LINE_SIZE];
   FILE *input_file = NULL;
   FILE *output_file = NULL;
+  syntax_error_code_t result = VALID_SYNTAX;
   macro_table_t *table = CreateMacroTable();
 
   if (NULL == table) {
@@ -39,9 +47,9 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
     if(IsComment(line)) {
       should_write_line = FALSE;
     }
-    else if (IsMacro(line)) {
-      if (FAILURE == ReadMacro(input_file)) {
-
+    else if (IsNewMacro(line)) {
+      result = ReadMacro(input_file, table);
+      if ( ReadMacro(input_file, table)) {
       }
     }
   }
