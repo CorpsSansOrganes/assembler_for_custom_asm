@@ -1,6 +1,7 @@
 #include "test_utils.h"
 #include "syntax_errors.h"
 #include "symbol_table.h"
+#include "macro_table.h"
 
 test_info_t DetectExtraCharactersTest(void) {
   test_info_t test_info = InitTestInfo("DetectExtraCharacters");
@@ -251,7 +252,20 @@ test_info_t SymbolExceedCharacterLimitTest(void) {
 /*
 *to do
 */
-test_info_t SymbolUsedAsAMacroTest(void); 
+test_info_t SymbolUsedAsAMacroTest(void){
+      test_info_t test_info = InitTestInfo("SymbolUsedAsAMacroTest");
+  macro_table_t *test_table = CreateMacroTable();
+  AddMacroIfUnique(test_table,"aaaa","definition"); 
+  if (FALSE ==  SymbolUsedAsAMacro("aaaa",test_table)){
+     RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE ==  SymbolUsedAsAMacro("bbbb",test_table)){
+     RETURN_ERROR(TEST_FAILED);
+  }
+  return test_info;
+}
+
+
 test_info_t DirectiveDoesntExistTest(void) {
   test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
   const char *exist = ".entry";
