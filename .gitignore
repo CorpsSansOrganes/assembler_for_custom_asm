@@ -12,3 +12,6 @@
 !test/**
 !include/**
 !src/**
+
+# Ignore .vscode
+src/.vscode/
