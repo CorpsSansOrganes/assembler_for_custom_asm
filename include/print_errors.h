@@ -8,6 +8,6 @@
  *        line - the line which the error occured
  */
 
-void PrintError(syntax_error_code_t error_num, int line);
+void PrintError(syntax_error_code_t error_code, unsigned int line);
 
 #endif /* __PRINT_ERRORS__ */

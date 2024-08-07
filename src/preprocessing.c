@@ -3,23 +3,28 @@
 #include <string.h> /* strcpy */
 #include "preprocessing.h"
 #include "syntax_errors.h"
+#include "print_errors.h"
 #include "string_utils.h"
 
 static bool_t IsComment(const char *line);
+static bool_t IsBlankLine(const char *line);
 static bool_t IsNewMacro(const char *line);
-static syntax_error_code_t ReadMacro(FILE *file, macro_table_t *table);
+static result_t ReadMacro(FILE *file,
+                          macro_table_t *table,
+                          unsigned int *line_number);
 
 /* ~~--~~--~~--~~--~~
   Preprocessor
   ~~--~~--~~--~~--~~ */
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   bool_t should_write_line = TRUE;
-  int line_number = 1;
+  bool_t no_error_occurred = TRUE;
+  unsigned int line_number = 1;
   int total_errors = 0;
   char line[MAX_LINE_SIZE];
   FILE *input_file = NULL;
   FILE *output_file = NULL;
-  syntax_error_code_t result = VALID_SYNTAX;
+  result_t res = SUCCESS;
   macro_table_t *table = CreateMacroTable();
 
   if (NULL == table) {
@@ -44,39 +49,99 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   }
 
   while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
-    if(IsComment(line)) {
+    char *clean_line = StripWhitespaces(line);
+    const char *str_to_write = NULL;
+
+    /* Analyse what type of line that is */
+    if (IsComment(clean_line) | IsBlankLine(clean_line)) {
       should_write_line = FALSE;
     }
-    else if (IsNewMacro(line)) {
-      result = ReadMacro(input_file, table);
-      if ( ReadMacro(input_file, table)) {
+
+    else if (IsNewMacro(clean_line)) {
+      if (SUCCESS != ReadMacro(input_file, table, &line_number)) {
+        no_error_occurred = FALSE;
       }
+    }
+
+    else {
+      macro_t *macro = FindMacro(table, clean_line);
+
+      if (NULL != macro) { /* Macro usage */
+        str_to_write = GetMacroDefinition(macro);
+      } else {
+        str_to_write = clean_line;
+      }
+    }
+
+    /* Write to output file */
+    if (no_error_occurred && should_write_line) {
     }
   }
 
-  /*
-  Open file.
-  For each line in file:
-    If (IsNewMacro(line)):
-        1. Check that name isn't reserved.
-        2. Create new entry (AddMacroIfUnique(macros, line))
-        3. If error occured, inc. total_errors.
-        4. Skip to the end of the macro macro_definition.
-      
-    Else 
-      to_Write = line
-      If (IsMacro(line)):
-            1. Find macro name in the macros.
-            2. to_write = macro_definition for the macro
-          
-      Write to_write to buffer / new_file
-  Write a new file.
-  */
+  return table;
+}
+
+/* ~~--~~--~~--~~--~~
+  Static functions
+  ~~--~~--~~--~~--~~ */
+/*
+ * @brief Checks if a line is a comment.
+ * 
+ * @param line - Pointer to a null-terminated string containing the line to be
+ *               checked.
+ * 
+ * @return TRUE if the line is a comment, FALSE otherwise.
+ */
+
+static bool_t IsComment(const char *line) {
+  return IsPrefix(StripLeadingWhitespaces(line), ";");
+}
+
+static bool_t IsNewMacro(const char *line) {
+  return IsPrefix(StripLeadingWhitespaces(line), "macr");
+}
+
+/*
+ * @brief Reads a macro definition from a file and adds it to a macro table.
+ * 
+ * This function processes a macro definition starting from the current file 
+ * pointer. 
+ * 'line number' is incremented and 'file' is updated to point to the next line
+ * after the macro definition.
+ *
+ * Syntax errors are reported to STDERR, and the function 
+ * returns a status code indicating the result of the operation.
+ * 
+ * @param file - Pointer to a FILE object positioned at the start of a macro
+ *               definition.
+ *               On successful completion, this will point to the line immediately
+ *               following the 'endmacr' directive of the macro definition.
+ *
+ *        table - Pointer to a macro_table_t structure where the macro will be
+ *                added if the macro definition is valid.
+ *
+ *        line_number - Pointer to an unsigned int representing the current line
+ *                      number. 
+ *                      This will be incremented to reflect the number of lines
+ *                      read from the file.
+ * 
+ * @return SUCCESS if the macro was successfully read and added to the macro table 
+ *         with no syntax errors.
+ *
+ *         FAILURE if a syntax error was encountered while reading the macro definition.
+ *
+ *         MEM_ALLOCATION_ERROR if the macro definition was valid but a memory 
+ *         allocation error occurred while adding the macro to the table.
+ */
+
+static result_t ReadMacro(FILE *file,
+                          macro_table_t *table,
+                          unsigned int *line_number) {
 
   /*
    * Syntax errors to check:
    * 1. No extra characters at the end of macr or endmacr line.
    * 2. Macro name isn't a reserved name.
    */
-  return table;
+  return SUCCESS; // TODO
 }
