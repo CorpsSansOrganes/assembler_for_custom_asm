@@ -12,8 +12,8 @@
 *@return the type of addressing method for the operand
 */
 static addressing_methods detect_addressing_method (char *operand);
-
-static int SymbolCompare (void *str,void *key );
+static char *string_tolower(char *str);
+/*static int SymbolCompare (void *str,void *key );*/
 
 syntax_check_info_t syntax_check_default = {FALSE, 0, "default"};
 
@@ -37,8 +37,7 @@ bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t synt
 }
 
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info){
-   int is_defined = (int) FindSymbol (table, symbol);
-   if (is_defined != -1){
+   if (NULL != FindSymbol (table, symbol)){
 	if (syntax_check_info.verbose){
         printf ("Error: attempted to define a symbol at line %u in the file: %s that already been defined", syntax_check_info.line_number, syntax_check_info.file_name);
     }
@@ -48,8 +47,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table, syntax_che
 }
 
 bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info){
-   int is_defined = (int) FindSymbol (table, symbol);
-   if (is_defined == -1){
+   if (NULL != FindSymbol (table, symbol)){
 	return FALSE;
    }
     if (syntax_check_info.verbose){
@@ -73,6 +71,7 @@ bool_t ColonSyntaxError(char *symbol, syntax_check_info_t syntax_check_info){
 
 int WrongNumberOfOperands(char *instruction, int num_of_operands, syntax_check_info_t syntax_check_info){
     int i;
+    int dummy = 100;
     for (i=0; i<NUM_OF_INSTRUCTIONS;i++){
         if (*address_method_table[i].name == *instruction)
         {
@@ -83,10 +82,12 @@ int WrongNumberOfOperands(char *instruction, int num_of_operands, syntax_check_i
             return num_of_operands-required_operands;        
         }
     }
+    return dummy;
 }
 
 bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_t type, syntax_check_info_t syntax_check_info){
     int i;
+    int dummy = 100;
     int method = (int) detect_addressing_method (operand);
         for (i=0; i<NUM_OF_INSTRUCTIONS;i++){
             if (*address_method_table[i].name == *instruction){
@@ -110,7 +111,7 @@ bool_t IncorrectAddressingMethod(char *instruction, char *operand, operand_type_
                 }
             }
         }
-    
+    return dummy;
 }
 
 bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name, symbol_table_t *table, syntax_check_info_t syntax_check_info){
@@ -232,7 +233,7 @@ bool_t DirectiveDoesntExist(char *directive, syntax_check_info_t syntax_check_in
     return TRUE;
 }
 bool_t DirectiveIsUpperCase(char *directive, syntax_check_info_t syntax_check_info){
-    if (DirectiveDoesntExist(directive, syntax_check_default) && !DirectiveDoesntExist(tolower(directive), syntax_check_default))
+    if (DirectiveDoesntExist(directive, syntax_check_default) && !DirectiveDoesntExist(string_tolower(directive), syntax_check_default))
     {
         if (syntax_check_info.verbose){
             printf ("ERROR: directive was written in uppercase letters instead of lowercase letters at line: %u in the file: %s doesn't exist", syntax_check_info.line_number, syntax_check_info.file_name);
@@ -243,11 +244,10 @@ bool_t DirectiveIsUpperCase(char *directive, syntax_check_info_t syntax_check_in
 }
 
 bool_t SymbolExceedCharacterLimit(char *symbol, syntax_check_info_t syntax_check_info) {
+    int length = 0;
     if (symbol == NULL) {
         return FALSE;
     }
-
-    int length = 0;
     while (*symbol != '\0') {
         length++;
         if (length > 31) {
@@ -262,7 +262,7 @@ bool_t SymbolExceedCharacterLimit(char *symbol, syntax_check_info_t syntax_check
     return FALSE;
 }
 bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list, syntax_check_info_t syntax_check_info){
-   if (NULL != Find (symbol, SymbolCompare, macro_list)){
+   if (NULL != FindMacro( macro_list, symbol)){
 	if (syntax_check_info.verbose){
         printf ("ERROR: attempt to define a symbol name that is already define as a macro at line %u in the file: %s", syntax_check_info.line_number, syntax_check_info.file_name);
     }
@@ -285,10 +285,17 @@ bool_t CommaIsMissingInData(char *data, syntax_check_info_t syntax_check_info){
    return FALSE;
 }
 
-static int SymbolCompare (void *str,void *key ){
+/*static int SymbolCompare (void *str,void *key ){
    return (0 == strcmp ((char *) str, (char *) key ));  
+}*/
+static char *string_tolower(char *str) {
+    int i;
+    int len = strlen(str);
+    for (i = 0; i < len; i++) {
+        str[i] = tolower(str[i]);
+    }
+    return str;
 }
-
 static addressing_methods detect_addressing_method (char *operand){
     int i;
     if (*operand == '#'){
@@ -310,12 +317,12 @@ static addressing_methods detect_addressing_method (char *operand){
     }
         return DIRECT;
     if (*operand == '*'){
-        if (RegisterNameDoesntExist(*(operand+1),syntax_check_default)){
+        if (RegisterNameDoesntExist(operand+1,syntax_check_default)){
             return INVALID;
         }
         return INDIRECT_REGISTER;
     }
-    if (!RegisterNameDoesntExist(*operand,syntax_check_default)){
+    if (!RegisterNameDoesntExist(operand,syntax_check_default)){
         return DIRECT_REGISTER;
     }
     return DIRECT;
