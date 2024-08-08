@@ -54,7 +54,7 @@ const char *StripLeadingWhitespaces(const char *str);
  */
 char *StripTrailingWhitespaces(char *str);
 
-/**
+/*
  * @brief Returns a pointer to the end of the string.
  * 
  * This function returns a pointer to the null terminator of the given string.
