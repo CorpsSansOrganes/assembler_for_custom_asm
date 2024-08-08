@@ -30,6 +30,11 @@ typedef enum {
   SYMBOL_NOT_EXIST_ERROR
 } syntax_error_code_t;
 
+struct syntax_error_info {
+  syntax_error_code_t code;
+  const char *msg_error;
+  unsigned int line;
+};
 
 /* ~~--~~--~~--~~--~~
   Preprocessor errors
@@ -45,7 +50,7 @@ typedef enum {
  * @return TRUE if extra characters were detected, FALSE otherwise.
  */
 
-bool_t DetectExtraCharacters(const char *starting_from);
+bool_t DetectExtraCharacters(const char *starting_from, bool_t verbose);
 
 /*
  * @brief Checks if name is reserved by the language.
