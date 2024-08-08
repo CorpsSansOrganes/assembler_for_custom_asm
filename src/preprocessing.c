@@ -9,7 +9,7 @@
 static bool_t IsComment(const char *line);
 static bool_t IsBlankLine(const char *line);
 static bool_t IsNewMacro(const char *line);
-static result_t ReadMacro(FILE *file,
+static result_t ParseMacro(FILE *file,
                           macro_table_t *table,
                           unsigned int *line_number);
 
@@ -18,15 +18,15 @@ static result_t ReadMacro(FILE *file,
   ~~--~~--~~--~~--~~ */
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   bool_t should_write_line = TRUE;
-  bool_t no_error_occurred = TRUE;
+  bool_t error_occurred = FALSE;
   unsigned int line_number = 1;
   int total_errors = 0;
   char line[MAX_LINE_SIZE];
   FILE *input_file = NULL;
   FILE *output_file = NULL;
-  result_t res = SUCCESS;
   macro_table_t *table = CreateMacroTable();
 
+  /* Acquire resources */
   if (NULL == table) {
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a macro table\n");
@@ -48,20 +48,49 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
     return NULL;
   }
 
+  /*
+   * First pass:
+   * Parse macros, populating the macro table.
+   * Check for syntax errors in macro definitions.
+   */
+  while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
+    char *clean_line = StripWhitespaces(line);
+    if (IsNewMacro(clean_line)) {
+      if (SUCCESS != ParseMacro(input_file, table, &line_number)) {
+        error_occurred = TRUE;
+      }
+    }
+  }
+
+  if (error_occurred) {
+    fclose(input_file);
+    fclose(output_file);
+    DestroyMacroTable(table);
+    return NULL;
+  }
+
+  /*
+   * Second pass:
+   * Since no errors occurred, write to file.
+   * Expand macros to their definitions.
+   */
+  fseek(input_file, 0, SEEK_SET);
   while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
     char *clean_line = StripWhitespaces(line);
     const char *str_to_write = NULL;
 
-    /* Analyse what type of line that is */
-    if (IsComment(clean_line) | IsBlankLine(clean_line)) {
+    if (IsNewMacro(clean_line)) {
+      while(FALSE == IsPrefix(clean_line, "endmacr")) {
+        fgets(line, MAX_LINE_SIZE, input_file); /* Assuming every macro has endmacr! */
+        clean_line = (char *)StripLeadingWhitespaces(line);
+      }
+      clean_line = StripTrailingWhitespaces(clean_line);
+    }
+
+    else if (IsComment(clean_line) | IsBlankLine(clean_line)) {
       should_write_line = FALSE;
     }
 
-    else if (IsNewMacro(clean_line)) {
-      if (SUCCESS != ReadMacro(input_file, table, &line_number)) {
-        no_error_occurred = FALSE;
-      }
-    }
 
     else {
       macro_t *macro = FindMacro(table, clean_line);
@@ -74,9 +103,17 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
     }
 
     /* Write to output file */
-    if (no_error_occurred && should_write_line) {
+    if (should_write_line) {
+      if (EOF == fputs(str_to_write, output_file)) {
+        perror("Error writing to file");
+      }
     }
   }
+
+  fclose(input_file);
+  fclose(output_file);
+  DestroyMacroTable(table);
+  return NULL;
 
   return table;
 }
@@ -86,6 +123,7 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   ~~--~~--~~--~~--~~ */
 /*
  * @brief Checks if a line is a comment.
+ *        We assume there are no leading white spaces (spaces or tabs).
  * 
  * @param line - Pointer to a null-terminated string containing the line to be
  *               checked.
@@ -94,11 +132,22 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
  */
 
 static bool_t IsComment(const char *line) {
-  return IsPrefix(StripLeadingWhitespaces(line), ";");
+  return IsPrefix(line, ";");
 }
 
+static bool_t IsBlankLine(const char *line);
+
+/*
+ * @brief Checks if a line is a macro.
+ *        We assume there are no leading white spaces (spaces or tabs).
+ * 
+ * @param line - Pointer to a null-terminated string containing the line to be
+ *               checked.
+ * 
+ * @return TRUE if the line is a macro, FALSE otherwise.
+ */
 static bool_t IsNewMacro(const char *line) {
-  return IsPrefix(StripLeadingWhitespaces(line), "macr");
+  return IsPrefix(line, "macr");
 }
 
 /*
@@ -134,7 +183,7 @@ static bool_t IsNewMacro(const char *line) {
  *         allocation error occurred while adding the macro to the table.
  */
 
-static result_t ReadMacro(FILE *file,
+static result_t ParseMacro(FILE *file,
                           macro_table_t *table,
                           unsigned int *line_number) {
 
@@ -143,5 +192,7 @@ static result_t ReadMacro(FILE *file,
    * 1. No extra characters at the end of macr or endmacr line.
    * 2. Macro name isn't a reserved name.
    */
+
+
   return SUCCESS; // TODO
 }

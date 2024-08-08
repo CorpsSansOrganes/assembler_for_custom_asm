@@ -95,15 +95,15 @@ test_info_t IncorrectAddressingMethodTest(void) {
   operand_type_t destination = DESTINATION_OPERAND;
   const char *add_instruction = "add";
   const char *jmp_instruction = "jmp";
-  char *invalid_operand1 = "#c";
-  char *invalid_operand2 = "#";
-  char *invalid_operand3 = "*r13";
-  char *invalid_operand4 = "#++12";
-  char *valid_operand0 = "#12";
-  char *valid_operand1 = "aaaa";
-  char *valid_operand2 = "*r2";
-  char *valid_operand3 = "r4";
-  if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination, error_check_default)) {
+  char invalid_operand1 = "#c";
+  char invalid_operand2 = "#";
+  char invalid_operand3 = "*r13";
+  char invalid_operand4 = "#++12";
+  char valid_operand0 = "#12";
+  char valid_operand1 = "aaaa";
+  char valid_operand2 = "*r2";
+  char valid_operand3 = "r4";
+  if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination)) {
     RETURN_ERROR(TEST_FAILED);
   }
   if (FALSE ==  IncorrectAddressingMethod(add_instruction,invalid_operand2,source, error_check_default)) {

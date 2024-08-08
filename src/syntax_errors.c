@@ -1,9 +1,9 @@
 #include <string.h> /* strchr */
+#include  <ctype.h> 
 #include "syntax_errors.h"
 #include "utils.h"
 #include "symbol_table.h"
 #include "language_definitions.h"
-#include  <ctype.h> 
 
 /*
 *@brief detects which type of addressing method fit to the operand, and returns invalid if neccessary.

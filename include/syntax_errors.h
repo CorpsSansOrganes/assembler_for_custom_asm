@@ -55,7 +55,7 @@ bool_t IsReservedName(char *name, error_check_info_t error_check_info);
  *
  * @return TRUE if the instruction exists, FALSE otherwise.
  */
-bool_t DoesInstructionExist(char *instruction, error_check_info_t error_check_info);
+bool_t InstructionDoesntExist(char *instruction, error_check_info_t error_check_info);
 
 /*
  * @brief Check if number of operands is correct for a given instruction line.
