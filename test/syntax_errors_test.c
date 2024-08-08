@@ -93,8 +93,8 @@ test_info_t IncorrectAddressingMethodTest(void) {
   operand_type_t destination = DESTINATION_OPERAND;
   const char *add_instruction = "add";
   const char *jmp_instruction = "jmp";
-  char invalid_operand1 = "#c";
-  char invalid_operand2 = "#";
+  char *invalid_operand1 = "#c";
+  char *invalid_operand2 = "#";
   char invalid_operand3 = "*r13";
   char invalid_operand4 = "#++12";
   char valid_operand0 = "#12";

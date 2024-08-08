@@ -19,12 +19,15 @@ LIST_OBJ := list.o
 FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 LINTING_OBJ := linting.o file_handling.o
 SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
+MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
 PREPROCESSING_OBJ := macro_table.o string_utils.o preprocessing.o
+SYNTAX_ERROR_OBJ := syntax_errors.o $(SYMBOL_TABLE_OBJ)
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
 TEST_LINTING_OBJ := $(LINTING_OBJ) linting_test.o test_utils.o
 TEST_SYMBOL_TABLE := $(SYMBOL_TABLE_OBJ) symbol_table_test.o test_utils.o
+TEST_SYNTAX_ERRORS := $(SYNTAX_ERROR_OBJ) $(MACRO_TABLE) syntax_errors_test.o test_utils.o
 
 # ----------
 # Executables
@@ -45,6 +48,9 @@ test_linting: $(addprefix $(OBJ_DEBUG)/, $(TEST_LINTING_OBJ))
 test_symbol_table: $(addprefix $(OBJ_DEBUG)/, $(TEST_SYMBOL_TABLE))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
+# Syntax errors test
+test_syntax_errors : $(addprefix $(OBJ_DEBUG)/, $(TEST_SYNTAX_ERRORS))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
 # ----------
 # Object files 

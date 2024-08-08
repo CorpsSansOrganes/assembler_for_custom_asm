@@ -1,6 +1,8 @@
 #ifndef __LANGUAGE_DEFINITIONS__
 #define __LANGUAGE_DEFINITIONS__
+
 #include "utils.h"
+
 #define NUM_OF_INSTRUCTIONS 16
 #define NUM_OF_DIRECTIVES 4
 #define NUM_OF_REGISTERS 8
