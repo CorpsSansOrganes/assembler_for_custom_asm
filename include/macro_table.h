@@ -69,7 +69,7 @@ macro_t *FindMacro(macro_table_t *table,
  * @brief Returns the definition for a given macro 
  * @param macro - The macro whose definition we're looking for.
  *
- * @return The macro's definition.
+ * @return The macro's definition, or NULL if it cant find the macro.
  */
 const char *GetMacroDefinition(macro_t *macro);
 

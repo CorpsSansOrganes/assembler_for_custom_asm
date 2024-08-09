@@ -3,6 +3,8 @@
 #include "symbol_table.h"
 #include "macro_table.h"
 
+syntax_check_info_t syntax_check_default = {FALSE, 0, "default"};
+
 test_info_t DetectExtraCharactersTest(void) {
   test_info_t test_info = InitTestInfo("DetectExtraCharacters");
   const char *no_extra_characters = "    ";
@@ -10,16 +12,16 @@ test_info_t DetectExtraCharactersTest(void) {
   const char *extra_characters = "abc  a";
   const char *blank_and_then_extra_characters = " a";
 
-  if (TRUE == DetectExtraCharacters(no_extra_characters)) {
+  if (TRUE == DetectExtraCharacters(no_extra_characters, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DetectExtraCharacters(no_characters_at_all)) {
+  if (TRUE == DetectExtraCharacters(no_characters_at_all, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DetectExtraCharacters(no_extra_characters)) {
+  if (FALSE == DetectExtraCharacters(no_extra_characters, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DetectExtraCharacters(blank_and_then_extra_characters)) {
+  if (FALSE == DetectExtraCharacters(blank_and_then_extra_characters, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -31,34 +33,34 @@ test_info_t IsReservedNameTest(void) {
   const char *register_name = "r3";
   const char *not_reserved = "aaaaa";
 
-  if (TRUE == IsReservedName(reserved_directive)) {
+  if (TRUE == IsReservedName(reserved_directive, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == IsReservedName(reserved_instruction)) {
+  if (TRUE == IsReservedName(reserved_instruction, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == IsReservedName(register_name)) {
+  if (TRUE == IsReservedName(register_name, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == IsReservedName(not_reserved)) {
+  if (FALSE == IsReservedName(not_reserved, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
 }
 
-test_info_t DoesInstructionExistTest(void) {
-  test_info_t test_info = InitTestInfo("DoesInstructionExist");
+test_info_t InstructionDoesntExistTest(void) {
+  test_info_t test_info = InitTestInfo("InstructionDoesntExist");
   const char *reserved_instruction = "cmp";
   const char *reserved_directive = ".entry";
   const char *not_reserved = "aaaaa";
 
-  if (FALSE == DoesInstructionExist(reserved_instruction)) {
+  if (TRUE == InstructionDoesntExist(reserved_instruction, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DoesInstructionExist(reserved_directive)) {
+  if (FALSE == InstructionDoesntExist(reserved_directive, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DoesInstructionExist(not_reserved)) {
+  if (FALSE == InstructionDoesntExist(not_reserved, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -73,16 +75,16 @@ test_info_t WrongNumberOfOperandsTest(void) {
   const int stop_operands = 0;
   const int expected_result_stop = stop_operands-not_stop_operands;
   const int expected_result_cmp = cmp_operands-not_cmp_operands;
-  if (FALSE != WrongNumberOfOperands(cmp_instruction,cmp_operands)) {
+  if (FALSE != WrongNumberOfOperands(cmp_instruction,cmp_operands, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
- if (FALSE != WrongNumberOfOperands(stop_instruction,stop_operands)) {
+ if (FALSE != WrongNumberOfOperands(stop_instruction,stop_operands, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (expected_result_cmp != WrongNumberOfOperands(cmp_instruction,not_cmp_operands)) {
+  if (expected_result_cmp != WrongNumberOfOperands(cmp_instruction,not_cmp_operands, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (expected_result_stop != WrongNumberOfOperands(stop_instruction,not_stop_operands)) {
+  if (expected_result_stop != WrongNumberOfOperands(stop_instruction,not_stop_operands, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -93,36 +95,36 @@ test_info_t IncorrectAddressingMethodTest(void) {
   operand_type_t destination = DESTINATION_OPERAND;
   const char *add_instruction = "add";
   const char *jmp_instruction = "jmp";
-  char *invalid_operand1 = "#c";
-  char *invalid_operand2 = "#";
+  char invalid_operand1 = "#c";
+  char invalid_operand2 = "#";
   char invalid_operand3 = "*r13";
   char invalid_operand4 = "#++12";
   char valid_operand0 = "#12";
   char valid_operand1 = "aaaa";
   char valid_operand2 = "*r2";
   char valid_operand3 = "r4";
-  if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination)) {
+  if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(add_instruction,invalid_operand2,source)) {
+  if (FALSE ==  IncorrectAddressingMethod(add_instruction,invalid_operand2,source, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == IncorrectAddressingMethod(jmp_instruction,invalid_operand3,destination)) {
+  if (FALSE == IncorrectAddressingMethod(jmp_instruction,invalid_operand3,destination, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,invalid_operand4,source)) {
+  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,invalid_operand4,source, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand1,source)) {
+  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand1,source, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(add_instruction,valid_operand0,destination)) {
+  if (FALSE ==  IncorrectAddressingMethod(add_instruction,valid_operand0,destination, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand2,destination)) {
+  if (TRUE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand2,destination, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  IncorrectAddressingMethod(add_instruction,valid_operand3,source)) {
+  if (TRUE ==  IncorrectAddressingMethod(add_instruction,valid_operand3,source, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -131,10 +133,10 @@ test_info_t SymbolDefinedMoreThanOnceTest(void) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
   symbol_table_t *test_table = CreateSymbolTable();
   result_t *valid_test_symbol = AddSymbol(test_table,"aaaa",100); 
-  if (FALSE == SymbolDefinedMoreThanOnce("aaaa",test_table)){
+  if (FALSE == SymbolDefinedMoreThanOnce("aaaa",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolDefinedMoreThanOnce("bbbb",test_table)){
+  if (TRUE == SymbolDefinedMoreThanOnce("bbbb",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -145,13 +147,13 @@ test_info_t ColonSyntaxErrorTest(void) {
   const char *colon_with_space = "aaaa :";
   const char *valid = "aaaa:";
 
-  if (TRUE == ColonSyntaxError(no_colon)) {
+  if (TRUE == ColonSyntaxError(no_colon, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == ColonSyntaxError(colon_with_space)) {
+  if (TRUE == ColonSyntaxError(colon_with_space, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == ColonSyntaxError(valid)) {
+  if (FALSE == ColonSyntaxError(valid, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -160,10 +162,10 @@ test_info_t SymbolWasntDefinedTest(void) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
   symbol_table_t *test_table = CreateSymbolTable();
   AddSymbol(test_table,"aaaa",100); 
-  if (TRUE == SymbolWasntDefined("aaaa",test_table)){
+  if (TRUE == SymbolWasntDefined("aaaa",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolWasntDefined("bbbb",test_table)){
+  if (FALSE == SymbolWasntDefined("bbbb",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -174,13 +176,13 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(void) {
   AddExternalSymbol(test_table,"aaaa",100); 
   AddEntrySymbol(test_table,"bbbb",100); 
   AddSymbol(test_table,"cccc",100); 
-  if (TRUE == SymbolAlreadyDefinedAsEntry("aaaa",test_table)){
+  if (TRUE == SymbolAlreadyDefinedAsEntry("aaaa",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsEntry("cccc",test_table)){
+  if (TRUE == SymbolAlreadyDefinedAsEntry("cccc",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolAlreadyDefinedAsEntry("bbbb",test_table)){
+  if (FALSE == SymbolAlreadyDefinedAsEntry("bbbb",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -191,13 +193,13 @@ test_info_t SymbolAlreadyDefinedAsExternTest(void) {
   AddExternalSymbol(test_table,"aaaa",100); 
   AddEntrySymbol(test_table,"bbbb",100); 
   AddSymbol(test_table,"cccc",100); 
-  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",test_table)){
+  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",test_table)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",test_table)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -208,13 +210,13 @@ test_info_t SymbolIsIllegalTest(void) {
   const char *invalid_symbol = "?-c?";
   const char *valid_symbol = "ascasv";
 
-  if (FALSE == SymbolIsIllegal(space_in_between)) {
+  if (FALSE == SymbolIsIllegal(space_in_between, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolIsIllegal(invalid_symbol)) {
+  if (FALSE == SymbolIsIllegal(invalid_symbol, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolIsIllegal(valid_symbol)) {
+  if (TRUE == SymbolIsIllegal(valid_symbol, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -225,13 +227,13 @@ test_info_t SymbolPrefixIllegalTest(void) {
   const char *invalid_sprefix2 = " ?-c?";
   const char *valid_prefix = "aaaa";
 
-  if (FALSE == SymbolPrefixIllegal(invalid_sprefix1)) {
+  if (FALSE == SymbolPrefixIllegal(invalid_sprefix1, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolPrefixIllegal(invalid_sprefix2)) {
+  if (FALSE == SymbolPrefixIllegal(invalid_sprefix2, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolPrefixIllegal(valid_prefix)) {
+  if (TRUE == SymbolPrefixIllegal(valid_prefix, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -241,10 +243,10 @@ test_info_t SymbolExceedCharacterLimitTest(void) {
   const char *exceed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   const char *not_exceed = "aaaa";
 
-  if (FALSE == SymbolExceedCharacterLimit(exceed)) {
+  if (FALSE == SymbolExceedCharacterLimit(exceed, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolExceedCharacterLimit(not_exceed)) {
+  if (FALSE == SymbolExceedCharacterLimit(not_exceed, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -256,10 +258,10 @@ test_info_t SymbolUsedAsAMacroTest(void){
       test_info_t test_info = InitTestInfo("SymbolUsedAsAMacroTest");
   macro_table_t *test_table = CreateMacroTable();
   AddMacroIfUnique(test_table,"aaaa","definition"); 
-  if (FALSE ==  SymbolUsedAsAMacro("aaaa",test_table)){
+  if (FALSE ==  SymbolUsedAsAMacro("aaaa",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  SymbolUsedAsAMacro("bbbb",test_table)){
+  if (TRUE ==  SymbolUsedAsAMacro("bbbb",test_table, syntax_check_default)){
      RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -271,13 +273,13 @@ test_info_t DirectiveDoesntExistTest(void) {
   const char *exist = ".entry";
   const char *without_dot = "entry";
   const char *not_exist = "aaaa";
-  if (TRUE == DirectiveDoesntExist(exist)) {
+  if (TRUE == DirectiveDoesntExist(exist, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DirectiveDoesntExist(without_dot)) {
+  if (FALSE == DirectiveDoesntExist(without_dot, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (FALSE == DirectiveDoesntExist(not_exist)) {
+    if (FALSE == DirectiveDoesntExist(not_exist, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -287,13 +289,13 @@ test_info_t DirectiveIsUpperCaseTest(void) {
   const char *exist = ".eNTry";
   const char *without_dot = ".entry";
   const char *not_exist = "aaaa";
-  if (FALSE == DirectiveIsUpperCase(exist)) {
+  if (FALSE == DirectiveIsUpperCase(exist, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DirectiveIsUpperCase(without_dot)) {
+  if (TRUE == DirectiveIsUpperCase(without_dot, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == DirectiveIsUpperCase(not_exist)) {
+    if (TRUE == DirectiveIsUpperCase(not_exist, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -303,13 +305,13 @@ test_info_t CommaIsMissingInDataTest(void) {
   const char *valid = "aaa, bbb, ccc";
   const char *with_space = "aaaa , bbbb";
   const char *no_comma = "aaaa bbbb";
-  if (FALSE == CommaIsMissingInData(no_comma)) {
+  if (FALSE == CommaIsMissingInData(no_comma, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == CommaIsMissingInData(with_space)) {
+  if (FALSE == CommaIsMissingInData(with_space, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == CommaIsMissingInData(valid)) {
+    if (TRUE == CommaIsMissingInData(valid, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -319,13 +321,13 @@ test_info_t RegisterNameDoesntExistTest(void) {
   const char *valid = "r0";
   const char *not_exist = "r9";
   const char *not_a_register = "aaaabbbb";
-  if (FALSE == RegisterNameDoesntExist(valid)) {
+  if (FALSE == RegisterNameDoesntExist(valid, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == RegisterNameDoesntExist(not_exist)) {
+  if (FALSE == RegisterNameDoesntExist(not_exist, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == RegisterNameDoesntExist(not_a_register)) {
+    if (TRUE == RegisterNameDoesntExist(not_a_register, syntax_check_default)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
