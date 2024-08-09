@@ -1,5 +1,5 @@
 #include <string.h> /* strchr */
-#include  <ctype.h> 
+#include  <ctype.h> /* isblank */
 #include  <stdio.h>
 #include "syntax_errors.h"
 #include "utils.h"
@@ -18,22 +18,23 @@ static char *string_tolower(char *str);
 syntax_check_info_t syntax_check_default = {FALSE, 0, "default"};
 
 bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info) {
-  const char blank_chars[] = {' ', '\t'};
   char *ptr = (char *)starting_from;
-  bool_t result = FALSE;
 
-  while ('\0' != *ptr) {
-    if (strchr(blank_chars, *ptr)) {
-      if (syntax_check_info.verbose){
-        printf ("Error: extrenuous characters detected at line %u in the file: %s", syntax_check_info.line_number, syntax_check_info.file_name);
-      }
-      result = TRUE;
-      break;
-    }
+  while (!isblank(*ptr)) {
     ++ptr;
   }
 
-  return result;
+  if ('\0' != *ptr) {
+    if (syntax_check_info.verbose) {
+      printf ("Error: extrenuous characters detected at line %u in the file: %s",
+              syntax_check_info.line_number,
+              syntax_check_info.file_name);
+    }
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info){

@@ -12,6 +12,7 @@ typedef struct {
   bool_t verbose;
   const char *file_name;
 } syntax_check_info_t;
+
 /*
 // ~~--~~--~~--~~--~~
 // Preprocessor errors
@@ -31,6 +32,7 @@ typedef struct {
 
  * @return TRUE if extra characters were detected, FALSE otherwise.
  */
+
 bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info);
 
 /*
@@ -255,6 +257,7 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list, syntax_check_
  */
 
 bool_t DirectiveDoesntExist(char *directive, syntax_check_info_t syntax_check_info);
+
 /*
  * @brief Tell if the directive is exist but have been called with uppercase letters instead of lowercase letters
  *
