@@ -54,7 +54,7 @@ bool_t IsReservedName(char *name, syntax_check_info_t syntax_check_info);
 */
 
 /*
- * @brief Checks if an instruction exist.
+ * @brief Checks if an instruction doesnt exist.
  *
  * @param instruction - The suspected instruction.
  *      syntax_check_info - struct that contains the parameters : 
@@ -62,7 +62,7 @@ bool_t IsReservedName(char *name, syntax_check_info_t syntax_check_info);
  *          line number - the line number of the checked argument
  *          file name - the file that contains the checked argument.
  *
- * @return TRUE if the instruction exists, FALSE otherwise.
+ * @return TRUE if the instruction doesnt exists, FALSE otherwise.
  */
 bool_t InstructionDoesntExist(char *instruction, syntax_check_info_t syntax_check_info);
 

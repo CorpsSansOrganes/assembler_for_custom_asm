@@ -28,6 +28,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   char input_file = NULL;
   char *entry_parameter = NULL;
 
+<<<<<<< HEAD
   syntax_check_info_t syntax_check_info_print = {.line_number = 0, .verbose=TRUE, .file_name = "file_path"};
   syntax_check_info_t syntax_check_info__no_print = {.line_number = -1, .verbose=FALSE, .file_name = "default"};
   symbol_table_t *symbol_table = CreateSymbolTable();/*check error*/
@@ -120,6 +121,15 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   /*5. handle instructio
   3. is it directive?
   */
+=======
+static result_t FirstPass(char *file_path) {
+  int error_count = 0;
+  /*
+   * 1. Read file line by line.
+   * 2. Follow algorithm given to us.
+   * 3. Check errors.
+   */
+>>>>>>> b0ad9db36de2171057020eff01c8e40e84318404
   return 0; //TODO
 }
 

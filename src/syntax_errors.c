@@ -15,7 +15,7 @@ static addressing_methods detect_addressing_method (char *operand);
 static char *string_tolower(char *str);
 /*static int SymbolCompare (void *str,void *key );*/
 
-syntax_check_info_t syntax_check_default = {FALSE, 0, "default"};
+syntax_check_info_t syntax_check_default = {.line_number = 0, .verbose=FALSE, .file_name = "default"};
 
 bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info) {
   const char blank_chars[] = {' ', '\t'};
@@ -313,9 +313,8 @@ static addressing_methods detect_addressing_method (char *operand){
             return INVALID;
            }
         }
-                
+        return IMMEDIATE;                
     }
-        return DIRECT;
     if (*operand == '*'){
         if (RegisterNameDoesntExist(operand+1,syntax_check_default)){
             return INVALID;
