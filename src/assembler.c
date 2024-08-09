@@ -3,8 +3,15 @@
 #include "syntax_errors.h"
 #include "macro_table.h"
 #include "symbol_table.h"
-#include <string.h>
+#include <stdio.h> /* perror */
+#include <string.h> 
+
 #define  blank_delimiters " \t\n\r"
+
+static bool_t FirstWordEndsWithColon(char *line);
+static int SymbolErrorUnite (char *symbol_name,syntax_check_info_t syntax_check_info_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
+static int CountParameters(char *line);
+static result_t FirstPass(char *file_path, macro_table_t *macro_list);
 
 result_t AssembleFile(char *file_path) {
   return 0; // TODO
@@ -17,7 +24,7 @@ youre not adding entry symbol, in the second pass you change exist symbol to ent
 */
 static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   int line_counter = 0;
-  int tmp_error_count = 0;
+  int error_count_in_line = 0;
   int total_errors = 0;
   int IC = INITIAL_IC_VALUE;
   int DC = 0;
@@ -25,122 +32,125 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   char *current_word = NULL; 
   char *current_line = NULL;
   char *symbol_name=NULL;
-  char input_file = NULL;
+  FILE *input_file = NULL;
   char *entry_parameter = NULL;
 
-<<<<<<< HEAD
-  syntax_check_info_t syntax_check_info_print = {.line_number = 0, .verbose=TRUE, .file_name = "file_path"};
-  syntax_check_info_t syntax_check_info__no_print = {.line_number = -1, .verbose=FALSE, .file_name = "default"};
+  syntax_check_info_t syntax_check_info_print = {.line_number = 0,
+                                                 .verbose=TRUE,
+                                                 .file_name = "file_path"};
+  syntax_check_info_t syntax_check_info__no_print = {.line_number = -1,
+                                                     .verbose=FALSE,
+                                                     .file_name = "default"};
+
   symbol_table_t *symbol_table = CreateSymbolTable();/*check error*/
   if (NULL == symbol_table) {
     perror("Memory allocation error: couldn't allocate a macro table\n");
     DestroyMacroTable(macro_list);
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
+
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
     perror("Couldn't open input file");
     DestroyMacroTable(macro_list);
     DestroySymbolTable(symbol_table);
-    return NULL;
+    return ERROR_OPENING_FILE; 
   }
+
   /*
   1. read line*/
   while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
-    tmp_error_count =0;
+    error_count_in_line = 0; 
     line_counter++;
+
   /*2. is first word finishes with a colon?*/
-    if (FirstWordEndsWithColon (current_line)){
-      current_word =strtok (current_line, ': '); 
+    /* Dealing with symbol definitions */
+    if (FirstWordEndsWithColon(current_line)) {
+      current_word = strtok(current_line, ": ");
       symbol_name = current_word;
       syntax_check_info_print.line_number = line_counter;
-      tmp_error_count += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
-      current_line += strlen(current_word)+2;/*skip the colon and space*/
-      current_word =strtok(NULL,blank_delimiters);/*TODO check NUll */
+      error_count_in_line += SymbolErrorUnite(symbol_name,
+                                              syntax_check_info_print,
+                                              macro_list,
+                                              symbol_table);
+
+      current_line += strlen(current_word) + 2; /*skip the colon and space*/
+      current_word = strtok(NULL,blank_delimiters);/*TODO check NUll */
       if (0 == strcmp(current_word,".string") ){
-        current_line += strlen(current_word)+1;
-        if (IsIllegalString(current_line)){/*TODO add the error function!*/
-          tmp_error_count++;
+        current_line += strlen(current_word) + 1;
+        if (IsIllegalString(current_line)){ /*TODO add the error function!*/
+          error_count_in_line++; 
         }
-        else if (tmp_error_count==0){
+        else if (error_count_in_line==0) {
           AddSymbol (symbol_table,symbol_name,DC);
-          DC += strlen(current_line)-2; /*the length of the string without the apostrophes */
+          DC += strlen(current_line) - 2; /*the length of the string without the apostrophes */
         }
       }
-      else if (0 == strcmp(current_word,".data")){
+      else if (0 == strcmp(current_word,".data")) {
           current_line += strlen(current_word)+1;
           if (CommaIsMissingInData(current_line,syntax_check_info_print)){
-                tmp_error_count++;
+                error_count_in_line++;
           }
-          if (ParameterIsMissingInData(current_line,syntax_check_info_print)){/*TODO add the error function*/
-                tmp_error_count++;
+          if (ParameterIsMissingInData(current_line,syntax_check_info_print)){ /*TODO add the error function*/
+                error_count_in_line++;
           }
-          if (IllegalParametersInData(current_line,syntax_check_info_print)){/*TODO add the error function*/
-                tmp_error_count++;
+          if (IllegalParametersInData(current_line,syntax_check_info_print)){ /*TODO add the error function*/
+                error_count_in_line++;
           }
-          if (tmp_error_count == 0){
+          if (error_count_in_line == 0){
                 AddSymbol (symbol_table,symbol_name,DC);
                 DC += CountParameters(current_line);
           }
       }
+
       else if (0 == strcmp(current_word,".extern")){
-        current_line += strlen(current_word)+1;
+        current_line += strlen(current_word) + 1;
         symbol_name  = strtok (NULL,blank_delimiters);
-        tmp_error_count += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
+        error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
         if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_info_print)){
-          tmp_error_count++;
+          error_count_in_line++;
         } 
         if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_info_print)){
-            tmp_error_count++;
+            error_count_in_line++;
         }
-        if (tmp_error_count == 0){
-            AddExternalSymbol (symbol_table,symbol_name);
+        if (error_count_in_line == 0){
+            AddExternalSymbol(symbol_table, symbol_name);
             DC += CountParameters(current_line);
         }
       }
-      else if (0 == strcmp(current_word,".extern")){}
+      else if (0 == strcmp(current_word,".entry")) {
+        /* Do nothing: will handle in 2nd pass */
+      }
+
+      /*
+       * Handling instructions, e.g. add __, __
+       */
       else if (FALSE == InstructionDoesntExist(current_word,syntax_check_info_print)){
-              if (0 == tmp_error_count){
+              if (0 == error_count_in_line){
                   AddSymbol (symbol_table, symbol_name,IC);/*TODO check success*/
               }
       }
 
-
       /*handle the rest of the line!*/
-      if (tmp_error_count ==0){
+      if (error_count_in_line ==0){
         AddSymbol (symbol_table,current_word,address);/*need to understand the address*/
       }
     }
-    total_errors += tmp_error_count;
-/*
-  3. if yes, handle symbol, else:
-  4. is it instruction?*/
+    total_errors += error_count_in_line;
   }
+}
 
 
-  /*5. handle instructio
-  3. is it directive?
-  */
-=======
-static result_t FirstPass(char *file_path) {
-  int error_count = 0;
-  /*
-   * 1. Read file line by line.
-   * 2. Follow algorithm given to us.
-   * 3. Check errors.
-   */
->>>>>>> b0ad9db36de2171057020eff01c8e40e84318404
+
+result_t SecondPass(char *file_path) {
   return 0; //TODO
 }
 
-static result_t SecondPass(char *file_path) {
-  return 0; //TODO
-}
 /* @brief - if the first word in a string ends with ':'
 *  @param - line: the line
    @return - true if ends with colon, otherwise, false.
 */
-static bool_t FirstWordEndsWithColon(char *line){
+static bool_t FirstWordEndsWithColon(char *line) {
     while (*(line+1) != '\t' || *(line+1) != ' ' || *(line+1) != '\0'){
        line++;
     }
@@ -149,11 +159,12 @@ static bool_t FirstWordEndsWithColon(char *line){
     }
     return FALSE;
 }
+
 /* @brief - count parameters which seperated by ',';
 *  @param - line: the line
 *  @return - the number of parameters detected
 */
-static int CountParameters(char *line){
+static int CountParameters(char *line) {
     int counter = 1;
     while ('\0' != *line){
       line++; 
