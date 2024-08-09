@@ -34,6 +34,20 @@ typedef struct {
 bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info);
 
 /*
+ * @brief Checks if a string is illegal. a string is legal if it has ' " ' (quation marks) in the beginning and ending of the string.
+ *
+ * @param str - The string to check.
+ *      syntax_check_info - struct that contains the parameters : 
+ *          verbose - determines whether to print an error or not.
+ *          line number - the line number of the checked argument
+ *          file name - the file that contains the checked argument.
+ *
+ * @return TRUE if the string is illegal, FALSE otherwise.
+ */
+
+bool_t IsIllegalString(char *str, syntax_check_info_t syntax_check_info);
+
+/*
  * @brief Checks if name is reserved by the language.
  *
  * @param name - The name to check.
@@ -44,6 +58,7 @@ bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t synt
  *
  * @return TRUE if is a reserved name, FALSE otherwise.
  */
+
 
 bool_t IsReservedName(char *name, syntax_check_info_t syntax_check_info);
 
@@ -285,6 +300,39 @@ bool_t DirectiveIsUpperCase(char *directive, syntax_check_info_t syntax_check_in
  */
 
 bool_t CommaIsMissingInData(char *data, syntax_check_info_t syntax_check_info);
+
+/*
+ * @brief Tell if the line that been performed is missing paramters, 
+ *        i.e there is two commas in a row or there is a comma in the end of the line without parameter that follows it.
+ *        assuming the line is linted
+ *
+ * @param data - The .data directive line that have been performed (starting 
+ *        from the first parameter, i.e not including the directive/instruction itself).
+ *        syntax_check_info - struct that contains the parameters : 
+ *          verbose - determines whether to print an error or not.
+ *          line number - the line number of the checked argument
+ *          file name - the file that contains the checked argument.
+ *
+ * @return TRUE if the .data directive line is missing parameters,
+ *         or FALSE otherwise.
+ */
+
+bool_t ParameterIsMissingInlLine(char *line,syntax_check_info_t syntax_check_info);
+
+/*
+ * @brief Tell if the .data directive line contains paramters which are not numbers.
+ *
+ * @param data - The .data directive line that have been performed (starting 
+ *        from the first parameter, i.e not including the directive itself).
+ *        syntax_check_info - struct that contains the parameters : 
+ *          verbose - determines whether to print an error or not.
+ *          line number - the line number of the checked argument
+ *          file name - the file that contains the checked argument.
+ *
+ * @return TRUE if the .data directive line is contains illegal parameters, or FALSE otherwise;
+ */
+
+bool_t IllegalParametersInData(char *line,syntax_check_info_t syntax_check_info);
 
 /*
 // ~~--~~--~~--~~--~~

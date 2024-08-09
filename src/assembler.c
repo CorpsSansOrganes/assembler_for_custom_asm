@@ -16,12 +16,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list);
 result_t AssembleFile(char *file_path) {
   return 0; // TODO
 }
-/*notes to self:
-label - always in the beginning of a a line.
-if it is a data or string line - the label gets the current DC. 
-if it is instruction line - gets the current IC.
-youre not adding entry symbol, in the second pass you change exist symbol to entry
-*/
+
 static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   int line_counter = 0;
   int error_count_in_line = 0;
@@ -78,7 +73,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       current_word = strtok(NULL,blank_delimiters);/*TODO check NUll */
       if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
-        if (IsIllegalString(current_line)){ /*TODO add the error function!*/
+        if (IsIllegalString(current_line,syntax_check_info_print)){ /*TODO add the error function!*/
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
@@ -91,7 +86,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
           if (CommaIsMissingInData(current_line,syntax_check_info_print)){
                 error_count_in_line++;
           }
-          if (ParameterIsMissingInData(current_line,syntax_check_info_print)){ /*TODO add the error function*/
+          if (ParameterIsMissingInlLine(current_line,syntax_check_info_print)){ /*TODO add the error function*/
                 error_count_in_line++;
           }
           if (IllegalParametersInData(current_line,syntax_check_info_print)){ /*TODO add the error function*/
