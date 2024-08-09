@@ -3,6 +3,8 @@
 
 #include "utils.h"
 
+#define INITIAL_IC_VALUE 100
+
 /*
  * @brief Assembler which takes .am files (after preprocessing)
  *        and converts them to corresponding object files.
