@@ -1,5 +1,5 @@
-#ifndef __ASSEMBLER__
-#define __ASSEMBLER__
+#ifndef __ASSEMBLER_SH_ED__
+#define __ASSEMBLER_SH_ED__
 
 #include "utils.h"
 
@@ -21,4 +21,4 @@ result_t AssembleFile(char *file_path);
  * 3. create obj file.
  */
 
-#endif /* __ASSEMBLER__ */
+#endif /* __ASSEMBLER_SH_ED__ */
