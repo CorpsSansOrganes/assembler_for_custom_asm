@@ -12,7 +12,7 @@ static bool_t IsNewMacro(const char *line);
 static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
-                           unsigned int *line_number);
+                           syntax_check_config_t *config);
 static result_t ReadMacrosInFile(FILE *file,
                                  macro_table_t *table,
                                  char *buffer,
@@ -271,7 +271,7 @@ static result_t ReadMacrosInFile(FILE *file,
 static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
-                           unsigned int *line_number) {
+                           syntax_check_config_t *config) {
   /*
    * Syntax errors to check:
    * 1. No extra characters at the end of macr or endmacr line.
@@ -280,7 +280,6 @@ static result_t ParseMacro(FILE *file,
 
   char *macro_name_start = NULL;
   char *macro_name_end = NULL;
-  syntax_check_info_t
 
   /* Reading macro name */ 
   if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
