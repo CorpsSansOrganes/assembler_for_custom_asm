@@ -7,17 +7,17 @@
 #include "list.h"
 #include "preprocessing.h"
 
-typedef struct {
-  unsigned int line_number;
-  bool_t verbose;
-  const char *file_name;
-} syntax_check_info_t;
+typedef struct syntax_check_info  syntax_check_info_t;
 
 /*
 // ~~--~~--~~--~~--~~
 // Preprocessor errors
 // ~~--~~--~~--~~--~~
 */
+
+syntax_check_info_t CreateSyntaxCheckInfo(const char *file_name,
+                                          unsigned int line_number,                                          
+                                          bool_t verbose);
 
 /*
  * @brief Checks if there are any characters after a certain point

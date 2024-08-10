@@ -6,6 +6,12 @@
 #include "symbol_table.h"
 #include "language_definitions.h"
 
+struct syntax_check_info {
+  const char *file_name;
+  unsigned int line_number;
+  bool_t verbose;
+};
+
 /*
 *@brief detects which type of addressing method fit to the operand, and returns invalid if neccessary.
 *@param operand - the operand
@@ -15,7 +21,18 @@ static addressing_methods detect_addressing_method (char *operand);
 static char *string_tolower(char *str);
 /*static int SymbolCompare (void *str,void *key );*/
 
-syntax_check_info_t syntax_check_default = {.line_number = 0, .verbose=FALSE, file_name = "default"};
+syntax_check_info_t syntax_check_default = {"default", 0, FALSE};
+
+syntax_check_info_t CreateSyntaxCheckInfo(const char *file_name,
+                                          unsigned int line_number,                                          
+                                          bool_t verbose) {
+  syntax_check_info_t info;
+  info.file_name = file_name;
+  info.line_number = line_number;
+  info.verbose = verbose;
+
+  return info;
+}
 
 bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info) {
   const char blank_chars[] = {' ', '\t'};
@@ -326,5 +343,3 @@ static addressing_methods detect_addressing_method (char *operand){
     }
     return DIRECT;
 }
-
-   
