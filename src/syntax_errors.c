@@ -12,14 +12,15 @@ struct syntax_check_config {
   bool_t verbose;
 };
 
-/*
-*@brief detects which type of addressing method fit to the operand, and returns invalid if neccessary.
-*@param operand - the operand
-*@return the type of addressing method for the operand
-*/
-static addressing_methods detect_addressing_method (char *operand);
+static addressing_method_t DetectAddressingMethod(const char *operand);
 static char *string_tolower(char *str);
 /*static int SymbolCompare (void *str,void *key );*/
+
+static bool_t TakesOperand(instruction_t instruction, operand_type_t type);
+
+static bool_t AddressingMethodIsLegal(instruction_t instruction,
+                                      operand_type_t type,
+                                      addressing_method_t method);
 
 /* This config is used for calling other syntax checks internally silently */
 syntax_check_config_t silent_syntax_cfg = {NULL, 0, FALSE};
@@ -90,20 +91,20 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
 bool_t InstructionDoesntExist(const char *instruction,
                               syntax_check_config_t *config) {
-   int i;
-   for (i = 0; i < NUM_OF_INSTRUCTIONS; i++) {
-       if (0 == strcmp(instruction, reserved_instructions[i])) {
-           return FALSE;
-       }
+  int i = 0;
+  for (i = 0; i < NUM_OF_INSTRUCTIONS; i++) {
+    if (0 == strcmp(instruction, reserved_instructions[i].name)) {
+      return FALSE;
     }
-
-    if (config->verbose){
-        printf ("ERROR: the instruction '%s' at line %u in the file %s doesn't exist",
-                instruction,
-                config->line_number,
-                config->file_name);
-    }
-    return TRUE;
+  }
+  
+  if (config->verbose) {
+    printf ("ERROR: the instruction '%s' at line %u in the file %s doesn't exist",
+            instruction,
+            config->line_number,
+            config->file_name);
+  }
+  return TRUE;
 }
 
 int WrongNumberOfOperands(const char *instruction,
@@ -112,11 +113,12 @@ int WrongNumberOfOperands(const char *instruction,
   int i = 0;
   int required_operands = 1;
 
-  while (0 != strcmp(address_method_table[i].name, instruction)) {
+  while (0 != strcmp(reserved_instructions[i].name, instruction)) {
     ++i;
   }
-  required_operands = (address_method_table[i].is_there_destination_operand
-                          + address_method_table[i].is_there_source_operand);
+
+  required_operands = (TakesOperand(reserved_instructions[i], SOURCE_OPERAND) 
+                      + TakesOperand(reserved_instructions[i], DESTINATION_OPERAND));
 
   if (num_of_operands != required_operands) {
     if (config->verbose) {
@@ -135,55 +137,44 @@ bool_t IncorrectAddressingMethod(const char *instruction,
                                  const char *operand,
                                  operand_type_t type,
                                  syntax_check_config_t *config) {
-    int i = 0;
-    int dummy = 100;
-    int method = (int) detect_addressing_method (operand);
-        for (i=0; i<NUM_OF_INSTRUCTIONS;i++){
-            if (*address_method_table[i].name == *instruction){
-                if (type == SOURCE_OPERAND){
-                    if (!address_method_table[i].source_operand_methods[method]){
-                        if(syntax_check_config.verbose){
-                          printf ("Error: the addressing method of the operand %s at line %u in the file: %s is not compatible to the instruction", operand, syntax_check_config.line_number, syntax_check_config.file_name);
-                        }
-                        return TRUE;  
-                    }
-                    return FALSE;
-                }
-                else if (type == DESTINATION_OPERAND){
-                    if (!address_method_table[i].destination_operand_methods[method]){
-                        if(syntax_check_config.verbose){
-                          printf ("Error: the addressing method of the operand %s at line %u in the file: %s is not compatible to the instruction", operand, syntax_check_config.line_number, syntax_check_config.file_name);
-                        }
-                        return TRUE;
-                    }
-                    return FALSE;
-                }
-            }
-        }
-    return dummy;
+  int i = 0;
+  int dummy = 100;
+  addressing_method_t method = DetectAddressingMethod(operand);
+  while (0 != strcmp(reserved_instructions[i].name, instruction)) {
+    ++i;
+  }
+
+  if (TRUE == AddressingMethodIsLegal(reserved_instructions[i], type, method)) {
+    if (config->verbose) {
+      printf("Error: the addressing method of the operand %s at line %u in file %s is illegal for the instruction '%s'",
+             operand, 
+             config->line_number,
+             config->file_name,
+             instruction);
+    }
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
 
-bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table, syntax_check_config_t syntax_check_config){
-   if (NULL != FindSymbol (table, symbol)){
-	if (syntax_check_config.verbose){
-        printf ("Error: attempted to define a symbol at line %u in the file: %s that already been defined", syntax_check_config.line_number, syntax_check_config.file_name);
+bool_t SymbolDefinedMoreThanOnce(char *symbol,
+                                 symbol_table_t *table,
+                                 syntax_check_config_t *config) {
+  if (NULL != FindSymbol (table, symbol)) {
+    if (config->verbose) {
+      printf ("Error: Attempted to define a symbol at line %u in the file %s that already been defined",
+              config->line_number,
+              config->file_name);
     }
     return TRUE;
    }
-   return FALSE;
+
+  return FALSE;
 }
 
-bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table, syntax_check_config_t syntax_check_config){
-   if (NULL != FindSymbol (table, symbol)){
-	return FALSE;
-   }
-    if (syntax_check_config.verbose){
-        printf ("Error: attempted to call a symbol at line %u in the file: %s that wasn't defined", syntax_check_config.line_number, syntax_check_config.file_name);
-    }
-   return TRUE;
-}
-
-bool_t ColonSyntaxError(char *symbol, syntax_check_config_t syntax_check_config){
+bool_t ColonSyntaxError(char *symbol, syntax_check_config_t *config) {
     while (*(symbol+1) != '\0'){
        symbol++;
     }
@@ -194,6 +185,16 @@ bool_t ColonSyntaxError(char *symbol, syntax_check_config_t syntax_check_config)
 	return TRUE;
     }
     return FALSE;
+}
+
+bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table, syntax_check_config_t syntax_check_config){
+   if (NULL != FindSymbol (table, symbol)){
+	return FALSE;
+   }
+    if (syntax_check_config.verbose){
+        printf ("Error: attempted to call a symbol at line %u in the file: %s that wasn't defined", syntax_check_config.line_number, syntax_check_config.file_name);
+    }
+   return TRUE;
 }
 
 
@@ -337,33 +338,70 @@ static char *string_tolower(char *str) {
     }
     return str;
 }
-static addressing_methods detect_addressing_method (char *operand){
-    int i;
-    if (*operand == '#'){
-        operand++;
-        if (*operand == '-' || *operand == '+'){
-            operand++;
-        }
-        if (strlen(operand)==0){
-            return INVALID;
-        }
-        for (i = 0; i < strlen(operand); i++)
-        {
-           if ( ! isdigit (*operand+i))
-           {
-            return INVALID;
-           }
-        }
-        return IMMEDIATE;                
+
+/*
+*@brief Detects which type of addressing method fit to the operand, and returns invalid if neccessary.
+*@param Operand - the operand
+*@return The type of addressing method for the operand.
+*/
+static addressing_method_t DetectAddressingMethod(const char *operand) {
+  char *ptr = (char *)operand;
+
+  if ('#' == *ptr) {
+    int i = 0;
+    ptr++;
+    if ('-' == *ptr | '+' ==  *ptr) {
+      ptr++;
     }
-    if (*operand == '*'){
-        if (RegisterNameDoesntExist(operand+1,silent_syntax_cfg)){
-            return INVALID;
-        }
-        return INDIRECT_REGISTER;
+    for (i = 0; i < strlen(ptr); i++) {
+      if (!isdigit(*(ptr+i))) {
+        return INVALID;
+      }
     }
-    if (!RegisterNameDoesntExist(operand,silent_syntax_cfg)){
-        return DIRECT_REGISTER;
+    if (0 == i) { /* strlen(ptr) == 0 */ 
+      return INVALID;
     }
-    return DIRECT;
+    return IMMEDIATE;                
+  }
+
+  if ('*' == *ptr) {
+    if (RegisterNameDoesntExist(ptr + 1, silent_syntax_cfg)) {
+      return INVALID;
+    }
+    return INDIRECT_REGISTER;
+  }
+  if (!RegisterNameDoesntExist(ptr,silent_syntax_cfg)) {
+    return DIRECT_REGISTER;
+  }
+
+  return DIRECT;
+}
+
+/*
+ * @brief Checks if an instruction takes a source/destination operand.
+ * @param instruction - The instruction to check.
+ *        type - Operand type to check for (SOURCE_OPERAND or DESTINATION_OPERAND)
+ *
+ * @return TRUE if 'instruction' takes an operand whose type is 'type'.
+ *         FALSE otherwise.
+ */
+static bool_t TakesOperand(instruction_t instruction, operand_type_t type) {
+  return GetBitValue(instruction.addressing_info, type);
+}
+
+/*
+ * @brief Checks if an addressing method is legal for an operand in a specific
+*         instruction.
+*
+ * @param instruction - The instruction to check.
+ *        type - Operand type to check for (SOURCE_OPERAND or DESTINATION_OPERAND)
+ *        method - Addressing method to check.
+ *
+* @return TRUE If the instruction is legal, FALSE otherwise.
+*/
+static bool_t AddressingMethodIsLegal(instruction_t instruction,
+                                      operand_type_t type,
+                                      addressing_method_t method) {
+  size_t bit_to_check = 2 + method + (type * 4); 
+  return GetBitValue(instruction.addressing_info, bit_to_check);
 }

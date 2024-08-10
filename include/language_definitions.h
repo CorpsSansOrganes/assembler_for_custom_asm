@@ -24,7 +24,8 @@ typedef enum {
   INDIRECT_REGISTER,
   DIRECT_REGISTER,
   INVALID
-} addressing_methods;
+
+} addressing_method_t;
 
 /*
 * @brief Struct representing an instruction & its properties.
@@ -63,14 +64,11 @@ typedef enum {
 */
 
 typedef struct {
-  char *name;
+  const char *name;
   bitmap_t addressing_info;
- } instructions_t;
+ } instruction_t;
 
-/*
-*table of the valid address method for each instruction 
-*/
-instructions_t instructions [NUM_OF_INSTRUCTIONS] = {
+instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
   {"mov", 959},  /* 0b1110111111 */
   {"cmp", 1023}, /* 0b1111111111 */ 
   {"add", 959},  /* 0b1110111111 */

@@ -100,6 +100,9 @@ int WrongNumberOfOperands(const char *instruction,
  *
  * @return TRUE if the addressing method of the operand is illegal in the given
  *   instruction, or FALSE otherwise.
+ *
+ *        NOTE: If the instruction isn't defined in the language's definition,
+ *        behaviour of this function is undefined.
  */
 bool_t IncorrectAddressingMethod(const char *instruction,
                                  const char *operand,
@@ -117,29 +120,23 @@ bool_t IncorrectAddressingMethod(const char *instruction,
  *
  * @param symbol - The symbol which now defined
  *        table - The symbol table.
- *        syntax_check_config - struct that contains the parameters : 
- *              verbose - determines whether to print an error or not.
- *              line number - the line number of the checked argument
- *              file name - the file that contains the checked argument.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
 bool_t SymbolDefinedMoreThanOnce(char *symbol,
                                  symbol_table_t *table,
-                                 syntax_check_config_t syntax_check_config);
+                                 syntax_check_config_t *config);
 /*
  * @brief Tell if a symbol was used without colon or with space between the symbol and the colon
  *
  * @param symbol - The symbol which now been called
- *        syntax_check_config - struct that contains the parameters : 
- *          verbose - determines whether to print an error or not.
- *          line number - the line number of the checked argument
- *          file name - the file that contains the checked argument.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
  * @return TRUE if a symbol was used without colon or with space between the symbol and the colon, or FALSE otherwise.
  */
 
-bool_t ColonSyntaxError(char *symbol, syntax_check_config_t syntax_check_config);
+bool_t ColonSyntaxError(char *symbol, syntax_check_config_t *config);
 
 /*
  * @brief Tell if a theres been an attempt to use a symbol that havent been defined previously
