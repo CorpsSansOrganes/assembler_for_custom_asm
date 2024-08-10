@@ -12,6 +12,7 @@ typedef struct {
   bool_t verbose;
   const char *file_name;
 } syntax_check_info_t;
+
 /*
 // ~~--~~--~~--~~--~~
 // Preprocessor errors
@@ -31,7 +32,9 @@ typedef struct {
 
  * @return TRUE if extra characters were detected, FALSE otherwise.
  */
-bool_t DetectExtraCharacters(const char *starting_from, syntax_check_info_t syntax_check_info);
+
+bool_t DetectExtraCharacters(const char *starting_from,
+                             syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Checks if a string is illegal. a string is legal if it has ' " ' (quation marks) in the beginning and ending of the string.
@@ -79,7 +82,8 @@ bool_t IsReservedName(char *name, syntax_check_info_t syntax_check_info);
  *
  * @return TRUE if the instruction doesnt exists, FALSE otherwise.
  */
-bool_t InstructionDoesntExist(char *instruction, syntax_check_info_t syntax_check_info);
+bool_t InstructionDoesntExist(char *instruction,
+                              syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Check if number of operands is correct for a given instruction line.
@@ -94,7 +98,9 @@ bool_t InstructionDoesntExist(char *instruction, syntax_check_info_t syntax_chec
  * @return the number of operands minus the number of needed operands.
  *         thus, return 0 if it fits. 
  */
-int WrongNumberOfOperands(char *instruction, int num_of_operands, syntax_check_info_t syntax_check_info);
+int WrongNumberOfOperands(char *instruction,
+                          int num_of_operands,
+                          syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if an operand addressing method is viable for a given instruction.
@@ -112,7 +118,8 @@ int WrongNumberOfOperands(char *instruction, int num_of_operands, syntax_check_i
  */
 bool_t IncorrectAddressingMethod(char *instruction,
                                  char *operand,
-                                 operand_type_t type, syntax_check_info_t syntax_check_info);
+                                 operand_type_t type,
+                                 syntax_check_info_t syntax_check_info);
 
 /*
 // ~~--~~--~~--~~--~~
@@ -132,7 +139,9 @@ bool_t IncorrectAddressingMethod(char *instruction,
  *
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
-bool_t SymbolDefinedMoreThanOnce(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info);
+bool_t SymbolDefinedMoreThanOnce(char *symbol,
+                                 symbol_table_t *table,
+                                 syntax_check_info_t syntax_check_info);
 /*
  * @brief Tell if a symbol was used without colon or with space between the symbol and the colon
  *
@@ -161,7 +170,8 @@ bool_t ColonSyntaxError(char *symbol, syntax_check_info_t syntax_check_info);
  */
 
 
-bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info);
+bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table,
+                          syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if a symbol that been directed as .extern was already defined as .entry
@@ -176,7 +186,8 @@ bool_t SymbolWasntDefined(char *symbol, symbol_table_t *table, syntax_check_info
  * @return TRUE if the symbol was already defined as .entry, or FALSE otherwise.
  */
 
-bool_t SymbolAlreadyDefinedAsEntry(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info);
+bool_t SymbolAlreadyDefinedAsEntry(char *symbol, symbol_table_t *table,
+                                   syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if a symbol that been directed as .entry was already defined as .extern
@@ -191,7 +202,8 @@ bool_t SymbolAlreadyDefinedAsEntry(char *symbol, symbol_table_t *table, syntax_c
  * @return TRUE if the symbol was already defined as .extern, or FALSE otherwise.
  */
 
-bool_t SymbolAlreadyDefinedAsExtern(char *symbol, symbol_table_t *table, syntax_check_info_t syntax_check_info);
+bool_t SymbolAlreadyDefinedAsExtern(char *symbol, symbol_table_t *table,
+                                    syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if a symbol has illegal characters in it (must be alphabetical or numerical characters only)
@@ -208,7 +220,8 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol, symbol_table_t *table, syntax_
 bool_t SymbolIsIllegal(char *symbol, syntax_check_info_t syntax_check_info);
 
 /*
- * @brief Tell if a symbol begins with illegal characters (must begin with alphabetical characters only)
+ * @brief Tell if a symbol begins with illegal characters 
+ *        (must begin with alphabetical characters only)
  *
  * @param symbol - The symbol.
  *        syntax_check_info - struct that contains the parameters : 
@@ -219,7 +232,8 @@ bool_t SymbolIsIllegal(char *symbol, syntax_check_info_t syntax_check_info);
  * @return TRUE if the symbol is illegal, or FALSE otherwise.
  */
 
-bool_t SymbolPrefixIllegal(char *symbol, syntax_check_info_t syntax_check_info);
+bool_t SymbolPrefixIllegal(char *symbol,
+                           syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if the length of the symbol name exceeded the character limit (31).
@@ -233,7 +247,8 @@ bool_t SymbolPrefixIllegal(char *symbol, syntax_check_info_t syntax_check_info);
  * @return TRUE if the symbol exceeded the character limit, or FALSE otherwise.
  */
 
-bool_t SymbolExceedCharacterLimit(char *symbol, syntax_check_info_t syntax_check_info);
+bool_t SymbolExceedCharacterLimit(char *symbol,
+                                  syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if a symbol name already used as a macro.
@@ -248,7 +263,8 @@ bool_t SymbolExceedCharacterLimit(char *symbol, syntax_check_info_t syntax_check
  * @return TRUE if the symbol name already used as a macro, or FALSE otherwise.
  */
 
-bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list, syntax_check_info_t syntax_check_info);
+bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list,
+                          syntax_check_info_t syntax_check_info);
 
 /*
 // ~~--~~--~~--~~--~~
@@ -269,7 +285,9 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list, syntax_check_
  * @return TRUE if the directive doesn't exist, or FALSE otherwise.
  */
 
-bool_t DirectiveDoesntExist(char *directive, syntax_check_info_t syntax_check_info);
+bool_t DirectiveDoesntExist(char *directive,
+                            syntax_check_info_t syntax_check_info);
+
 /*
  * @brief Tell if the directive is exist but have been called with uppercase letters instead of lowercase letters
  *
@@ -282,7 +300,8 @@ bool_t DirectiveDoesntExist(char *directive, syntax_check_info_t syntax_check_in
  * @return TRUE if the directive have been called with uppercase letters , or FALSE otherwise.
  */
 
-bool_t DirectiveIsUpperCase(char *directive, syntax_check_info_t syntax_check_info);
+bool_t DirectiveIsUpperCase(char *directive,
+                            syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if the .data directive line that been performed is missing commas
@@ -317,7 +336,8 @@ bool_t CommaIsMissingInData(char *data, syntax_check_info_t syntax_check_info);
  *         or FALSE otherwise.
  */
 
-bool_t ParameterIsMissingInlLine(char *line,syntax_check_info_t syntax_check_info);
+bool_t ParameterIsMissingInlLine(char *line,
+                                 syntax_check_info_t syntax_check_info);
 
 /*
  * @brief Tell if the .data directive line contains paramters which are not numbers.
@@ -332,7 +352,8 @@ bool_t ParameterIsMissingInlLine(char *line,syntax_check_info_t syntax_check_inf
  * @return TRUE if the .data directive line is contains illegal parameters, or FALSE otherwise;
  */
 
-bool_t IllegalParametersInData(char *line,syntax_check_info_t syntax_check_info);
+bool_t IllegalParametersInData(char *line,
+                               syntax_check_info_t syntax_check_info);
 
 /*
 // ~~--~~--~~--~~--~~
@@ -352,7 +373,8 @@ bool_t IllegalParametersInData(char *line,syntax_check_info_t syntax_check_info)
  * @return TRUE if a register name doesn't exist, or FALSE otherwise.
  */
 
-bool_t RegisterNameDoesntExist(char *register_name, syntax_check_info_t syntax_check_info);
+bool_t RegisterNameDoesntExist(char *register_name,
+                               syntax_check_info_t syntax_check_info);
 
 #endif /* __SYNTAX_ERRORS__ */
 
