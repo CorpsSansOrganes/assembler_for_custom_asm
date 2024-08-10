@@ -280,6 +280,7 @@ static result_t ParseMacro(FILE *file,
 
   char *macro_name_start = NULL;
   char *macro_name_end = NULL;
+  syntax_check_info_t
 
   /* Reading macro name */ 
   if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
@@ -294,6 +295,7 @@ static result_t ParseMacro(FILE *file,
   while (!isblank(*macro_name_end)) {
     ++macro_name_end;
   }
+
   if ()
   
   /* Assuming every macro has endmacr! */
@@ -371,4 +373,3 @@ static result_t PerformPreprocessing(FILE *input_file,
 
   return SUCCESS;
 }
-
