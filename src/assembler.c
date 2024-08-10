@@ -35,12 +35,8 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
 
-  syntax_check_info_t syntax_check_info_print = {.line_number = 0,
-                                                 .verbose=TRUE,
-                                                 .file_name = "file_path"};
-  syntax_check_info_t syntax_check_info__no_print = {.line_number = -1,
-                                                     .verbose=FALSE,
-                                                     .file_name = "default"};
+  syntax_check_info_t syntax_check_info_print = {0, TRUE, "file_path"};
+  syntax_check_info_t syntax_check_info__no_print = {-1, FALSE, "default"};
 
   symbol_table_t *symbol_table = CreateSymbolTable();/*check error*/
   if (NULL == symbol_table) {
