@@ -30,14 +30,14 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
 
-  syntax_check_info_t syntax_check_info_print = {.line_number = 0,
-                                                 .verbose=TRUE,
-                                                 .file_name = "file_path"};
-  syntax_check_info_t syntax_check_info__no_print = {.line_number = -1,
-                                                     .verbose=FALSE,
-                                                     .file_name = "default"};
+  syntax_check_info_t syntax_check_info_print = {0,
+                                                 TRUE,
+                                                 "file_path"};
+  syntax_check_info_t syntax_check_info__no_print = {-1,
+                                                     FALSE,
+                                                     "default"};
 
-  symbol_table_t *symbol_table = CreateSymbolTable();/*check error*/
+  symbol_table_t *symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
     perror("Memory allocation error: couldn't allocate a macro table\n");
     DestroyMacroTable(macro_list);
@@ -52,13 +52,11 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
     return ERROR_OPENING_FILE; 
   }
 
-  /*
-  1. read line*/
+ 
   while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
     error_count_in_line = 0; 
     line_counter++;
 
-  /*2. is first word finishes with a colon?*/
     /* Dealing with symbol definitions */
     if (FirstWordEndsWithColon(current_line)) {
       current_word = strtok(current_line, ": ");
@@ -70,7 +68,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                                               symbol_table);
 
       current_line += strlen(current_word) + 2; /*skip the colon and space*/
-      current_word = strtok(NULL,blank_delimiters);/*TODO check NUll */
+      current_word = strtok(NULL,blank_delimiters);
+      if (NULL == current_word){
+        /*TODO orint error accordingly */
+      }
       if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
         if (IsIllegalString(current_line,syntax_check_info_print)){ /*TODO add the error function!*/
@@ -93,11 +94,12 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
-                AddSymbol (symbol_table,symbol_name,DC);
+                if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+                  return FAILURE;
+                } 
                 DC += CountParameters(current_line);
           }
       }
-
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
         symbol_name  = strtok (NULL,blank_delimiters);
@@ -109,7 +111,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
             error_count_in_line++;
         }
         if (error_count_in_line == 0){
-            AddExternalSymbol(symbol_table, symbol_name);
+            if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+              return FAILURE;
+            }
             DC += CountParameters(current_line);
         }
       }
@@ -119,17 +123,35 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
 
       /*
        * Handling instructions, e.g. add __, __
+       * need to understand how much to increase IC
        */
       else if (FALSE == InstructionDoesntExist(current_word,syntax_check_info_print)){
               if (0 == error_count_in_line){
-                  AddSymbol (symbol_table, symbol_name,IC);/*TODO check success*/
+                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+                    return FAILURE;
+                  }
               }
       }
-
-      /*handle the rest of the line!*/
-      if (error_count_in_line ==0){
-        AddSymbol (symbol_table,current_word,address);/*need to understand the address*/
-      }
+      
+      else {
+        current_word = strtok (current_line," ");
+        if (0 == strcmp(current_word,".extern")) {
+          current_line += strlen(current_word) + 1;
+          symbol_name  = strtok (NULL,blank_delimiters);
+          error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
+          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_info_print)){
+            error_count_in_line++;
+          } 
+          if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_info_print)){
+              error_count_in_line++;
+          }
+          if (error_count_in_line == 0){
+              if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+                return FAILURE;
+              }
+              DC += CountParameters(current_line); 
+          }
+        }
     }
     total_errors += error_count_in_line;
   }
