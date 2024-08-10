@@ -1,6 +1,6 @@
 #include <string.h> /* strchr */
-#include  <ctype.h> /* isblank */
-#include  <stdio.h>
+#include <ctype.h> /* isblank */
+#include <stdio.h>
 #include "syntax_errors.h"
 #include "utils.h"
 #include "symbol_table.h"
