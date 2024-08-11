@@ -40,7 +40,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
 
   if ('\0' != *ptr) {
     if (config->verbose) {
-      printf ("Error: extraneous characters detected at line %u in file: %s\n",
+      printf ("Error: extraneous characters detected at line %u in file %s\n",
               config->line_number, config->file_name);
     }
     return TRUE;
@@ -52,7 +52,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
 bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
   if (FALSE == InstructionDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved instruction name '%s' at line %u in file: %s\n",
+      printf ("ERROR: attempt to make use of a reserved instruction name '%s' at line %u in file %s\n",
               name,
               config->line_number,
               config->file_name);
@@ -62,7 +62,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved directive name '%s' at line %u in file: %s\n",
+      printf ("ERROR: attempt to make use of a reserved directive name '%s' at line %u in file %s\n",
               name,
               config->line_number, 
               config->file_name);
@@ -72,7 +72,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == RegisterNameDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved register name '%s' at line %u in file: %s\n",
+      printf ("ERROR: attempt to make use of a reserved register name '%s' at line %u in file %s\n",
               name,
               config->line_number, 
               config->file_name);

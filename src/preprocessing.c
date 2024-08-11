@@ -324,14 +324,6 @@ static result_t ParseMacro(FILE *file,
   /*
    * Reading macro definition 
    */
-  while(FALSE == IsPrefix(line, "endmacr")) {
-    /* Assuming every macro has endmacr! */
-    if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
-      perror("Error reading from file");
-      return FILE_HANDLING_ERROR;
-    }
-      line = (char *)StripLeadingWhitespaces(line);
-    }
 
   return SUCCESS; // TODO
 }
@@ -339,8 +331,69 @@ static result_t ParseMacro(FILE *file,
 /*
  * @brief Reads a macro definition from file into a string.
  *
- * @return NULL if couldn't allocate string, or a pointer to it otherwise.
-static char *ReadMacroDefinition(FILE *file, char *line,
+ * @param file - File pointer at the start of the macro definition.
+ *        line - Buffer into which each line of the macro definition will
+ *               be read.
+ *        cfg - A pointer to a syntax error analysis configurations object for verbose
+ *              error printing.
+ *
+ * @return A pointer to a newly allocated string with the macro's
+ *         definition, or NULL if such pointer couldn't be allocated.
+ */
+
+static char *ReadMacroDefinition(FILE *file,
+                                 char *line,
+                                 syntax_check_config_t *cfg) {
+  size_t definition_size = 0;
+  char *definition = NULL;
+  long starting_pos = 0;
+  char *current_position = NULL;
+
+  starting_pos = ftell(file);
+  if (-1 == starting_pos) {
+    perror("Couldn't save file starting_position");
+    return NULL;
+  }
+
+  /* Sum up file size */
+  while (fgets(line, MAX_LINE_SIZE, file) && 
+    FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
+    definition_size += strlen(StripTrailingWhitespaces(line));
+  }
+
+  if (DetectExtraCharacters(line + strlen("endmacr"), cfg)) {
+    return NULL;
+  }
+
+  definition = (char *)malloc(definition_size + 1);
+  if (NULL == definition) {
+    perror("Error allocating string for macro definition\n");
+    return NULL;
+  }
+
+  /* Go back to the start of the definition & write to definition */
+  if (0 != fseek(file, starting_pos, SEEK_SET)) { 
+    perror("Failed to go back to the start of the macro definition");
+    free(definition);
+    return NULL;
+  }
+
+  current_position = definition;
+  while (fgets(line, MAX_LINE_SIZE, file) && 
+         FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
+    char *stripped_line = StripTrailingWhitespaces(line);
+    size_t line_length = strlen(stripped_line);
+    
+    /* Copy the stripped line into the definition */
+    strncpy(current_position, stripped_line, line_length);
+    current_position += line_length;
+  }
+
+  /* Null-terminate the definition string */
+  *current_position = '\0';
+
+  return definition;
+}
 
 /**
  * @brief Performs preprocessing on the input file and writes the result to the output file.
