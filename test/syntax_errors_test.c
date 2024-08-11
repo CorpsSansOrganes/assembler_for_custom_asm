@@ -3,7 +3,7 @@
 #include "symbol_table.h"
 #include "macro_table.h"
 
-syntax_check_info_t syntax_check_default = {FALSE, 0, "default"};
+syntax_check_config_t syntax_check_default = {FALSE, 0, "default"};
 
 test_info_t DetectExtraCharactersTest(void) {
   test_info_t test_info = InitTestInfo("DetectExtraCharacters");

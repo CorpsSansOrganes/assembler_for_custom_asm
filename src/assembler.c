@@ -9,9 +9,10 @@
 #define  blank_delimiters " \t\n\r"
 
 static bool_t FirstWordEndsWithColon(char *line);
-static int SymbolErrorUnite (char *symbol_name,syntax_check_info_t syntax_check_info_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
 static int CountParameters(char *line);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list);
+static instruction_t FindInstruction (char *instruction_name);
 
 result_t AssembleFile(char *file_path) {
   return 0; // TODO
@@ -29,13 +30,16 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   char *symbol_name=NULL;
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
+  char *first_operand =NULL;
+  char *second_operand =NULL;
+  instruction_t current_instruction;
 
-  syntax_check_info_t syntax_check_info_print = {.line_number = 0,
-                                                 .verbose=TRUE,
-                                                 .file_name = "file_path"};
-  syntax_check_info_t syntax_check_info__no_print = {.line_number = -1,
-                                                     .verbose=FALSE,
-                                                     .file_name = "default"};
+  syntax_check_config_t *syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
+                                                 0,
+                                                 TRUE);
+  syntax_check_config_t *syntax_check_config__no_print = CreateSyntaxCheckConfig ("default",
+                                                  0,
+                                                  FALSE);
 
   symbol_table_t *symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
@@ -61,9 +65,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
     if (FirstWordEndsWithColon(current_line)) {
       current_word = strtok(current_line, ": ");
       symbol_name = current_word;
-      syntax_check_info_print.line_number = line_counter;
+      syntax_check_config_print.line_number = line_counter;
       error_count_in_line += SymbolErrorUnite(symbol_name,
-                                              syntax_check_info_print,
+                                              syntax_check_config_print,
                                               macro_list,
                                               symbol_table);
 
@@ -74,23 +78,23 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }
       if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
-        if (IsIllegalString(current_line,syntax_check_info_print)){ /*TODO add the error function!*/
+        if (IsIllegalString(current_line,syntax_check_config_print)){ /*TODO add the error function!*/
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
           AddSymbol (symbol_table,symbol_name,DC);
-          DC += strlen(current_line) - 2; /*the length of the string without the apostrophes */
-        }
-      }
+          DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
+        }  
+      }  
       else if (0 == strcmp(current_word,".data")) {
           current_line += strlen(current_word)+1;
-          if (CommaIsMissingInData(current_line,syntax_check_info_print)){
+          if (CommaIsMissingInData(current_line,syntax_check_config_print)){
                 error_count_in_line++;
           }
-          if (ParameterIsMissingInlLine(current_line,syntax_check_info_print)){ /*TODO add the error function*/
+          if (ParameterIsMissingInlLine(current_line,syntax_check_config_print)){ /*TODO add the error function*/
                 error_count_in_line++;
           }
-          if (IllegalParametersInData(current_line,syntax_check_info_print)){ /*TODO add the error function*/
+          if (IllegalParametersInData(current_line,syntax_check_config_print)){ /*TODO add the error function*/
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
@@ -103,11 +107,11 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
         symbol_name  = strtok (NULL,blank_delimiters);
-        error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
-        if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_info_print)){
+        error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
+        if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
           error_count_in_line++;
         } 
-        if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_info_print)){
+        if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_config_print)){
             error_count_in_line++;
         }
         if (error_count_in_line == 0){
@@ -125,24 +129,59 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
        * Handling instructions, e.g. add __, __
        * need to understand how much to increase IC
        */
-      else if (FALSE == InstructionDoesntExist(current_word,syntax_check_info_print)){
-              if (0 == error_count_in_line){
-                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
-                    return FAILURE;
+      else if (FALSE == InstructionDoesntExist(current_word,syntax_check_config_print)){
+           if (0 == error_count_in_line){
+               if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+                 return FAILURE;
+               }
+            current_instruction = FindInstruction (current_word); 
+            /* get the opcode of the instruction*/
+            current_line += strlen (current_word)+1;
+            first_operand = strtok (current_line, " ,/n/t/r");
+            if (NULL == first_operand){
+              if (FALSE == WrongNumberOfOperands (current_instruction.name,0,syntax_check_config_print)){/*may be better to change the parameters of the function to get instruction_t*/
+                /*L=1*/
+              }
+            } 
+            else {
+              second_operand = strtok (NULL,  " ,/n/t/r");
+              if (NULL == second_operand){
+                if (FALSE == WrongNumberOfOperands (current_instruction.name,1,syntax_check_config_print)){/*may be better to change the parameters of the function to get instruction_t*/
+                /*L=2*/
+                /*encoding the operand*/
+                }
+              } 
+              else {
+                if (NULL == strtok (NULL,  " ,/n/t/r")){
+                  if (FALSE == WrongNumberOfOperands (current_instruction.name,2,syntax_check_config_print)){
+                    /*Analyze the operands and encode*/
+                    /*compure L*/
                   }
+                }
+              }
+            }
+                /*instruction handling:
+                * check errors
+                * extract the operands               
+                * get addressing method of operands
+                * check errors
+                * compute L
+                * compute opcode of operands
+                */
+              
               }
       }
-      
+    }  
       else {
         current_word = strtok (current_line," ");
         if (0 == strcmp(current_word,".extern")) {
           current_line += strlen(current_word) + 1;
           symbol_name  = strtok (NULL,blank_delimiters);
-          error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_info_print,macro_list,symbol_table);
-          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_info_print)){
+          error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
+          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
             error_count_in_line++;
           } 
-          if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_info_print)){
+          if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_config_print)){
               error_count_in_line++;
           }
           if (error_count_in_line == 0){
@@ -152,7 +191,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
               DC += CountParameters(current_line); 
           }
         }
-    }
+      }
     total_errors += error_count_in_line;
   }
 }
@@ -191,27 +230,35 @@ static int CountParameters(char *line) {
     }
     return counter;
 }
-static int SymbolErrorUnite (char *symbol_name,syntax_check_info_t syntax_check_info_print, macro_table_t *macro_list, symbol_table_t *symbol_table){
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table){
       int internal_counter =0;
-      if (SymbolPrefixIllegal (symbol_name,syntax_check_info_print)){
+      if (SymbolPrefixIllegal (symbol_name,syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolIsIllegal (symbol_name,syntax_check_info_print)){
+      if (SymbolIsIllegal (symbol_name,syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_info_print)){
+      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_info_print)){
+      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolUsedAsAMacro (symbol_name, macro_list, syntax_check_info_print)){
+      if (SymbolUsedAsAMacro (symbol_name, macro_list, syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, syntax_check_info_print)){
+      if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, syntax_check_config_print)){
           internal_counter++;
       }
       return internal_counter;
+}
+static instruction_t FindInstruction (char *instruction_name){
+  int i =0;
+  while (0 != strcmp(reserved_instructions[i].name, instruction_name)) {
+    ++i;
+  }
+  return reserved_instructions[i];
+
 }
 static void HandleSymbol (char *symbol, int line_number){
 }
