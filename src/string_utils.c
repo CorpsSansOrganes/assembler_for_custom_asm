@@ -1,5 +1,4 @@
 #include <string.h> /* strncmp, strlen */
-#include <ctype.h> /* isblank */
 #include "string_utils.h"
 
 bool_t IsPrefix(const char *str, const char *prefix) {
@@ -11,7 +10,7 @@ char *StripWhitespaces(char *str) {
 }
 
 const char *StripLeadingWhitespaces(const char *str) {
-  while (isblank(*str)) {
+  while (IsBlank(*str)) {
     ++str;
   }
 
@@ -20,7 +19,7 @@ const char *StripLeadingWhitespaces(const char *str) {
 
 char *StripTrailingWhitespaces(char *str) {
   char *end = (char *)EndOfString(str) - 1;
-  while (isblank(*end) && end > str) {
+  while (IsBlank(*end) && end > str) {
     --end;
   }
 

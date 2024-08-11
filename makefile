@@ -21,7 +21,7 @@ LINTING_OBJ := linting.o file_handling.o
 SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
 MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
 PREPROCESSING_OBJ := macro_table.o string_utils.o preprocessing.o
-SYNTAX_ERROR_OBJ := syntax_errors.o $(SYMBOL_TABLE_OBJ)
+SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) syntax_errors.o macro_table.o string_utils.o bitmap.o language_definitions.o
 BITMAP_OBJ := bitmap.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o

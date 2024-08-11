@@ -14,16 +14,16 @@ test_info_t DetectExtraCharactersTest(syntax_check_config_t *cfg) {
   const char *extra_characters = "abc  a";
   const char *blank_and_then_extra_characters = " a";
 
-  if (TRUE == DetectExtraCharacters(no_extra_characters, cfg)) {
+  if (FALSE != DetectExtraCharacters(no_extra_characters, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DetectExtraCharacters(no_characters_at_all, cfg)) {
+  if (FALSE != DetectExtraCharacters(no_characters_at_all, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DetectExtraCharacters(extra_characters, cfg)) {
+  if (TRUE != DetectExtraCharacters(extra_characters, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DetectExtraCharacters(blank_and_then_extra_characters, cfg)) {
+  if (TRUE != DetectExtraCharacters(blank_and_then_extra_characters, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
@@ -36,16 +36,17 @@ test_info_t IsReservedNameTest(syntax_check_config_t *cfg) {
   const char *register_name = "r3";
   const char *not_reserved = "aaaaa";
 
-  if (TRUE == IsReservedName(reserved_directive, cfg)) {
+  if (TRUE != IsReservedName(reserved_directive, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == IsReservedName(reserved_instruction, cfg)) {
+
+  if (TRUE != IsReservedName(reserved_instruction, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == IsReservedName(register_name, cfg)) {
+  if (TRUE != IsReservedName(register_name, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == IsReservedName(not_reserved, cfg)) {
+  if (FALSE != IsReservedName(not_reserved, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;

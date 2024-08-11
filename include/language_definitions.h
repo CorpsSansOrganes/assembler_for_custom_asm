@@ -1,5 +1,5 @@
-#ifndef __LANGUAGE_DEFINITIONS__
-#define __LANGUAGE_DEFINITIONS__
+#ifndef __SH_ED_LANGUAGE_DEFINITIONS__
+#define __SH_ED_LANGUAGE_DEFINITIONS__
 
 #include "utils.h"
 #include "bitmap.h"
@@ -68,25 +68,6 @@ typedef struct {
   bitmap_t addressing_info;
  } instruction_t;
 
- /*in the right note - the full opcode of the instruction*/
-instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
-  {"mov", 959},  /* 0b1110111111 */ 
-  {"cmp", 1023}, /* 0b1111111111 */ 
-  {"add", 959},  /* 0b1110111111 */ 
-  {"sub", 959},  /* 0b1110111111 */ 
-  {"lea", 907},  /* 0b1110001011 */ 
-  {"clr", 898},  /* 0b1110000010 */ 
-  {"not", 898},  /* 0b1110000010 */ 
-  {"inc", 898},  /* 0b1110000010 */ 
-  {"dec", 898},  /* 0b1110000010 */ 
-  {"jmp", 386},  /* 0b0110000010 */ 
-  {"bne", 386},  /* 0b0110000010 */ 
-  {"red", 898},  /* 0b1110000010 */ 
-  {"prn", 962},  /* 0b1111000010 */ 
-  {"jsr", 386},  /* 0b0110000010 */ 
-  {"rts", 0},    /* 0b0000000000 */ 
-  {"stop", 0}   /* 0b0000000000 */  
-};
 
 typedef struct {
   const char *name;
@@ -94,22 +75,10 @@ typedef struct {
   operand_type_t type;
 } operand_t;
 
-char *reserved_directives[] = {
-  ".data",
-  ".entry",
-  ".string",
-  ".extern"
-};
+extern instruction_t reserved_instructions[NUM_OF_INSTRUCTIONS];
 
-char *register_names[] = {
-  "r0",
-  "r1",
-  "r2",
-  "r3",
-  "r4",
-  "r5",
-  "r6",
-  "r7"
-};
+extern char *reserved_directives[NUM_OF_DIRECTIVES];
 
-#endif /* __LANGUAGE_DEFINITIONS__ */
+extern char *register_names[NUM_OF_REGISTERS];
+
+#endif /* __SH_ED_LANGUAGE_DEFINITIONS__ */
