@@ -1,5 +1,5 @@
 #include <string.h> /* strchr */
-#include <ctype.h> /* isblank, isalpha */
+#include <ctype.h> /* isalpha */
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, free */
 #include "syntax_errors.h"
@@ -34,7 +34,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
                              syntax_check_config_t *config) {
   char *ptr = (char *)starting_from;
 
-  while (isblank(*ptr)) {
+  while (IsBlank(*ptr)) {
     ++ptr;
   }
 
@@ -310,7 +310,6 @@ bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config
 bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
   char *start = (char *)data;
   char *end = strstr(start, ",");
-  bool_t digits_occurred = TRUE;
 
   while (NULL != end && IsDataEntryValid(start, end)) {
     start = end + 1;
@@ -336,7 +335,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
 
   if ('\"' == *str) {
     str = EndOfString(str);
-    while (isblank(*str)) {
+    while (IsBlank(*str)) {
       --str;
     }
     
@@ -385,7 +384,7 @@ static addressing_method_t DetectAddressingMethod(const char *operand) {
   if ('#' == *ptr) {
     int i = 0;
     ptr++;
-    if ('-' == *ptr | '+' ==  *ptr) {
+    if (('-' == *ptr) || ('+' ==  *ptr)) {
       ptr++;
     }
     for (i = 0; i < strlen(ptr); i++) {
@@ -462,10 +461,9 @@ static bool_t AddressingMethodIsLegal(instruction_t instruction,
 static bool_t IsDataEntryValid(const char *from,
                                const char *to) {
   bool_t digits_occurred = FALSE;
-  bool_t illegal_character_occured = FALSE;
 
   from = StripLeadingWhitespaces(from);
-  if ('-' == *from | '+' == *from) {
+  if (('-' == *from) || ('+' == *from)) {
     ++from;
   }
 

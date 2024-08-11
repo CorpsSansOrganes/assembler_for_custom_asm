@@ -81,4 +81,13 @@ const char *EndOfString(const char *str);
 
 char *CopySubstring(const char *from, const char *to, char *dest);
 
+/* 
+ * @brief A portable ANSI-supported implementation of 'isblank'.
+ *
+ * @param c - A character.
+ *
+ * @return 1 if c is a space or tab character, 0 otherwise.
+ */
+int IsBlank(int c);
+
 #endif /* __STRING_UTILS__ */

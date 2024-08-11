@@ -39,3 +39,7 @@ char *CopySubstring(const char *from, const char *to, char *dest) {
   dest[length] = '0';
   return dest;
 }
+
+int IsBlank(int c) {
+  return ((' ' == c) || ('\t' == c));
+}
