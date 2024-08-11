@@ -13,6 +13,7 @@ static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_chec
 static int CountParameters(char *line);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list);
 static instruction_t FindInstruction (char *instruction_name);
+static addressing_method_t DetectAddressingMethod(const char *operand);
 
 result_t AssembleFile(char *file_path) {
   return 0; // TODO
@@ -30,8 +31,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   char *symbol_name=NULL;
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
-  char *first_operand =NULL;
-  char *second_operand =NULL;
+  unsigned int num_of_operands;
+  operand_t first_operand;
+  operand_t *second_operand =NULL;
   instruction_t current_instruction;
 
   syntax_check_config_t *syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
@@ -128,38 +130,44 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       /*
        * Handling instructions, e.g. add __, __
        * need to understand how much to increase IC
+       * TODO need to add Too many operands error
+       * 
        */
       else if (FALSE == InstructionDoesntExist(current_word,syntax_check_config_print)){
-           if (0 == error_count_in_line){
-               if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
-                 return FAILURE;
-               }
+          if (0 == error_count_in_line){
+             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+               return FAILURE;
+             }
             current_instruction = FindInstruction (current_word); 
             /* get the opcode of the instruction*/
             current_line += strlen (current_word)+1;
-            first_operand = strtok (current_line, " ,/n/t/r");
-            if (NULL == first_operand){
-              if (FALSE == WrongNumberOfOperands (current_instruction.name,0,syntax_check_config_print)){/*may be better to change the parameters of the function to get instruction_t*/
-                /*L=1*/
+            num_of_operands = CountParameters (current_line);
+            if (FALSE == WrongNumberOfOperands (current_instruction.name,num_of_operands,syntax_check_config_print)){
+              if (0 == num_of_operands){
+                 /*L=1*/
               }
-            } 
-            else {
-              second_operand = strtok (NULL,  " ,/n/t/r");
-              if (NULL == second_operand){
-                if (FALSE == WrongNumberOfOperands (current_instruction.name,1,syntax_check_config_print)){/*may be better to change the parameters of the function to get instruction_t*/
-                /*L=2*/
-                /*encoding the operand*/
-                }
-              } 
-              else {
-                if (NULL == strtok (NULL,  " ,/n/t/r")){
-                  if (FALSE == WrongNumberOfOperands (current_instruction.name,2,syntax_check_config_print)){
-                    /*Analyze the operands and encode*/
-                    /*compure L*/
-                  }
-                }
+              if (1 == num_of_operands){
+                current_word = strtok(current_line, blank_delimiters);
+                first_operand.name = current_word;
+                first_operand.addressing_method = DetectAddressingMethod(current_word);
+                first_operand.type = DESTINATION_OPERAND;
+                 /* L=2
+                 */
               }
-            }
+              if (2 == num_of_operands){
+                current_word = strtok(current_line, ", \t\n\r");/*TODO check error of the case 'operand1 ,, operand2'*/
+                first_operand.name = current_word;
+                first_operand.addressing_method = DetectAddressingMethod(current_word);
+                first_operand.type = SOURCE_OPERAND;
+                current_word = strtok(NULL, ", \t\n\r");
+                first_operand.name = current_word;
+                first_operand.addressing_method = DetectAddressingMethod(current_word);
+                first_operand.type = DESTINATION_OPERAND;
+                 /* compute L
+                 */
+              }
+            }    
+          }
                 /*instruction handling:
                 * check errors
                 * extract the operands               
@@ -169,9 +177,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                 * compute opcode of operands
                 */
               
-              }
+        }
       }
-    }  
+      
       else {
         current_word = strtok (current_line," ");
         if (0 == strcmp(current_word,".extern")) {
@@ -259,6 +267,37 @@ static instruction_t FindInstruction (char *instruction_name){
   }
   return reserved_instructions[i];
 
+}
+/*copied from syntax_errors.c maybe better to put it in utils?*/
+static addressing_method_t DetectAddressingMethod(const char *operand) {
+  char *ptr = (char *)operand;
+
+  if ('#' == *ptr) {
+    int i = 0;
+    ptr++;
+    if ('-' == *ptr | '+' ==  *ptr) {
+      ptr++;
+    }
+    for (i = 0; i < strlen(ptr); i++) {
+      if (!isdigit(*(ptr+i))) {
+        return INVALID;
+      }
+    }
+    if (0 == i) { /* strlen(ptr) == 0 */ 
+      return INVALID;
+    }
+    return IMMEDIATE;                
+  }
+} 
+static bitmap_t OperandToOpcode(operand_t operand){/*operand_t *? */
+  char *extract_operand;
+  if (operand.addressing_method == IMMEDIATE)
+  {
+    if (*(operand.name+1) == '-' || *(operand.name+1) == '+'){
+      
+    }
+  }
+  
 }
 static void HandleSymbol (char *symbol, int line_number){
 }
