@@ -24,7 +24,6 @@ typedef enum {
   INDIRECT_REGISTER,
   DIRECT_REGISTER,
   INVALID
-
 } addressing_method_t;
 
 /*
@@ -67,6 +66,7 @@ typedef struct {
   const char *name;
   bitmap_t addressing_info;
  } instruction_t;
+
  /*in the right note - the full opcode of the instruction*/
 instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
   {"mov", 959},  /* 0b1110111111 */ 
@@ -86,29 +86,29 @@ instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
   {"rts", 0},    /* 0b0000000000 */ 
   {"stop", 0}   /* 0b0000000000 */  
 };
+
 typedef struct {
   const char *name;
   addressing_method_t addressing_method;
   operand_type_t type;
 } operand_t;
 
-char *reserved_directives[] =
-  {
-    ".data",
-    ".entry",
-    ".string",
-    ".extern"
-  };
-  char *register_names[] =
-  {
-    "r0",
-    "r1",
-    "r2",
-    "r3",
-    "r4",
-    "r5",
-    "r6",
-    "r7"
-  };
+char *reserved_directives[] = {
+  ".data",
+  ".entry",
+  ".string",
+  ".extern"
+};
+
+char *register_names[] = {
+  "r0",
+  "r1",
+  "r2",
+  "r3",
+  "r4",
+  "r5",
+  "r6",
+  "r7"
+};
 
 #endif /* __LANGUAGE_DEFINITIONS__ */
