@@ -29,6 +29,7 @@ typedef struct {
  *        line number - The line number of the checked argument
  *        file name - The file that contains the checked argument.
  */
+
 syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
                                               unsigned int line_number,                                          
                                               bool_t verbose);
@@ -247,55 +248,36 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list,
 bool_t DirectiveDoesntExist(const char *directive,
                             syntax_check_config_t *config);
 
-/*
- * @brief Checks if the .data directive line that been performed is missing commas
- *        between the parameters. assuming the line is linted
+/**
+ * @brief Checks if `.data` definitions is correct. 
+ * 
+ *        This function examines the input string `data` to determine whether:
+ *        1. commas are properly placed between values in a `.data` definition. 
  *
- * @param data - The .data directive line that have been performed (starting 
- *        from the first parameter, i.e not including the word '.data ' itself).
+ *        For example:
+ *        13, 145 // OK
+ *        13 145  // ERROR
  *
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *        2. No parameters are missing.
+ *        
+ *        For example:
+ *        13, , 15 // ERROR
  *
- * @return TRUE if the .data directive line is missing commas between the parameters,
- *         or FALSE otherwise.
+ *        3. No illegal characters (for instance, alphabetical characters).
+ *
+ *        For example:
+ *        13, 32x  // ERROR
+ *
+ *
+ * @param data - A pointer to the string containing the `.data` values to be checked.
+ *               e.g.: "13, 143, 12".
+ *        config - A pointer to the syntax checking configuration, which may include options 
+ *                 for handling errors or warnings.
+ *
+ * @return `TRUE` if an error is encountered in `.data` definition, `FALSE` otherwise.
  */
 
-bool_t CommaIsMissingInData(char *data, syntax_check_config_t *config);
-
-/*
- * @brief Tell if the line that been performed is missing paramters, 
- *        i.e there is two commas in a row or there is a comma in the end of the line without parameter that follows it.
- *        assuming the line is linted
- *
- * @param data - The .data directive line that have been performed (starting 
- *        from the first parameter, i.e not including the directive/instruction itself).
- *        syntax_check_config - struct that contains the parameters : 
- *          verbose - determines whether to print an error or not.
- *          line number - the line number of the checked argument
- *          file name - the file that contains the checked argument.
- *
- * @return TRUE if the .data directive line is missing parameters,
- *         or FALSE otherwise.
- */
-
-bool_t ParameterIsMissingInlLine(char *line,
-                                 syntax_check_config_t *config);
-
-/*
- * @brief Tell if the .data directive line contains paramters which are not numbers.
- *
- * @param data - The .data directive line that have been performed (starting 
- *        from the first parameter, i.e not including the directive itself).
- *        syntax_check_config - struct that contains the parameters : 
- *          verbose - determines whether to print an error or not.
- *          line number - the line number of the checked argument
- *          file name - the file that contains the checked argument.
- *
- * @return TRUE if the .data directive line is contains illegal parameters, or FALSE otherwise;
- */
-
-bool_t IllegalParametersInData(char *line,
-                               syntax_check_config_t *config);
+bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 
 /*
  * @brief Checks if a string is illegal. a string is legal if it has ' " ' (quation marks) in the beginning and ending of the string.
@@ -306,7 +288,7 @@ bool_t IllegalParametersInData(char *line,
  * @return TRUE if the string is illegal, FALSE otherwise.
  */
 
-bool_t IsIllegalString(char *str, syntax_check_config_t *config);
+bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
 
 /*
@@ -327,7 +309,7 @@ bool_t IsIllegalString(char *str, syntax_check_config_t *config);
  * @return TRUE if a register name doesn't exist, or FALSE otherwise.
  */
 
-bool_t RegisterNameDoesntExist(char *register_name,
+bool_t RegisterNameDoesntExist(const char *register_name,
                                syntax_check_config_t *config);
 
 #endif /* __SYNTAX_ERRORS__ */

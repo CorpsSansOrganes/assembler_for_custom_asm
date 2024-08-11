@@ -7,6 +7,7 @@
 #define NUM_OF_INSTRUCTIONS 16
 #define NUM_OF_DIRECTIVES 4
 #define NUM_OF_REGISTERS 8
+#define SYMBOL_CHARACTER_LIMIT 31
 
 /*
  * @brief Definitions for reserved words and other building blocks

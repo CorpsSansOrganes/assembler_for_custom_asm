@@ -6,14 +6,15 @@
 #include "utils.h"
 #include "symbol_table.h"
 #include "language_definitions.h"
+#include "string_utils.h"
 
 static addressing_method_t DetectAddressingMethod(const char *operand);
-
 static bool_t TakesOperand(instruction_t instruction, operand_type_t type);
-
 static bool_t AddressingMethodIsLegal(instruction_t instruction,
                                       operand_type_t type,
                                       addressing_method_t method);
+static bool_t IsDataEntryValid(const char *from,
+                               const char *to);
 
 /* This config is used for calling other syntax checks internally silently */
 syntax_check_config_t silent_syntax_cfg = {NULL, 0, FALSE};
@@ -42,7 +43,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
   }
 
   else if (config->verbose) {
-    printf ("Error: Extraneous characters detected at line %u in file %s\n",
+    printf ("Error: Extraneous characters detected (line %u file %s)\n",
             config->line_number, config->file_name);
   }
   return TRUE;
@@ -51,7 +52,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
 bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
   if (FALSE == InstructionDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved instruction name '%s' at line %u in file %s\n",
+      printf ("ERROR: Attempt to make use of a reserved instruction name '%s' (line %u file %s)\n",
               name,
               config->line_number,
               config->file_name);
@@ -61,7 +62,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved directive name '%s' at line %u in file %s\n",
+      printf ("ERROR: Attempt to make use of a reserved directive name '%s' (line %u file %s)\n",
               name,
               config->line_number, 
               config->file_name);
@@ -71,7 +72,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == RegisterNameDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf ("ERROR: attempt to make use of a reserved register name '%s' at line %u in file %s\n",
+      printf ("ERROR: Attempt to make use of a reserved register name '%s' (line %u file %s)\n",
               name,
               config->line_number, 
               config->file_name);
@@ -93,7 +94,7 @@ bool_t InstructionDoesntExist(const char *instruction,
   }
   
   if (config->verbose) {
-    printf ("ERROR: the instruction '%s' at line %u in the file %s doesn't exist\n",
+    printf ("ERROR: Unknown instruction '%s' (line %u file %s)\n",
             instruction,
             config->line_number,
             config->file_name);
@@ -119,7 +120,7 @@ bool_t WrongNumberOfOperands(const char *instruction,
   }
 
   if (config->verbose) {
-    printf ("Error: Expected %d operands, but given %d at line %u in the file %s\n",
+    printf ("Error: Expected %d operands, but given %d (line %u file %s)\n",
             required_operands,
             num_of_operands,
             config->line_number,
@@ -143,11 +144,11 @@ bool_t IncorrectAddressingMethod(const char *instruction,
   }
 
   if (config->verbose) {
-    printf("Error: Addressing method of the operand %s at line %u in file %s is illegal for the instruction '%s'\n",
+    printf("Error: Addressing method of the operand %s is illegal for the instruction %s (line %u file %s)\n",
+           instruction,
            operand->name, 
            config->line_number,
-           config->file_name,
-           instruction);
+           config->file_name);
   }
   return TRUE;
 }
@@ -161,7 +162,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol,
   }
 
   if (config->verbose) {
-    printf ("Error: Attempted to define a symbol at line %u in the file %s that already been defined\n",
+    printf ("Error: Attempted to define a symbol that was already defined (line %u file %s)\n",
             config->line_number,
             config->file_name);
   }
@@ -176,7 +177,7 @@ bool_t SymbolWasntDefined(char *symbol,
   }
 
   if (config->verbose) {
-    printf ("Error: Attempted to call a symbol at line %u in file %s that wasn't defined\n",
+    printf ("Error: Attempted to call a symbol that wasn't defined (line %u file %s)\n",
             config->line_number,
             config->file_name);
   }
@@ -193,7 +194,7 @@ bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name,
   }
 
   if (config->verbose) { 
-    printf ("ERROR: Attempt to define an entry symbol at line %u in file %s as an extern\n",
+    printf ("ERROR: Attempt to define an entry symbol as extern (line %u file %s)\n",
             config->line_number,
             config->file_name);
   }
@@ -210,7 +211,7 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol_name,
   }
 
   if (config->verbose){
-    printf ("ERROR: Attempt to define an extern symbol at line %u in the file %s as an entry\n",
+    printf ("ERROR: Attempt to define an extern symbol as entry (line %u file %s)\n",
             config->line_number,
             config->file_name);
   }
@@ -229,7 +230,7 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
   }
 
   if (config->verbose) {
-    printf ("ERROR: Use of illegal characters in the symbol name '%s' at line %u in file %s\n",
+    printf ("ERROR: Use of illegal characters in the symbol name '%s' (line %u, file %s)\n",
             symbol,
             config->line_number,
             config->file_name);
@@ -250,17 +251,17 @@ bool_t SymbolExceedCharacterLimit(const char *symbol,
                                   syntax_check_config_t *config) {
   unsigned int length = 0;
 
-  while ('\0' != *symbol && length <= 31) {
+  while ('\0' != *symbol && length <= SYMBOL_CHARACTER_LIMIT) {
     length++;
     symbol++;
   }
 
-  if (length <= 31) {
+  if (length <= SYMBOL_CHARACTER_LIMIT) {
     return FALSE;
   }
 
   if (config->verbose) {
-    printf ("ERROR: Symbol name '%s' at line %u in file %s exceeded the character limit\n",
+    printf ("ERROR: Symbol name '%s' exceeded the character limit (line %u in file %s)\n",
             symbol,
             config->line_number,
             config->file_name);
@@ -269,14 +270,16 @@ bool_t SymbolExceedCharacterLimit(const char *symbol,
   return TRUE;
 }
 
-bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list, syntax_check_config_t *config){
+bool_t SymbolUsedAsAMacro(char *symbol,
+                          macro_table_t *macro_list,
+                          syntax_check_config_t *config) {
 
   if (NULL == FindMacro(macro_list, symbol)) {
     return FALSE;
   }
 
 	if (config->verbose) {
-    printf ("ERROR: Attempt to define a symbol '%s', but it was already defined as a macro at line %u in file %s\n",
+    printf ("ERROR: Attempt to define a symbol '%s', but it was already defined as a macro (line %u, file %s)\n",
             symbol,
             config->line_number,
             config->file_name);
@@ -296,7 +299,7 @@ bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config
   }
   
   if (config->verbose) {
-    printf ("ERROR: The directive name '%s' in line %u in file %s doesn't exist\n",
+    printf ("ERROR: The directive name '%s' doesn't exist (line %u, file %s)\n",
             directive,
             config->line_number,
             config->file_name);
@@ -304,34 +307,72 @@ bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config
   return TRUE;
 }
 
-bool_t CommaIsMissingInData(char *data, syntax_check_config_t *config){
-   while (*data != '\0') {
-	 if (*data == ' ' || *data == '\t' ){
-		if (*(data-1) != ','){
-			if (config->verbose){
-                printf ("ERROR: a comma is missing between parameters at line %u in the file: %s", syntax_check_config.line_number, syntax_check_config.file_name);
-            }
-            return TRUE;
-        }
-     }
-   }
-   return FALSE;
+bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
+  char *start = (char *)data;
+  char *end = strstr(start, ",");
+  bool_t digits_occurred = TRUE;
+
+  while (NULL != end && IsDataEntryValid(start, end)) {
+    start = end + 1;
+    end = strstr(start, ",");
+  }
+
+  if (NULL == end && IsDataEntryValid(start, end)) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf ("ERROR: .data definition '%s' is invalid (line %u, file %s)\n",
+            data,
+            config->line_number,
+            config->file_name);
+  }
+
+  return TRUE;
 }
 
-bool_t RegisterNameDoesntExist(char *register_name, syntax_check_config_t *config){
-    int i;
-    for (i = 0; i < NUM_OF_REGISTERS; i++) {
-        if (strcmp(register_name, register_names[i]) == 0) {
-            return FALSE;
-        }
+bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
+  const char *start = str;
+
+  if ('\"' == *str) {
+    str = EndOfString(str);
+    while (isblank(*str)) {
+      --str;
     }
-    if (config->verbose){
-        printf ("ERROR: the register name at line %u in the file: %s doesn't exist", syntax_check_config.line_number, syntax_check_config.file_name);
+    
+    if ('\"' == *str) {
+      return FALSE;
     }
-    return TRUE;
+  }
+
+  if (config->verbose) {
+    printf ("ERROR: .string definition %s is invalid (line %u, file %s)\n",
+            start,
+            config->line_number,
+            config->file_name);
+  }
+
+  return TRUE;
 }
 
-
+bool_t RegisterNameDoesntExist(const char *register_name, syntax_check_config_t *config){
+  int i = 0;
+  while (i < NUM_OF_REGISTERS && strcmp(register_name, register_names[i])) {
+    ++i;
+  }
+  
+  if (i < NUM_OF_REGISTERS) {
+    return FALSE;
+  }
+  
+  if (config->verbose) {
+      printf("ERROR: Register name '%s' doesn't exist (line %u file %s)\n",
+              register_name,
+              config->line_number,
+              config->file_name);
+  }
+  return TRUE;
+}
 
 /*
 *@brief Detects which type of addressing method fit to the operand, and returns invalid if neccessary.
@@ -359,12 +400,12 @@ static addressing_method_t DetectAddressingMethod(const char *operand) {
   }
 
   if ('*' == *ptr) {
-    if (RegisterNameDoesntExist(ptr + 1, silent_syntax_cfg)) {
+    if (RegisterNameDoesntExist(ptr + 1, &silent_syntax_cfg)) {
       return INVALID;
     }
     return INDIRECT_REGISTER;
   }
-  if (!RegisterNameDoesntExist(ptr,silent_syntax_cfg)) {
+  if (!RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
     return DIRECT_REGISTER;
   }
 
@@ -398,4 +439,51 @@ static bool_t AddressingMethodIsLegal(instruction_t instruction,
                                       addressing_method_t method) {
   size_t bit_to_check = 2 + method + (type * 4);
   return GetBitValue(instruction.addressing_info, bit_to_check);
+}
+
+/*
+ * @brief Checks if a given .data parameter represents a valid integer number.
+ * 
+ * This function verifies whether the substring defined by the pointers `from` and `to`
+ * represents a valid integer number. The function allows an optional leading sign 
+ * ('+' or '-'), as well as leading & trailing whitespaces.
+ * 
+ * If `to` is `NULL`, the function checks the substring starting from `from` and ending at 
+ * the null terminator (`'\0'`).
+ * If `to` is not `NULL`, it checks the substring [from, to)
+ * 
+ * @param from - A pointer to the start of the substring to be checked.
+ * @param to - A pointer to the end of the substring to be checked, or `NULL` if the function 
+ *           should check up to the null terminator.
+ *
+ * @return TRUE if the substring represents a valid integer number, FALSE otherwise.
+ */
+
+static bool_t IsDataEntryValid(const char *from,
+                               const char *to) {
+  bool_t digits_occurred = FALSE;
+  bool_t illegal_character_occured = FALSE;
+
+  from = StripLeadingWhitespaces(from);
+  if ('-' == *from | '+' == *from) {
+    ++from;
+  }
+
+  if (isdigit(*from)) {
+    digits_occurred = TRUE;
+    ++from;
+  }
+
+  while (isdigit(*from)) {
+    ++from;
+  }
+  
+  from = (char *)StripLeadingWhitespaces(from);
+
+  if (digits_occurred && 
+      ((from == to) || ('\0' == *from))) {
+    return TRUE;
+  }
+
+  return FALSE;
 }

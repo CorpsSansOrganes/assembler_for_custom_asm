@@ -10,7 +10,7 @@ char *StripWhitespaces(char *str) {
   return StripTrailingWhitespaces((char *)StripLeadingWhitespaces(str));
 }
 
-const char *StripLeadingWhitespace(const char *str) {
+const char *StripLeadingWhitespaces(const char *str) {
   while (isblank(*str)) {
     ++str;
   }
