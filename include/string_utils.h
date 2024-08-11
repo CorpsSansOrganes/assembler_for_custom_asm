@@ -66,4 +66,19 @@ char *StripTrailingWhitespaces(char *str);
 
 const char *EndOfString(const char *str);
 
+/*
+ * @brief Copies a substring from the range [from, to) in a source string to dest.
+ *
+ * @param from, to - Two pointers in a source string, s.t. from < to.
+ *        dest - The string into which the substring will be copied.
+ *
+ * @return Pointer to the destination string after the substring has been copied to it.
+ *
+ * NOTE: If from, to aren't from a single string, or if to >= from behaviour is undefined.
+ *       dest must be allocated correctly before calling the function, else behaviour is
+ *       undefined.
+ */
+
+char *CopySubstring(const char *from, const char *to, char *dest);
+
 #endif /* __STRING_UTILS__ */

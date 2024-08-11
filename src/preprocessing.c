@@ -16,6 +16,7 @@ static result_t ParseMacro(FILE *file,
 static result_t ReadMacrosInFile(FILE *file,
                                  macro_table_t *table,
                                  char *buffer,
+                                 syntax_check_config_t *cfg,
                                  bool_t *error_occurred);
 static result_t PerformPreprocessing(FILE *input_file,
                                    FILE *output_file,
@@ -33,6 +34,7 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   macro_table_t *table = CreateMacroTable();
   long pos = 0;
   result_t res;
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig(input_path, 1, TRUE);
 
   /* Acquire resources */
   line = (char *)malloc(MAX_LINE_SIZE * sizeof(char));
@@ -71,7 +73,7 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
    * Check for syntax errors in macro definitions.
    */
   if (FILE_HANDLING_ERROR == 
-    ReadMacrosInFile(input_file, table, line, &error_occurred)) {
+    ReadMacrosInFile(input_file, table, line, &cfg, &error_occurred)) {
       perror("Error parsing file to macros");
       error_occurred = TRUE;
   }
@@ -169,12 +171,14 @@ static bool_t IsNewMacro(const char *line) {
  *
  * @param file - A valid pointer to a file object to be read. This file should 
  *             be opened for reading prior to calling this function.
- * @param table - A pointer to the macro table where detected macros will be added.
- * @param buffer - A pointer to a pre-allocated buffer with a size of at least 
+ *        table - A pointer to the macro table where detected macros will be added.
+ *        buffer - A pointer to a pre-allocated buffer with a size of at least 
  *                 MAX_LINE_SIZE used for reading lines from the file.
- * @param error_occurred - A pointer to a boolean flag that will be set to TRUE 
+ *        error_occurred - A pointer to a boolean flag that will be set to TRUE 
  *                       if any syntax errors occur during the file analysis; 
  *                       otherwise, it will be set to FALSE.
+ *        cfg - A pointer to a syntax error analysis configurations object for verbose
+ *              error printing.
  * 
  * @return Returns SUCCESS if the entire file was analyzed.
  *         If an error occurred while handling the file, FILE_HANDLING_ERROR is returned.
@@ -183,9 +187,9 @@ static bool_t IsNewMacro(const char *line) {
 static result_t ReadMacrosInFile(FILE *file,
                                  macro_table_t *table,
                                  char *buffer,
+                                 syntax_check_config_t *cfg,
                                  bool_t *error_occurred) {
   long pos = ftell(file);
-  unsigned int line_number = 1;
 
   if (-1 == pos) {
     perror("Error getting file position");
@@ -200,7 +204,7 @@ static result_t ReadMacrosInFile(FILE *file,
         perror("Error changing file position");
         return FILE_HANDLING_ERROR;
       }
-      if (SUCCESS != ParseMacro(file, table, buffer, &line_number)) {
+      if (SUCCESS != ParseMacro(file, table, buffer, cfg)) {
         *error_occurred = TRUE;
       }
     }
@@ -210,7 +214,7 @@ static result_t ReadMacrosInFile(FILE *file,
       perror("Error getting file position");
       return FAILURE;
     }
-    ++line_number;
+    ++cfg->line_number;
   }
 
   return SUCCESS;
@@ -254,7 +258,9 @@ static result_t ReadMacrosInFile(FILE *file,
  *
  *        line - Buffer in which lines read by the function will be stored.
  *
- *        line_number - Pointer to the line number of the first line of the macro.
+ *        cfg - A pointer to a syntax error analysis configurations object for verbose
+ *              error printing.
+ *
  * 
  * @return SUCCESS if the macro was successfully read and added to the macro table 
  *         with no syntax errors.
@@ -271,7 +277,7 @@ static result_t ReadMacrosInFile(FILE *file,
 static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
-                           syntax_check_config_t *config) {
+                           syntax_check_config_t *cfg) {
   /*
    * Syntax errors to check:
    * 1. No extra characters at the end of macr or endmacr line.
@@ -280,6 +286,7 @@ static result_t ParseMacro(FILE *file,
 
   char *macro_name_start = NULL;
   char *macro_name_end = NULL;
+  char *macro_name = NULL;
 
   /* Reading macro name */ 
   if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
@@ -295,10 +302,30 @@ static result_t ParseMacro(FILE *file,
     ++macro_name_end;
   }
 
-  if ()
+  /* e.g.: "macr m_name asd" */
+  if (DetectExtraCharacters(macro_name_end, cfg)) {
+    return FAILURE;
+  }
+
+  macro_name = (char *)malloc(macro_name_end - macro_name_start + 1);
+  if (NULL == macro_name) {
+    perror("Error allocating memory for macro name");
+    return MEM_ALLOCATION_ERROR;
+  }
+
+  macro_name = CopySubstring(macro_name_start, macro_name_end, macro_name);
   
-  /* Assuming every macro has endmacr! */
+  /* e.g.: "macr mov" */
+  if (IsReservedName(macro_name, cfg)) {
+    free(macro_name);
+    return FAILURE;
+  }
+  
+  /*
+   * Reading macro definition 
+   */
   while(FALSE == IsPrefix(line, "endmacr")) {
+    /* Assuming every macro has endmacr! */
     if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
       perror("Error reading from file");
       return FILE_HANDLING_ERROR;
@@ -308,6 +335,12 @@ static result_t ParseMacro(FILE *file,
 
   return SUCCESS; // TODO
 }
+
+/*
+ * @brief Reads a macro definition from file into a string.
+ *
+ * @return NULL if couldn't allocate string, or a pointer to it otherwise.
+static char *ReadMacroDefinition(FILE *file, char *line,
 
 /**
  * @brief Performs preprocessing on the input file and writes the result to the output file.

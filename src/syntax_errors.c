@@ -6,12 +6,6 @@
 #include "symbol_table.h"
 #include "language_definitions.h"
 
-struct syntax_check_config {
-  const char *file_name;
-  unsigned int line_number;
-  bool_t verbose;
-};
-
 static addressing_method_t DetectAddressingMethod(const char *operand);
 static char *string_tolower(char *str);
 /*static int SymbolCompare (void *str,void *key );*/

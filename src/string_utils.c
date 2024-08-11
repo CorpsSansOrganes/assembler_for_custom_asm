@@ -31,3 +31,11 @@ char *StripTrailingWhitespaces(char *str) {
 const char *EndOfString(const char *str) {
   return str + strlen(str);
 }
+
+char *CopySubstring(const char *from, const char *to, char *dest) {
+  size_t length = to - from;
+
+  strncpy(dest, from, length);
+  dest[length] = '0';
+  return dest;
+}

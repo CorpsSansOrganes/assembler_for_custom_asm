@@ -41,16 +41,20 @@ macro_table_t *CreateMacroTable(void);
  *
  * @return If there's another macro whose name is macro_name, 
  *         FAILURE is returned.
- *         If a memory error occurs, MEM_ALLOCATION_ERROR is returned.
- *         Else if the macro has been written to the table successfully, 
+ *         If the required memory couldn't be allocated for the macro,
+ *         MEM_ALLOCATION_ERROR is returned.
+ *         Else, if the macro has been written to the table successfully, 
  *         SUCCESS is returned.
+ *
+ * NOTE: the function performs a shallow copy of macro_name & macro_definition.
  */
 result_t AddMacroIfUnique(macro_table_t *table,
                           const char *macro_name,
                           const char *macro_definition);
 
 /*
- * @brief Deallocates the memory of a macro table.
+ * @brief Deallocates the memory of a macro table, including macro names &
+ *        definitions.
  * @param table - the table we wish to destroy.
  */
 void DestroyMacroTable(macro_table_t *table);

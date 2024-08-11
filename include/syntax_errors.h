@@ -7,7 +7,11 @@
 #include "list.h"
 #include "preprocessing.h"
 
-typedef struct syntax_check_config syntax_check_config_t;
+typedef struct {
+  const char *file_name;
+  unsigned int line_number;
+  bool_t verbose;
+} syntax_check_config_t;
 
 /*
 // ~~--~~--~~--~~--~~
