@@ -5,6 +5,7 @@
 #include "symbol_table.h"
 #include <stdio.h> /* perror */
 #include <string.h> 
+#include <stdlib.h>
 
 #define  blank_delimiters " \t\n\r"
 
@@ -14,6 +15,7 @@ static int CountParameters(char *line);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list);
 static instruction_t FindInstruction (char *instruction_name);
 static addressing_method_t DetectAddressingMethod(const char *operand);
+static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
 
 result_t AssembleFile(char *file_path) {
   return 0; // TODO
@@ -26,6 +28,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   int IC = INITIAL_IC_VALUE;
   int DC = 0;
   int saved_space = 0;
+  int opcode;
   char *current_word = NULL; 
   char *current_line = NULL;
   char *symbol_name=NULL;
@@ -33,8 +36,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   char *entry_parameter = NULL;
   unsigned int num_of_operands;
   operand_t first_operand;
-  operand_t *second_operand =NULL;
+  operand_t second_operand;
   instruction_t current_instruction;
+  
 
   syntax_check_config_t *syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
                                                  0,
@@ -67,7 +71,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
     if (FirstWordEndsWithColon(current_line)) {
       current_word = strtok(current_line, ": ");
       symbol_name = current_word;
-      syntax_check_config_print.line_number = line_counter;
+      syntax_check_config_print -> line_number = line_counter;
       error_count_in_line += SymbolErrorUnite(symbol_name,
                                               syntax_check_config_print,
                                               macro_list,
@@ -139,6 +143,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                return FAILURE;
              }
             current_instruction = FindInstruction (current_word); 
+            opcode = current_instruction.
             /* get the opcode of the instruction*/
             current_line += strlen (current_word)+1;
             num_of_operands = CountParameters (current_line);
@@ -147,12 +152,14 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                  /*L=1*/
               }
               if (1 == num_of_operands){
+                /* L=2
+                */
                 current_word = strtok(current_line, blank_delimiters);
                 first_operand.name = current_word;
                 first_operand.addressing_method = DetectAddressingMethod(current_word);
                 first_operand.type = DESTINATION_OPERAND;
-                 /* L=2
-                 */
+                opcode = OperandToOpcode (first_operand);
+                /*insert opcode*/
               }
               if (2 == num_of_operands){
                 current_word = strtok(current_line, ", \t\n\r");/*TODO check error of the case 'operand1 ,, operand2'*/
@@ -160,11 +167,22 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                 first_operand.addressing_method = DetectAddressingMethod(current_word);
                 first_operand.type = SOURCE_OPERAND;
                 current_word = strtok(NULL, ", \t\n\r");
-                first_operand.name = current_word;
-                first_operand.addressing_method = DetectAddressingMethod(current_word);
-                first_operand.type = DESTINATION_OPERAND;
-                 /* compute L
-                 */
+                second_operand.name = current_word;
+                second_operand.addressing_method = DetectAddressingMethod(current_word);
+                second_operand.type = DESTINATION_OPERAND;
+                if ((first_operand.addressing_method == DIRECT_REGISTER || first_operand.addressing_method == INDIRECT_REGISTER) &&
+                    (second_operand.addressing_method == DIRECT_REGISTER || second_operand.addressing_method == INDIRECT_REGISTER)){
+                      opcode = UnifyRegisterOpcode (OperandToOpcode (first_operand),OperandToOpcode (second_operand));
+                      /*insert opcode*/
+                      /*L=2*/
+                    }
+                else {
+                  opcode = OperandToOpcode (first_operand);
+                  /*insert opcode*/
+                  opcode = OperandToOpcode (second_operand);
+                  /*insert opcode*/
+                  /*L=3*/
+                }
               }
             }    
           }
@@ -289,15 +307,45 @@ static addressing_method_t DetectAddressingMethod(const char *operand) {
     return IMMEDIATE;                
   }
 } 
-static bitmap_t OperandToOpcode(operand_t operand){/*operand_t *? */
+static int OperandToOpcode(operand_t operand){/*operand_t *? TODO add number too big error */
   char *extract_operand;
+  int opcode =0;
   if (operand.addressing_method == IMMEDIATE)
   {
     if (*(operand.name+1) == '-' || *(operand.name+1) == '+'){
-      
+      opcode = atoi (operand.name+2);
     }
+    else{
+      opcode = atoi (operand.name+1);
+    }
+    opcode = opcode << 3;/*make space for ARE*/
+    opcode += 4; /*add A=1, R=0, E=0*/
+    return opcode;
   }
-  
+  if (operand.addressing_method == DIRECT){
+
+    /*depend by the symbol table, to handle in second pass*/
+  }
+  if (operand.addressing_method == DIRECT_REGISTER || operand.addressing_method == INDIRECT_REGISTER)
+  {
+    if (operand.addressing_method == DIRECT_REGISTER){
+      opcode = atoi (operand.name+1);
+    } 
+    else {
+      opcode = atoi (operand.name+2);
+    }
+    if (operand.type == SOURCE_OPERAND){
+      opcode = opcode << 6;
+    }
+    else {
+      opcode = opcode << 3;
+    }
+    opcode += 4; /*add A=1, R=0, E=0( add macro A)*/
+  }
+return opcode;
+}
+static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination){
+  return register_opcode_source+register_opcode_destination - 4;
 }
 static void HandleSymbol (char *symbol, int line_number){
 }

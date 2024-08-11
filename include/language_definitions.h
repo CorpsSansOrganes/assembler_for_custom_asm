@@ -67,25 +67,30 @@ typedef struct {
   const char *name;
   bitmap_t addressing_info;
  } instruction_t;
-
+ /*in the right note - the full opcode of the instruction*/
 instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
-  {"mov", 959},  /* 0b1110111111 */
+  {"mov", 959},  /* 0b1110111111 */ 
   {"cmp", 1023}, /* 0b1111111111 */ 
-  {"add", 959},  /* 0b1110111111 */
-  {"sub", 959},  /* 0b1110111111 */
-  {"lea", 907},  /* 0b1110001011 */
-  {"clr", 898},  /* 0b1110000010 */
-  {"not", 898},  /* 0b1110000010 */
-  {"inc", 898},  /* 0b1110000010 */
-  {"dec", 898},  /* 0b1110000010 */
-  {"jmp", 386},  /* 0b0110000010 */
-  {"bne", 386},  /* 0b0110000010 */
-  {"red", 898},  /* 0b1110000010 */
-  {"prn", 962},  /* 0b1111000010 */
-  {"jsr", 386},  /* 0b0110000010 */
-  {"rts", 0},    /* 0b0000000000 */
-  {"stop", 0}   /* 0b0000000000 */
+  {"add", 959},  /* 0b1110111111 */ 
+  {"sub", 959},  /* 0b1110111111 */ 
+  {"lea", 907},  /* 0b1110001011 */ 
+  {"clr", 898},  /* 0b1110000010 */ 
+  {"not", 898},  /* 0b1110000010 */ 
+  {"inc", 898},  /* 0b1110000010 */ 
+  {"dec", 898},  /* 0b1110000010 */ 
+  {"jmp", 386},  /* 0b0110000010 */ 
+  {"bne", 386},  /* 0b0110000010 */ 
+  {"red", 898},  /* 0b1110000010 */ 
+  {"prn", 962},  /* 0b1111000010 */ 
+  {"jsr", 386},  /* 0b0110000010 */ 
+  {"rts", 0},    /* 0b0000000000 */ 
+  {"stop", 0}   /* 0b0000000000 */  
 };
+typedef struct {
+  const char *name;
+  addressing_method_t addressing_method;
+  operand_type_t type;
+} operand_t;
 
 char *reserved_directives[] =
   {
