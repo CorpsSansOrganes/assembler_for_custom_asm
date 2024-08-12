@@ -40,16 +40,17 @@ typedef enum {
  vector_t StringLineToMachineCode(vector_t opcode, char *string);
 
 /* 
-*@brief produce the opcode of an data directive line, i.e adds to the opcode vector an opcode line for every int 
+*@brief produce the opcode of an data directive line, i.e adds to the opcode vector an opcode line for every int. 
+*       in addition update the data counter according to number of opcodes added 
 *
 *@param opcode: the vector that contains the overall opcode 
 *       string: the string that contains the paramaters
-*       num_of_parameters: num of parameters.
+*       DC: address of the data counter.
 *
 *@return  returns the full vector opcode containing the opcode of the data parameters
 */
 
- vector_t DataLineToMachineCode(vector_t full_opcode, char *string, int num_of_parameters);
+ vector_t DataLineToMachineCode(vector_t full_opcode, char *string, int *DC);
 
 /* 
 *@brief set the bit of the correct addressing method int the opcode of the instruction word

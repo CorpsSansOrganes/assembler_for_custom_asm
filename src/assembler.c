@@ -26,7 +26,6 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   int total_errors = 0;
   int IC = INITIAL_IC_VALUE;
   int DC = 0;
-  int saved_space = 0;
   char *current_word = NULL; 
   char *current_line = NULL;
   char *symbol_name=NULL;
@@ -80,9 +79,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       if (NULL == current_word){
         /*TODO print error accordingly */
       }
-      if (0 == strcmp(current_word,".string") ){
+      else if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
-        if (IsIllegalString(current_line,syntax_check_config_print)){ /*TODO add the error function!*/
+        if (IsIllegalString(current_line,syntax_check_config_print)){ 
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
@@ -95,13 +94,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }  
       else if (0 == strcmp(current_word,".data")) {
           current_line += strlen(current_word)+1;
-          if (CommaIsMissingInData(current_line,syntax_check_config_print)){
-                error_count_in_line++;
-          }
-          if (ParameterIsMissingInlLine(current_line,syntax_check_config_print)){ /*TODO add the error function*/
-                error_count_in_line++;
-          }
-          if (IllegalParametersInData(current_line,syntax_check_config_print)){ /*TODO add the error function*/
+          if (IsIllegalDataParameter(current_line,syntax_check_config_print)){
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
@@ -110,8 +103,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                     return FAILURE;
                   } 
                 }
-                opcode = DataLineToMachineCode(opcode, current_line,CountParameters(current_line));
-                DC += CountParameters(current_line);
+                opcode = DataLineToMachineCode(opcode, current_line, &DC);
           }
       }
       else if (0 == strcmp(current_word,".extern")){
@@ -141,7 +133,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                return FAILURE;
              }
             }
-            current_line += current_word +1;
+            current_line += strlen (current_word)+1;
             VectorAppend (opcode, InstructionLineToMachineCode (current_line,current_word, &IC));
          }
       }
@@ -150,8 +142,32 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   }
 }
 
-result_t SecondPass(char *file_path) {
-  return 0; //TODO
+static result_t SecondPass(char *file_path, symbol_table_t *symbol_table){
+  int line_counter = 0;
+  int error_count_in_line = 0;
+  int total_errors = 0;
+  int IC = INITIAL_IC_VALUE;
+  int DC = 0;
+  char *current_word = NULL; 
+  char *current_line = NULL;
+  char *symbol_name=NULL;
+  FILE *input_file = NULL;
+  char *entry_parameter = NULL;
+
+  if (FirstWordEndsWithColon(current_line)) {
+      /*continue to the next word*/
+      }
+  if (/*word == extern/data/string*/){
+      /*move to next line*/
+  }
+  if (/*word == .entry*/){
+    /*change to entry the symbol*/
+  }
+  if (/*word == instruction*/){
+    /*look for symbol and replace*/
+  }
+
+
 }
 
 /* @brief - if the first word in a string ends with ':'

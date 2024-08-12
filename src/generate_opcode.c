@@ -1,26 +1,22 @@
 #include "assembler.h"
-#include "utils.h"
-#include "utils.h"
-#include "syntax_errors.h"
 #include "macro_table.h"
-#include "symbol_table.h"
 #include "generate_opcode.h"
 #include "vector.h"
-#include <stdio.h> /* perror */
 #include <string.h> 
-#include <stdlib.h>
 
 static instruction_t FindInstruction (char *instruction_name);
 static int CountParameters(char *line);
 
-vector_t DataLineToMachineCode(vector_t full_opcode, char *string, int num_of_parameters){
+vector_t DataLineToMachineCode(vector_t full_opcode, char *string, int *DC){
     int i;
+    int num_of_parameters = CountParameters (string);
     bitmap_t parameter = atoi (strtok (string, ", /n/t/r"));
     VectorAppend (full_opcode,parameter);
     for (i=1; i<num_of_parameters;i++){
         parameter = atoi (strtok (NULL, ", /n/t/r"));
         VectorAppend (full_opcode,parameter);
     }
+    DC += CountParameters;
     return full_opcode;
 }
 
