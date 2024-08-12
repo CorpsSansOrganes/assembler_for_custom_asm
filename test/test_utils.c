@@ -8,7 +8,7 @@ void PrintTestInfo(test_info_t info) {
       break;
 
     case TEST_FAILED:
-      printf("Test '%s' was failed in line %d\n", info.test_name, info.line);
+      printf("Test '%s' failed in line %d\n", info.test_name, info.line);
       break;
 
     case TECHNICAL_ERROR:

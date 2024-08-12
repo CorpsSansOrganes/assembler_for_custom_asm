@@ -1,4 +1,7 @@
 #include "language_definitions.h"
+#include <string.h> /* strlen */
+#include <ctype.h> /* isdigit */
+
 
 instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
   {"mov", 959},  /* 0b1110111111 */ 

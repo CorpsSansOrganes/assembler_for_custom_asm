@@ -20,21 +20,6 @@ typedef struct {
 */
 
 /*
- * @brief Creates a new syntax_check_config_t object, containing configurations
- *        about the syntax check, which are used in the syntax checks. 
- *        In particular those configurations are used for optionally printing
- *        appropriate error messages.
- *
- * @param verbose - Determines whether to print an error or not.
- *        line number - The line number of the checked argument
- *        file name - The file that contains the checked argument.
- */
-
-syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
-                                              unsigned int line_number,                                          
-                                              bool_t verbose);
-
-/*
  * @brief Checks if there are any characters after a certain point
  *   in a string, ignoring blank spaces (' ', '\t' etc).
  *
@@ -101,7 +86,6 @@ bool_t WrongNumberOfOperands(const char *instruction,
  *
  * @param instruction - The instruction performed.
  *        operand - The operand we check (e.g. '5', 'r0').
- *        type - Destination or source operand.
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
  * @return TRUE if the addressing method of the operand is illegal in the given
@@ -112,7 +96,6 @@ bool_t WrongNumberOfOperands(const char *instruction,
  */
 bool_t IncorrectAddressingMethod(const char *instruction,
                                  const operand_t *operand,
-                                 operand_type_t type,
                                  syntax_check_config_t *config);
 
 /*
@@ -296,6 +279,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 // General syntax
 // ~~--~~--~~--~~--~~
 */
+
 /*
  * @brief Tell if a register name doesn't exist.
  * the register names that exist are (r0 ... r7)
@@ -311,6 +295,48 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
 bool_t RegisterNameDoesntExist(const char *register_name,
                                syntax_check_config_t *config);
+
+/*
+// ~~--~~--~~--~~--~~
+// Utilities
+// ~~--~~--~~--~~--~~
+*/
+
+/*
+ * @brief Creates a new syntax_check_config_t object, containing configurations
+ *        about the syntax check, which are used in the syntax checks. 
+ *        In particular those configurations are used for optionally printing
+ *        appropriate error messages.
+ *
+ * @param verbose - Determines whether to print an error or not.
+ *        line number - The line number of the checked argument
+ *        file name - The file that contains the checked argument.
+ */
+
+syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
+                                              unsigned int line_number,                                          
+                                              bool_t verbose);
+
+
+/*
+* @brief Detects what kind of addressing method a given operand adherse to.
+*        For example:
+*        #3 - Immediate addresing.
+*        r1 - Direct register addressing.
+*        *r3 - Indirect register addresing.
+*
+* @param operand - the operand name, e.g. "#3".
+*
+* @return The type of addressing method for the operand.
+*         In particular, if the operand is detected to be invalid, the function
+*         return INVALID.
+*
+*         NOTE: The function can't determine for any 'operand_name' whether
+*         it is invalid or not. In particular, it can't tell if a name which
+*         could be a symbol is actually a valid symbol.
+*/
+
+addressing_method_t DetectAddressingMethod(const char *operand_name);
 
 #endif /* __SYNTAX_ERRORS__ */
 

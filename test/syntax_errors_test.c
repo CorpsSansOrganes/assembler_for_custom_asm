@@ -52,62 +52,71 @@ test_info_t IsReservedNameTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-/*
 test_info_t InstructionDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("InstructionDoesntExist");
   const char *reserved_instruction = "cmp";
   const char *reserved_directive = ".entry";
   const char *not_reserved = "aaaaa";
 
-  if (TRUE == InstructionDoesntExist(reserved_instruction, cfg)) {
+  if (FALSE != InstructionDoesntExist(reserved_instruction, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == InstructionDoesntExist(reserved_directive, cfg)) {
+  if (TRUE != InstructionDoesntExist(reserved_directive, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == InstructionDoesntExist(not_reserved, cfg)) {
+  if (TRUE != InstructionDoesntExist(not_reserved, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
 }
+
 test_info_t WrongNumberOfOperandsTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("WrongNumberOfOperands");
   const char *cmp_instruction = "cmp";
   const int cmp_operands = 2;
   const int not_cmp_operands = 0;
-  const char *stop_instruction = "cmp";
+  const char *stop_instruction = "stop";
   const int not_stop_operands = 1;
   const int stop_operands = 0;
-  const int expected_result_stop = stop_operands-not_stop_operands;
-  const int expected_result_cmp = cmp_operands-not_cmp_operands;
+
   if (FALSE != WrongNumberOfOperands(cmp_instruction,cmp_operands, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
- if (FALSE != WrongNumberOfOperands(stop_instruction,stop_operands, cfg)) {
+
+  if (FALSE != WrongNumberOfOperands(stop_instruction,stop_operands, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (expected_result_cmp != WrongNumberOfOperands(cmp_instruction,not_cmp_operands, cfg)) {
+
+  /* Too little */
+  if (TRUE != WrongNumberOfOperands(cmp_instruction,not_cmp_operands, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (expected_result_stop != WrongNumberOfOperands(stop_instruction,not_stop_operands, cfg)) {
+
+  /* Too much */
+  if (TRUE != WrongNumberOfOperands(stop_instruction,not_stop_operands, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
 }
+
 test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("IncorrectAddressingMethod");
-  operand_type_t source = SOURCE_OPERAND;
-  operand_type_t destination = DESTINATION_OPERAND;
+
+  operand_t invalid_operand1 = {"add", INVALID, DESTINATION_OPERAND};
   const char *add_instruction = "add";
   const char *jmp_instruction = "jmp";
-  char invalid_operand1 = "#c";
-  char invalid_operand2 = "#";
-  char invalid_operand3 = "*r13";
-  char invalid_operand4 = "#++12";
-  char valid_operand0 = "#12";
-  char valid_operand1 = "aaaa";
-  char valid_operand2 = "*r2";
-  char valid_operand3 = "r4";
+  // TODO - what to do with invalid operands?
+  /* 
+  char *invalid_operand1 = "#c";
+  char *invalid_operand2 = "#";
+  char *invalid_operand3 = "*r13";
+  char *invalid_operand4 = "#++12";
+  */
+  char *valid_operand0 = "#12";
+  char *valid_operand1 = "aaaa";
+  char *valid_operand2 = "*r2";
+  char *valid_operand3 = "r4";
+
   if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
@@ -134,6 +143,8 @@ test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   }
   return test_info;
 }
+
+/*
 test_info_t SymbolDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
   symbol_table_t *test_table = CreateSymbolTable();
@@ -354,7 +365,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  cfg = CreateSyntaxCheckConfig(argv[0], -1, verbose);
+  cfg = CreateSyntaxCheckConfig(argv[0], 0, verbose);
 
   test_info = DetectExtraCharactersTest(&cfg);
   if (TEST_SUCCESSFUL != test_info.result) {
@@ -368,8 +379,20 @@ int main(int argc, char *argv[]) {
     ++total_failures;
   }
 
+  test_info = InstructionDoesntExistTest(&cfg);
+  if (TEST_SUCCESSFUL != test_info.result) {
+    PrintTestInfo(test_info);
+    ++total_failures;
+  }
+
+  test_info = WrongNumberOfOperandsTest(&cfg);
+  if (TEST_SUCCESSFUL != test_info.result) {
+    PrintTestInfo(test_info);
+    ++total_failures;
+  }
+
   if (0 == total_failures) {
-    printf("Test successful: Syntax errors\n");
+    printf(BOLD_GREEN "Test successful: " COLOR_RESET "Syntax errors\n");
   }
   return total_failures;
 }

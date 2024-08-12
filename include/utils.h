@@ -16,4 +16,8 @@ typedef enum {
   FILE_HANDLING_ERROR
 } result_t;
 
+#define BOLD_RED "\033[1;31m"
+#define BOLD_GREEN "\033[1;32m"
+#define COLOR_RESET "\033[0m"
+
 #endif /* __UTILS__ */

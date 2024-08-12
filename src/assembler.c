@@ -1,16 +1,16 @@
+#include <stdio.h> /* perror */
+#include <string.h> 
+#include <stdlib.h>
 #include "assembler.h"
 #include "utils.h"
 #include "syntax_errors.h"
 #include "macro_table.h"
 #include "symbol_table.h"
-#include <stdio.h> /* perror */
-#include <string.h> 
-#include <stdlib.h>
 
 #define  blank_delimiters " \t\n\r"
 
 static bool_t FirstWordEndsWithColon(char *line);
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *cfg_verbose, macro_table_t *macro_list, symbol_table_t *symbol_table);
 static int CountParameters(char *line);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list);
 static instruction_t FindInstruction (char *instruction_name);
@@ -34,14 +34,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
 
-  
-
-  syntax_check_config_t *syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
-                                                 0,
-                                                 TRUE);
-  syntax_check_config_t *syntax_check_config__no_print = CreateSyntaxCheckConfig ("default",
-                                                  0,
-                                                  FALSE);
+  syntax_check_config_t cfg_verbose = CreateSyntaxCheckConfig (file_path,
+                                                               0,
+                                                               TRUE);
+  syntax_check_config_t cfg_silent = CreateSyntaxCheckConfig (NULL, 0, FALSE);
 
   symbol_table_t *symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
@@ -67,9 +63,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
     if (FirstWordEndsWithColon(current_line)) {
       current_word = strtok(current_line, ": ");
       symbol_name = current_word;
-      syntax_check_config_print -> line_number = line_counter;
+      cfg_verbose.line_number = line_counter;
       error_count_in_line += SymbolErrorUnite(symbol_name,
-                                              syntax_check_config_print,
+                                              &cfg_verbose,
                                               macro_list,
                                               symbol_table);
 
@@ -80,7 +76,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }
       if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
-        if (IsIllegalString(current_line,syntax_check_config_print)){ /*TODO add the error function!*/
+        if (IsIllegalString(current_line,&cfg_verbose)){ /*TODO add the error function!*/
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
@@ -90,13 +86,13 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }  
       else if (0 == strcmp(current_word,".data")) {
           current_line += strlen(current_word)+1;
-          if (CommaIsMissingInData(current_line,syntax_check_config_print)){
+          if (CommaIsMissingInData(current_line,&cfg_verbose)){
                 error_count_in_line++;
           }
-          if (ParameterIsMissingInlLine(current_line,syntax_check_config_print)){ /*TODO add the error function*/
+          if (ParameterIsMissingInlLine(current_line,&cfg_verbose)){ /*TODO add the error function*/
                 error_count_in_line++;
           }
-          if (IllegalParametersInData(current_line,syntax_check_config_print)){ /*TODO add the error function*/
+          if (IllegalParametersInData(current_line,&cfg_verbose)){ /*TODO add the error function*/
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
@@ -109,11 +105,11 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
         symbol_name  = strtok (NULL,blank_delimiters);
-        error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
-        if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
+        error_count_in_line += SymbolErrorUnite(symbol_name,&cfg_verbose,macro_list,symbol_table);
+        if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &cfg_verbose)){
           error_count_in_line++;
         } 
-        if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_config_print)){
+        if (DetectExtraCharacters(current_line+strlen (symbol_name),&cfg_verbose)){
             error_count_in_line++;
         }
         if (error_count_in_line == 0){
@@ -133,7 +129,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
        * TODO need to add Too many operands error
        * 
        */
-      else if (FALSE == InstructionDoesntExist(current_word,syntax_check_config_print)){
+      else if (FALSE == InstructionDoesntExist(current_word,&cfg_verbose)){
           if (0 == error_count_in_line){
              if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
                return FAILURE;
@@ -145,11 +141,11 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
         if (0 == strcmp(current_word,".extern")) {
           current_line += strlen(current_word) + 1;
           symbol_name  = strtok (NULL,blank_delimiters);
-          error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
-          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
+          error_count_in_line += SymbolErrorUnite(symbol_name,&cfg_verbose,macro_list,symbol_table);
+          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &cfg_verbose)){
             error_count_in_line++;
           } 
-          if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_config_print)){
+          if (DetectExtraCharacters(current_line+strlen (symbol_name),&cfg_verbose)){
               error_count_in_line++;
           }
           if (error_count_in_line == 0){
@@ -199,24 +195,24 @@ static int CountParameters(char *line) {
     }
     return counter;
 }
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table){
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t &cfg_verbose, macro_table_t *macro_list, symbol_table_t *symbol_table){
       int internal_counter =0;
-      if (SymbolPrefixIllegal (symbol_name,syntax_check_config_print)){
+      if (SymbolPrefixIllegal (symbol_name,&cfg_verbose)){
           internal_counter++;
       }
-      if (SymbolIsIllegal (symbol_name,syntax_check_config_print)){
+      if (SymbolIsIllegal (symbol_name,&cfg_verbose)){
           internal_counter++;
       }
-      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_config_print)){
+      if (SymbolExceedCharacterLimit (symbol_name,&cfg_verbose)){
           internal_counter++;
       }
-      if (SymbolExceedCharacterLimit (symbol_name,syntax_check_config_print)){
+      if (SymbolExceedCharacterLimit (symbol_name,&cfg_verbose)){
           internal_counter++;
       }
-      if (SymbolUsedAsAMacro (symbol_name, macro_list, syntax_check_config_print)){
+      if (SymbolUsedAsAMacro (symbol_name, macro_list, &cfg_verbose)){
           internal_counter++;
       }
-      if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, syntax_check_config_print)){
+      if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, &cfg_verbose)){
           internal_counter++;
       }
       return internal_counter;
@@ -307,7 +303,7 @@ static opcode_t InstructionLineToMachineCode(char *current_line, char *current_w
   /* get the opcode of the instruction*/
   current_line += strlen (current_word)+1;
   num_of_operands = CountParameters (current_line);
-  if (FALSE == WrongNumberOfOperands (current_instruction.name,num_of_operands,syntax_check_config_print)){
+  if (FALSE == WrongNumberOfOperands (current_instruction.name,num_of_operands,&cfg_verbose)){
     if (0 == num_of_operands){
         L=1;
     }
