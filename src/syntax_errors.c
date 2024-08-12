@@ -35,7 +35,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
   }
 
   else if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Extraneous characters detected ('%s')\n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Extraneous characters detected ('%s')\n\n",
             config->file_name,
             config->line_number,
             starting_from);
@@ -46,7 +46,7 @@ bool_t DetectExtraCharacters(const char *starting_from,
 bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
   if (FALSE == InstructionDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to make use of a reserved instruction name '%s' \n",
+      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to make use of a reserved instruction name '%s' \n\n",
               config->file_name,
               config->line_number,
               name);
@@ -56,7 +56,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to make use of a reserved directive name '%s' \n",
+      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to make use of a reserved directive name '%s' \n\n",
               config->file_name,
               config->line_number,
               name);
@@ -66,7 +66,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
 
   if (FALSE == RegisterNameDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
-      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to make use of a reserved register name '%s' \n",
+      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to make use of a reserved register name '%s' \n\n",
               config->file_name,
               config->line_number, 
               name);
@@ -88,7 +88,7 @@ bool_t InstructionDoesntExist(const char *instruction,
   }
   
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Unknown instruction '%s' \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Unknown instruction '%s' \n\n",
             config->file_name,
             config->line_number,
             instruction);
@@ -114,7 +114,7 @@ bool_t WrongNumberOfOperands(const char *instruction,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): For instruction '%s' expected %d operands, but given %d \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n For instruction '%s' expected %d operands, but given %d \n\n",
             config->file_name,
             config->line_number,
             instruction,
@@ -140,11 +140,41 @@ bool_t IncorrectAddressingMethod(const char *instruction,
   }
 
   if (config->verbose) {
-    printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Addressing method of the operand '%s' is illegal for the instruction '%s' \n",
-           config->file_name,
-           config->line_number,
-           operand->name, 
-           instruction);
+    const char *method_str;
+
+    switch (method) {
+      case IMMEDIATE:
+        method_str = "immediate";
+        break;
+      case DIRECT:
+        method_str = "direct";
+        break;
+      case INDIRECT_REGISTER:
+        method_str = "indirect register";
+        break;
+      case DIRECT_REGISTER:
+        method_str = "direct register";
+        break;
+      case INVALID:
+        method_str = "invalid";
+        break;
+    }
+
+    printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n ",
+            config->file_name,
+            config->line_number
+      );
+
+    printf("operand '%s' can't be used as %s operand in the instruction '%s' ",
+            operand->name, 
+            (operand->type ? "source" : "target"),
+            instruction
+      );
+
+    printf("(%s addressing isn't supported for %s operands)\n\n",
+            method_str,
+            (operand->type ? "source" : "target")
+      );
   }
   return TRUE;
 }
@@ -158,7 +188,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempted to define a symbol that was already defined \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempted to define a symbol that was already defined \n\n",
             config->file_name,
             config->line_number);
   }
@@ -173,7 +203,7 @@ bool_t SymbolWasntDefined(char *symbol,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempted to call a symbol that wasn't defined \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempted to call a symbol that wasn't defined \n\n",
             config->file_name,
             config->line_number);
   }
@@ -190,9 +220,10 @@ bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name,
   }
 
   if (config->verbose) { 
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to define an entry symbol as extern \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to define '%s' as extern, but it was already defined as entry\n\n",
             config->file_name,
-            config->line_number);
+            config->line_number,
+            symbol_name);
   }
   return TRUE;
 }
@@ -207,9 +238,10 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol_name,
   }
 
   if (config->verbose){
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to define an extern symbol as entry \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to define '%s' as entry, but it was already defined as extern\n\n",
             config->file_name,
-            config->line_number);
+            config->line_number,
+            symbol_name);
   }
   return TRUE;
 }
@@ -232,7 +264,7 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Use of illegal characters in the symbol name '%s'\n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Use of illegal characters in the symbol name '%s'\n\n",
             config->file_name,
             config->line_number,
             symbol);
@@ -251,7 +283,7 @@ bool_t SymbolUsedAsAMacro(char *symbol,
   }
 
 	if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Attempt to define a symbol '%s', but it was already defined as a macro \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to define a symbol '%s', but it was already defined as a macro \n\n",
             config->file_name,
             config->line_number,
             symbol);
@@ -271,7 +303,7 @@ bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config
   }
   
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): The directive name '%s' doesn't exist \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n The directive name '%s' doesn't exist \n\n",
             config->file_name,
             config->line_number,
             directive);
@@ -293,7 +325,7 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): .data definition '%s' is invalid \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n .data definition '%s' is invalid \n\n",
             config->file_name,
             config->line_number,
             data);
@@ -317,7 +349,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): .string definition '%s' is invalid \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n .string definition '%s' is invalid \n\n",
             config->file_name,
             config->line_number,
             start);
@@ -337,7 +369,7 @@ bool_t RegisterNameDoesntExist(const char *register_name, syntax_check_config_t 
   }
   
   if (config->verbose) {
-      printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Register name '%s' doesn't exist \n",
+      printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Register name '%s' doesn't exist \n\n",
             config->file_name,
             config->line_number,
             register_name);
@@ -493,7 +525,7 @@ static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *con
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbols '%s' doesn't start with an alphabetical character \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Symbols '%s' doesn't start with an alphabetical character \n\n",
             config->file_name,
             config->line_number,
             symbol);
@@ -525,7 +557,7 @@ static bool_t SymbolExceedCharacterLimit(const char *symbol,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbol name '%s' exceeded the character limit \n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Symbol name '%s' exceeded the character limit \n\n",
             config->file_name,
             config->line_number,
             symbol);

@@ -20,10 +20,10 @@ typedef enum {
 } operand_type_t;
 
 typedef enum {
-  IMMEDIATE,
-  DIRECT,
-  INDIRECT_REGISTER,
-  DIRECT_REGISTER,
+  IMMEDIATE,         /* #3     */
+  DIRECT,            /* SYMBOL */
+  INDIRECT_REGISTER, /* *r2    */
+  DIRECT_REGISTER,   /* r3     */
   INVALID
 } addressing_method_t;
 

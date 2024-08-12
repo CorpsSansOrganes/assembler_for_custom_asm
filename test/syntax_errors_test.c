@@ -5,7 +5,8 @@
 #include "symbol_table.h"
 #include "macro_table.h"
 
-/* This config is used for calling syntax checks silently */
+
+typedef test_info_t (* test_func_t)(syntax_check_config_t *);
 
 test_info_t DetectExtraCharactersTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("DetectExtraCharacters");
@@ -99,108 +100,196 @@ test_info_t WrongNumberOfOperandsTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-/*
 test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("IncorrectAddressingMethod");
 
-  operand_t invalid_operand1 = {"add", INVALID, DESTINATION_OPERAND};
-  const char *add_instruction = "add";
-  const char *jmp_instruction = "jmp";
-  // TODO - what to do with invalid operands?
-  char *invalid_operand1 = "#c";
-  char *invalid_operand2 = "#";
-  char *invalid_operand3 = "*r13";
-  char *invalid_operand4 = "#++12";
-  char *valid_operand0 = "#12";
-  char *valid_operand1 = "aaaa";
-  char *valid_operand2 = "*r2";
-  char *valid_operand3 = "r4";
+  operand_t immediate_source_operand = {"#2", IMMEDIATE, SOURCE_OPERAND};
+  operand_t immediate_desc_operand = {"#-3", IMMEDIATE, DESTINATION_OPERAND};
+  operand_t direct_source_operand = {"SYMBOL", DIRECT, SOURCE_OPERAND};
+  operand_t direct_desc_operand = {"ANOTHERSYMBOL", DIRECT, DESTINATION_OPERAND};
+  operand_t indirect_register_source_operand = {"*r3", INDIRECT_REGISTER, SOURCE_OPERAND};
+  operand_t indirect_register_desc_operand = {"*r7", INDIRECT_REGISTER, DESTINATION_OPERAND};
+  operand_t direct_register_source_operand = {"r0", DIRECT_REGISTER, SOURCE_OPERAND};
+  operand_t direct_register_desc_operand = {"r1", DIRECT_REGISTER, DESTINATION_OPERAND};
 
-  if (FALSE == IncorrectAddressingMethod(add_instruction,invalid_operand1,destination, cfg)) {
+  /* add support immediate as source, but not as destination */
+  if (FALSE != IncorrectAddressingMethod("add",
+                                         &immediate_source_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(add_instruction,invalid_operand2,source, cfg)) {
+  if (TRUE != IncorrectAddressingMethod("add",
+                                        &immediate_desc_operand,
+                                        cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == IncorrectAddressingMethod(jmp_instruction,invalid_operand3,destination, cfg)) {
+
+  /* cmp supports anything */
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &immediate_source_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,invalid_operand4,source, cfg)) {
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &immediate_desc_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand1,source, cfg)) {
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &direct_source_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE ==  IncorrectAddressingMethod(add_instruction,valid_operand0,destination, cfg)) {
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &direct_desc_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  IncorrectAddressingMethod(jmp_instruction,valid_operand2,destination, cfg)) {
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &indirect_register_source_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  IncorrectAddressingMethod(add_instruction,valid_operand3,source, cfg)) {
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &indirect_register_desc_operand,
+                                         cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &direct_register_source_operand,
+                                         cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != IncorrectAddressingMethod("cmp",
+                                         &direct_register_desc_operand,
+                                         cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  /* lea doesn't support immediate addressing */
+  if (TRUE != IncorrectAddressingMethod("lea",
+                                        &immediate_source_operand,
+                                        cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != IncorrectAddressingMethod("lea",
+                                        &immediate_desc_operand,
+                                        cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  /* ...it does support direct addressing... */
+  if (FALSE != IncorrectAddressingMethod("lea",
+                                         &direct_source_operand,
+                                         cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != IncorrectAddressingMethod("lea",
+                                         &direct_desc_operand,
+                                         cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  /* ...but supports indirect addressing for destination operand only */
+  if (TRUE != IncorrectAddressingMethod("lea",
+                                        &indirect_register_source_operand,
+                                        cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != IncorrectAddressingMethod("lea",
+                                         &indirect_register_desc_operand,
+                                         cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+
   return test_info;
 }
 
 test_info_t SymbolDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
-  symbol_table_t *test_table = CreateSymbolTable();
-  result_t *valid_test_symbol = AddSymbol(test_table,"aaaa",100); 
-  if (FALSE == SymbolDefinedMoreThanOnce("aaaa",test_table, cfg)){
-     RETURN_ERROR(TEST_FAILED);
-  }
-  if (TRUE == SymbolDefinedMoreThanOnce("bbbb",test_table, cfg)){
-     RETURN_ERROR(TEST_FAILED);
-  }
-  return test_info;
-}
-test_info_t ColonSyntaxErrorTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("ColonSyntaxError");
-  const char *no_colon = "aaaa";
-  const char *colon_with_space = "aaaa :";
-  const char *valid = "aaaa:";
+  symbol_table_t *table = CreateSymbolTable();
 
-  if (TRUE == ColonSyntaxError(no_colon, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
+  if (NULL == table) {
+    perror("Couldn't init symbol table in SymbolDefinedMoreThanOnceTest");
+    RETURN_ERROR(TECHNICAL_ERROR);
   }
-  if (TRUE == ColonSyntaxError(colon_with_space, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
+
+  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+    perror("Couldn't add symbol in SymbolDefinedMoreThanOnceTest");
+    RETURN_ERROR(TECHNICAL_ERROR);
   }
-  if (FALSE == ColonSyntaxError(valid, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
+
+  if (TRUE != SymbolDefinedMoreThanOnce("aaaa", table, cfg)) {
+     RETURN_ERROR(TEST_FAILED);
   }
+
+  if (FALSE != SymbolDefinedMoreThanOnce("bbbb", table, cfg)){
+     RETURN_ERROR(TEST_FAILED);
+  }
+
+  DestroySymbolTable(table);
   return test_info;
 }
+
 test_info_t SymbolWasntDefinedTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
-  symbol_table_t *test_table = CreateSymbolTable();
-  AddSymbol(test_table,"aaaa",100); 
-  if (TRUE == SymbolWasntDefined("aaaa",test_table, cfg)){
+  symbol_table_t *table = CreateSymbolTable();
+
+  if (NULL == table) {
+    perror("Couldn't init symbol table");
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+    perror("Couldn't add symbol");
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (FALSE != SymbolWasntDefined("aaaa",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolWasntDefined("bbbb",test_table, cfg)){
+  if (TRUE != SymbolWasntDefined("bbbb",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
+
+  DestroySymbolTable(table);
   return test_info;
 }
+
 test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolAlreadyDefinedAsEntry");
-  symbol_table_t *test_table = CreateSymbolTable();
-  AddExternalSymbol(test_table,"aaaa",100); 
-  AddEntrySymbol(test_table,"bbbb",100); 
-  AddSymbol(test_table,"cccc",100); 
-  if (TRUE == SymbolAlreadyDefinedAsEntry("aaaa",test_table, cfg)){
+  symbol_table_t *table = CreateSymbolTable();
+
+  if (SUCCESS != AddExternalSymbol(table,"aaaa")) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddEntrySymbol(table,"bbbb")) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (FALSE != SymbolAlreadyDefinedAsEntry("aaaa", table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsEntry("cccc",test_table, cfg)){
+
+  if (FALSE != SymbolAlreadyDefinedAsEntry("cccc",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolAlreadyDefinedAsEntry("bbbb",test_table, cfg)){
+
+  if (TRUE != SymbolAlreadyDefinedAsEntry("bbbb",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
+
+  DestroySymbolTable(table);
   return test_info;
 }
+
+/*
 test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolAlreadyDefinedAsExtern");
   symbol_table_t *test_table = CreateSymbolTable();
@@ -423,42 +512,33 @@ int main(int argc, char *argv[]) {
   bool_t verbose = FALSE;
   int i = 0;
 
+  test_func_t tests[] = {
+    DetectExtraCharactersTest,
+    IsReservedNameTest,
+    InstructionDoesntExistTest,
+    WrongNumberOfOperandsTest,
+    DetectAddressingMethodTest,
+    IncorrectAddressingMethodTest,
+    SymbolDefinedMoreThanOnceTest,
+    SymbolWasntDefinedTest,
+    SymbolAlreadyDefinedAsEntryTest
+  };
+
+  /* Check if -v has been passed to enable verbose mode */
   for (i = 0; i < argc; ++i) {
     if (0 == strcmp(argv[i], "-v")) {
       verbose = TRUE;
     }
   }
-
   cfg = CreateSyntaxCheckConfig(argv[0], 0, verbose);
 
-  test_info = DetectExtraCharactersTest(&cfg);
-  if (TEST_SUCCESSFUL != test_info.result) {
-    PrintTestInfo(test_info);
-    ++total_failures;
-  }
-
-  test_info = IsReservedNameTest(&cfg);
-  if (TEST_SUCCESSFUL != test_info.result) {
-    PrintTestInfo(test_info);
-    ++total_failures;
-  }
-
-  test_info = InstructionDoesntExistTest(&cfg);
-  if (TEST_SUCCESSFUL != test_info.result) {
-    PrintTestInfo(test_info);
-    ++total_failures;
-  }
-
-  test_info = WrongNumberOfOperandsTest(&cfg);
-  if (TEST_SUCCESSFUL != test_info.result) {
-    PrintTestInfo(test_info);
-    ++total_failures;
-  }
-
-  test_info = DetectAddressingMethodTest(&cfg);
-  if (TEST_SUCCESSFUL != test_info.result) {
-    PrintTestInfo(test_info);
-    ++total_failures;
+  /* Run tests */
+  for (i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    test_info = tests[i](&cfg);
+    if (TEST_SUCCESSFUL != test_info.result) {
+      PrintTestInfo(test_info);
+      ++total_failures;
+    }
   }
 
   if (0 == total_failures) {

@@ -84,6 +84,15 @@ bool_t WrongNumberOfOperands(const char *instruction,
 /*
  * @brief Tell if an operand addressing method is viable for a given instruction.
  *
+ *        For example, for "add r7, B", since direct register is a legal
+ *        addressing method for add's source operand, the function would 
+ *        return FALSE.
+ *        However, since clr takes no source operand, calling the function 
+ *        with any addressing method for a source operand would return TRUE.
+ *        Similarly, "clr #2" is also illegal, as clr doesn't support immediate
+ *        addressing, so the function would return TRUE.
+ *
+ *
  * @param instruction - The instruction performed.
  *        operand - The operand we check (e.g. '5', 'r0').
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
@@ -92,7 +101,10 @@ bool_t WrongNumberOfOperands(const char *instruction,
  *   instruction, or FALSE otherwise.
  *
  *        NOTE: If the instruction isn't defined in the language's definition,
- *        behaviour of this function is undefined.
+ *        behaviour is undefined.
+ *
+ *        NOTE: If the operand is invalid (i.e. its addressing method is invalid)
+ *        behaviour is undefined.
  */
 bool_t IncorrectAddressingMethod(const char *instruction,
                                  const operand_t *operand,
@@ -133,9 +145,10 @@ bool_t SymbolWasntDefined(char *symbol,
                           syntax_check_config_t *config);
 
 /*
- * @brief Tell if a symbol that been directed as .extern was already defined as .entry
+ * @brief Check if a symbol that has been declared as .extern was previously 
+ *        declared as .entry.
  *
- * @param symbol - The symbol that been checked.
+ * @param symbol - The name of the symbol to check.
  *         table - The symbol table.
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
@@ -147,9 +160,10 @@ bool_t SymbolAlreadyDefinedAsEntry(char *symbol,
                                    syntax_check_config_t* config);
 
 /*
- * @brief Tell if a symbol that been directed as .entry was already defined as .extern
+ * @brief Check if a symbol that has been declared as .entry was previously 
+ *        declared as .extern.
  *
- * @param symbol - The symbol that been checked.
+ * @param symbol - The name of the symbol to check.
  *         table - The symbol table.
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
