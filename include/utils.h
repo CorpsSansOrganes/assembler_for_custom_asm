@@ -1,6 +1,8 @@
 #ifndef __UTILS__
 #define __UTILS__
 
+#define  blank_delimiters " \t\n\r"
+
 typedef enum {
   FALSE,
   TRUE

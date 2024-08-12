@@ -3,17 +3,15 @@
 #include "syntax_errors.h"
 #include "macro_table.h"
 #include "symbol_table.h"
+#include "generate_opcode.h"
+#include "vector.h"
 #include <stdio.h> /* perror */
 #include <string.h> 
 #include <stdlib.h>
 
-#define  blank_delimiters " \t\n\r"
-
 static bool_t FirstWordEndsWithColon(char *line);
 static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
-static int CountParameters(char *line);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list);
-static instruction_t FindInstruction (char *instruction_name);
 static addressing_method_t DetectAddressingMethod(const char *operand);
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
 
@@ -22,6 +20,7 @@ result_t AssembleFile(char *file_path) {
 }
 
 static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
+  vector_t opcode = VectorCreate(0,size_of(vector_t *));
   int line_counter = 0;
   int error_count_in_line = 0;
   int total_errors = 0;
@@ -60,23 +59,26 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
 
  
   while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
-    error_count_in_line = 0; 
-    line_counter++;
+      error_count_in_line = 0; 
+      line_counter++;
+      symbol_name = NULL;
 
-    /* Dealing with symbol definitions */
-    if (FirstWordEndsWithColon(current_line)) {
-      current_word = strtok(current_line, ": ");
-      symbol_name = current_word;
-      syntax_check_config_print -> line_number = line_counter;
-      error_count_in_line += SymbolErrorUnite(symbol_name,
-                                              syntax_check_config_print,
-                                              macro_list,
-                                              symbol_table);
+      /* Dealing with symbol definitions */
+      if (FirstWordEndsWithColon(current_line)) {
+        current_word = strtok(current_line, ": ");
+        symbol_name = current_word;
+        syntax_check_config_print -> line_number = line_counter;
+        error_count_in_line += SymbolErrorUnite(symbol_name,
+                                                syntax_check_config_print,
+                                                macro_list,
+                                                symbol_table);
 
-      current_line += strlen(current_word) + 2; /*skip the colon and space*/
-      current_word = strtok(NULL,blank_delimiters);
+        current_line += strlen(current_word) + 2; /*skip the colon and space*/
+        current_word = strtok(NULL,blank_delimiters);
+      }        
+      current_word = strtok(current_line, " ");
       if (NULL == current_word){
-        /*TODO orint error accordingly */
+        /*TODO print error accordingly */
       }
       if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
@@ -84,7 +86,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
+          if (symbol_name!= NULL){
           AddSymbol (symbol_table,symbol_name,DC);
+          }
+          opcode = StringLineToMachineCode(opcode, current_line); 
           DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
         }  
       }  
@@ -100,15 +105,18 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
-                if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
-                  return FAILURE;
-                } 
+                if (symbol_name != NULL){
+                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+                    return FAILURE;
+                  } 
+                }
+                opcode = DataLineToMachineCode(opcode, current_line,CountParameters(current_line));
                 DC += CountParameters(current_line);
           }
       }
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
-        symbol_name  = strtok (NULL,blank_delimiters);
+        symbol_name = strtok (NULL,blank_delimiters);/*TODO check error*/
         error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
         if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
           error_count_in_line++;
@@ -126,44 +134,19 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (0 == strcmp(current_word,".entry")) {
         /* Do nothing: will handle in 2nd pass */
       }
-
-      /*
-       * Handling instructions, e.g. add __, __
-       * need to understand how much to increase IC
-       * TODO need to add Too many operands error
-       * 
-       */
       else if (FALSE == InstructionDoesntExist(current_word,syntax_check_config_print)){
           if (0 == error_count_in_line){
+            if (symbol_name != NULL){
              if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
                return FAILURE;
              }
-          
-      
-      else {
-        current_word = strtok (current_line," ");
-        if (0 == strcmp(current_word,".extern")) {
-          current_line += strlen(current_word) + 1;
-          symbol_name  = strtok (NULL,blank_delimiters);
-          error_count_in_line += SymbolErrorUnite(symbol_name,syntax_check_config_print,macro_list,symbol_table);
-          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, syntax_check_config_print)){
-            error_count_in_line++;
-          } 
-          if (DetectExtraCharacters(current_line+strlen (symbol_name),syntax_check_config_print)){
-              error_count_in_line++;
-          }
-          if (error_count_in_line == 0){
-              if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
-                return FAILURE;
-              }
-              DC += CountParameters(current_line); 
-          }
-        }
+            }
+            current_line += current_word +1;
+            VectorAppend (opcode, InstructionLineToMachineCode (current_line,current_word, &IC));
+         }
       }
     total_errors += error_count_in_line;
-  }
-}
-    }
+    
   }
 }
 
@@ -189,16 +172,7 @@ static bool_t FirstWordEndsWithColon(char *line) {
 *  @param - line: the line
 *  @return - the number of parameters detected
 */
-static int CountParameters(char *line) {
-    int counter = 1;
-    while ('\0' != *line){
-      line++; 
-      if (*line == ','){
-        counter++;
-      }
-    }
-    return counter;
-}
+
 static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table){
       int internal_counter =0;
       if (SymbolPrefixIllegal (symbol_name,syntax_check_config_print)){
@@ -221,15 +195,7 @@ static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_chec
       }
       return internal_counter;
 }
-static instruction_t FindInstruction (char *instruction_name, int *instruction_number){
-  int i =0;
-  while (0 != strcmp(reserved_instructions[i].name, instruction_name)) {
-    ++i;
-  }
-  instruction_name = i;
-  return reserved_instructions[i];
 
-}
 /*copied from syntax_errors.c maybe better to put it in utils?*/
 static addressing_method_t DetectAddressingMethod(const char *operand) {
   char *ptr = (char *)operand;
@@ -291,64 +257,7 @@ return opcode;
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination){
   return (register_opcode_source+register_opcode_destination - 4);
 }
-static opcode_t InstructionLineToMachineCode(char *current_line, char *current_word){
-  bitmap_t instruction_opcode = 0;
-  bitmap_t operand_opcode = 0;
-  int L; /*number of memory words needed*/
-  unsigned int num_of_operands;
-  operand_t first_operand;
-  operand_t second_operand;
-  int instruction_number;
-  instruction_t current_instruction;
-  current_instruction = FindInstruction (current_word, &instruction_number); 
-  instruction_opcode += instruction_number;
-  instruction_opcode = instruction_opcode <<11;
-  SetBitOn (instruction_opcode,2);/* TODO move it to a function with enum containing ARE */
-  /* get the opcode of the instruction*/
-  current_line += strlen (current_word)+1;
-  num_of_operands = CountParameters (current_line);
-  if (FALSE == WrongNumberOfOperands (current_instruction.name,num_of_operands,syntax_check_config_print)){
-    if (0 == num_of_operands){
-        L=1;
-    }
-    if (1 == num_of_operands){
-      L=2;
-      current_word = strtok(current_line, blank_delimiters);
-      first_operand.name = current_word;
-      first_operand.addressing_method = DetectAddressingMethod(current_word);
-      first_operand.type = DESTINATION_OPERAND;
-      operand_opcode = OperandToOpcode (first_operand);
-      SetBitOn (instruction_opcode, 7+first_operand.addressing_method); /* TODO move it to a function*/
-      /*insert opcode*/
-  }
-    if (2 == num_of_operands){
-      SetBitOn (instruction_opcode, 3+first_operand.addressing_method); /* TODO move it to a function*/
-      SetBitOn (instruction_opcode, 7+first_operand.addressing_method); /* TODO move it to a function*/
-      current_word = strtok(current_line, ", \t\n\r");/*TODO check error of the case 'operand1 ,, operand2'*/
-      first_operand.name = current_word;
-      first_operand.addressing_method = DetectAddressingMethod(current_word);
-      first_operand.type = SOURCE_OPERAND;
-      current_word = strtok(NULL, ", \t\n\r");
-      second_operand.name = current_word;
-      second_operand.addressing_method = DetectAddressingMethod(current_word);
-      second_operand.type = DESTINATION_OPERAND;
-        if ((first_operand.addressing_method == DIRECT_REGISTER || first_operand.addressing_method == INDIRECT_REGISTER) &&
-          (second_operand.addressing_method == DIRECT_REGISTER || second_operand.addressing_method == INDIRECT_REGISTER)){
-          operand_opcode = UnifyRegisterOpcode (OperandToOpcode (first_operand),OperandToOpcode (second_operand));
-          /*insert opcode*/
-          L=2;
-          }
-        else {
-          operand_opcode = OperandToOpcode (first_operand);
-          /*insert opcode*/
-          operand_opcode = OperandToOpcode (second_operand);
-          /*insert opcode*/
-          L=3;
-      }
 
-    }
-  }    
-}
                 /*instruction handling:
                 * check errors
                 * extract the operands               
