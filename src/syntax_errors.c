@@ -8,7 +8,6 @@
 #include "language_definitions.h"
 #include "string_utils.h"
 
-static addressing_method_t DetectAddressingMethod(const char *operand);
 static bool_t TakesOperand(instruction_t instruction, operand_type_t type);
 static bool_t AddressingMethodIsLegal(instruction_t instruction,
                                       operand_type_t type,
@@ -16,73 +15,12 @@ static bool_t AddressingMethodIsLegal(instruction_t instruction,
 static bool_t IsDataEntryValid(const char *from,
                                const char *to);
 
+static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *config);
+static bool_t SymbolExceedCharacterLimit(const char *symbol,
+                                  syntax_check_config_t *config);
+
 /* This config is used for calling other syntax checks internally silently */
 syntax_check_config_t silent_syntax_cfg = {NULL, 0, FALSE};
-
-syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
-                                              unsigned int line_number,                                          
-                                              bool_t verbose) {
-  syntax_check_config_t info;
-  info.file_name = file_name;
-  info.line_number = line_number;
-  info.verbose = verbose;
-
-  return info;
-}
-
-/*
-* @brief Detects what kind of addressing method a given operand adherse to.
-*        For example:
-*        #3 - Immediate addresing.
-*        r1 - Direct register addressing.
-*        *r3 - Indirect register addresing.
-*
-* @param operand - the operand name, e.g. "#3".
-*
-* @return The type of addressing method for the operand.
-*         In particular, if the 
-*/
-
-addressing_method_t DetectAddressingMethod(const char *operand_name) {
-  char *ptr = (char *)StripLeadingWhitespaces(operand_name);
-
-  if ('#' == *ptr) {
-    bool_t digit_occurred = FALSE;
-    ptr++;
-    if (('-' == *ptr) || ('+' ==  *ptr)) {
-      ptr++;
-    }
-
-    if (isdigit(*ptr)) {
-      digit_occurred = TRUE;
-      ++ptr;
-    }
-
-    while (isdigit(*ptr)) {
-      ++ptr;
-    }
-
-    if (('\0' != *ptr) || (FALSE == digit_occurred)) {
-      return INVALID;
-    }
-
-    return IMMEDIATE;                
-  }
-
-  else if ('*' == *ptr) {
-    ++ptr;
-    if (RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
-      return INVALID;
-    }
-    return INDIRECT_REGISTER;
-  }
-
-  else if (!RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
-    return DIRECT_REGISTER;
-  }
-
-  return DIRECT;
-}
 
 bool_t DetectExtraCharacters(const char *starting_from,
                              syntax_check_config_t *config) {
@@ -278,13 +216,19 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol_name,
 
 bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
   char *ptr = (char *)symbol;
+  bool_t result = FALSE;
 
-  while ('\0' != *ptr && isalpha(*ptr)) {
+  if (SymbolPrefixIllegal(ptr, config) 
+    || SymbolExceedCharacterLimit(symbol, config)) {
+    result = TRUE;
+  }
+
+  while ('\0' != *ptr && (isalpha(*ptr) || isdigit(*ptr))) {
     ++ptr;
   }
 
-  if ('\0' == *ptr) {
-    return FALSE;
+  if ('\0' != *ptr) {
+    result = TRUE;
   }
 
   if (config->verbose) {
@@ -293,47 +237,10 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
             config->line_number,
             symbol);
   }
-  return TRUE;
+
+  return result;
 }
 
-bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *config) {
-  if (isalpha(*symbol)) {
-    return FALSE;
-  }
-
-  if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbols '%s' doesn't start with an alphabetical character \n",
-            config->file_name,
-            config->line_number,
-            symbol);
-  }
-
-  return TRUE;
-}
-
-
-bool_t SymbolExceedCharacterLimit(const char *symbol,
-                                  syntax_check_config_t *config) {
-  unsigned int length = 0;
-
-  while ('\0' != *symbol && length <= SYMBOL_CHARACTER_LIMIT) {
-    length++;
-    symbol++;
-  }
-
-  if (length <= SYMBOL_CHARACTER_LIMIT) {
-    return FALSE;
-  }
-
-  if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbol name '%s' exceeded the character limit \n",
-            config->file_name,
-            config->line_number,
-            symbol);
-  }
-
-  return TRUE;
-}
 
 bool_t SymbolUsedAsAMacro(char *symbol,
                           macro_table_t *macro_list,
@@ -438,43 +345,62 @@ bool_t RegisterNameDoesntExist(const char *register_name, syntax_check_config_t 
   return TRUE;
 }
 
-/*
-*@brief Detects which type of addressing method fit to the operand, and returns invalid if neccessary.
-*@param Operand - the operand
-*@return The type of addressing method for the operand.
-*/
-static addressing_method_t DetectAddressingMethod(const char *operand) {
-  char *ptr = (char *)operand;
+syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
+                                              unsigned int line_number,                                          
+                                              bool_t verbose) {
+  syntax_check_config_t info;
+  info.file_name = file_name;
+  info.line_number = line_number;
+  info.verbose = verbose;
+
+  return info;
+}
+
+addressing_method_t DetectAddressingMethod(const char *operand_name) {
+  char *ptr = (char *)operand_name;
 
   if ('#' == *ptr) {
-    int i = 0;
+    bool_t digit_occurred = FALSE;
     ptr++;
     if (('-' == *ptr) || ('+' ==  *ptr)) {
       ptr++;
     }
-    for (i = 0; i < strlen(ptr); i++) {
-      if (!isdigit(*(ptr+i))) {
-        return INVALID;
-      }
+
+    if (isdigit(*ptr)) {
+      digit_occurred = TRUE;
+      ++ptr;
     }
-    if (0 == i) { /* strlen(ptr) == 0 */ 
+
+    while (isdigit(*ptr)) {
+      ++ptr;
+    }
+
+    if (('\0' != *ptr) || (FALSE == digit_occurred)) {
       return INVALID;
     }
+
     return IMMEDIATE;                
   }
 
-  if ('*' == *ptr) {
-    if (RegisterNameDoesntExist(ptr + 1, &silent_syntax_cfg)) {
+  else if ('*' == *ptr) {
+    ++ptr;
+    if (RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
       return INVALID;
     }
     return INDIRECT_REGISTER;
   }
-  if (!RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
+
+  else if (!RegisterNameDoesntExist(ptr, &silent_syntax_cfg)) {
     return DIRECT_REGISTER;
+  }
+
+  else if (SymbolNameIsIllegal(ptr, &silent_syntax_cfg)) {
+    return INVALID;
   }
 
   return DIRECT;
 }
+
 
 /*
  * @brief Checks if an instruction takes a source/destination operand.
@@ -549,4 +475,61 @@ static bool_t IsDataEntryValid(const char *from,
   }
 
   return FALSE;
+}
+
+/*
+ * @brief Tell if a symbol begins with illegal characters 
+ *        (must begin with alphabetical characters only)
+ *
+ * @param symbol - The symbol name.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ * @return TRUE if the symbol is illegal, or FALSE otherwise.
+ */
+
+static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *config) {
+  if (isalpha(*symbol)) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbols '%s' doesn't start with an alphabetical character \n",
+            config->file_name,
+            config->line_number,
+            symbol);
+  }
+
+  return TRUE;
+}
+
+/*
+ * @brief Check if the length of the symbol name exceeded the character limit (31).
+ *
+ * @param symbol - The symbol.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ * @return TRUE if the symbol exceeded the character limit, or FALSE otherwise.
+ */
+
+static bool_t SymbolExceedCharacterLimit(const char *symbol,
+                                  syntax_check_config_t *config) {
+  unsigned int length = 0;
+
+  while ('\0' != *symbol && length <= SYMBOL_CHARACTER_LIMIT) {
+    length++;
+    symbol++;
+  }
+
+  if (length <= SYMBOL_CHARACTER_LIMIT) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u): Symbol name '%s' exceeded the character limit \n",
+            config->file_name,
+            config->line_number,
+            symbol);
+  }
+
+  return TRUE;
 }

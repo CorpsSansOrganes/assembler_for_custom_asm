@@ -161,51 +161,21 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol,
                                    syntax_check_config_t* config);
 
 /*
- * @brief Tell if a symbol has illegal characters in it (must be alphabetical or
- * numerical characters only)
+ * @brief Tell if a symbol name is illegal.
  *
-  * @param symbol - The symbol (without the colon at the end).
+ * A symbol name is considered illegal if it:
+ *   1. Starts with a non-alphabetical character.
+ *   2. Has any illegal characters in it (must be alphabetical or
+ *   numerical characters only).
+ *   3. Exceeds character limit (32).
+ *
+  * @param symbol - The symbol (e.g. "SYMBOL")
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
  * @return TRUE if the symbol is illegal, or FALSE otherwise.
  */
 
 bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config);
-
-/*
- * @brief Tell if a symbol begins with illegal characters 
- *        (must begin with alphabetical characters only)
- *
- * @param symbol - The symbol name.
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- * @return TRUE if the symbol is illegal, or FALSE otherwise.
- */
-
-bool_t SymbolPrefixIllegal(const char *symbol,
-                           syntax_check_config_t *config);
-
-/*
- * @brief Check if the length of the symbol name exceeded the character limit (31).
- *
- * @param symbol - The symbol.
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- * @return TRUE if the symbol exceeded the character limit, or FALSE otherwise.
- */
-
-bool_t SymbolExceedCharacterLimit(const char *symbol,
-                                  syntax_check_config_t *config);
-
-/*
- * @brief Check if a symbol name already used as a macro.
- *
-  * @param symbol - The symbol 
- *         macro_list - The list of macros.
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- * @return TRUE if the symbol name already used as a macro, or FALSE otherwise.
- */
 
 bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list,
                           syntax_check_config_t *config);

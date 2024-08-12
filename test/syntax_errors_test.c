@@ -99,6 +99,7 @@ test_info_t WrongNumberOfOperandsTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
+/*
 test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("IncorrectAddressingMethod");
 
@@ -106,12 +107,10 @@ test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   const char *add_instruction = "add";
   const char *jmp_instruction = "jmp";
   // TODO - what to do with invalid operands?
-  /* 
   char *invalid_operand1 = "#c";
   char *invalid_operand2 = "#";
   char *invalid_operand3 = "*r13";
   char *invalid_operand4 = "#++12";
-  */
   char *valid_operand0 = "#12";
   char *valid_operand1 = "aaaa";
   char *valid_operand2 = "*r2";
@@ -144,7 +143,6 @@ test_info_t IncorrectAddressingMethodTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-/*
 test_info_t SymbolDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolDefinedMoreThanOnce");
   symbol_table_t *test_table = CreateSymbolTable();
@@ -352,6 +350,72 @@ test_info_t RegisterNameDoesntExistTest(syntax_check_config_t *cfg) {
 }
 */
 
+test_info_t DetectAddressingMethodTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("DetectExtraCharacters");
+  const char *valid_register = "r7";
+  const char *valid_indirect_register = "*r4";
+  const char *invalid_indirect_register = "*r";
+  const char *valid_immediate = "#+3";
+  const char *invalid_immediate1 = "#+";
+  const char *invalid_immediate2 = "#x";
+  const char *invalid_immediate3 = "#";
+  const char *valid_symbol = "SYMBOL";
+  const char *symbol_looks_like_register = "r12";
+  const char *invalid_symbol1 = "1SYMBOL";
+  const char *invalid_symbol2 = "X012345678901234567890123456789XY";
+  const char *invalid_symbol3 = " SYMBOL   ";
+
+  if (DIRECT_REGISTER != DetectAddressingMethod(valid_register)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INDIRECT_REGISTER != DetectAddressingMethod(valid_indirect_register)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_indirect_register)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (IMMEDIATE != DetectAddressingMethod(valid_immediate)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_immediate1)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_immediate2)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_immediate3)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (DIRECT != DetectAddressingMethod(valid_symbol)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (DIRECT != DetectAddressingMethod(symbol_looks_like_register)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_symbol1)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_symbol2)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (INVALID != DetectAddressingMethod(invalid_symbol3)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  return test_info;
+}
+
 int main(int argc, char *argv[]) {
   int total_failures = 0;
   syntax_check_config_t cfg;
@@ -386,6 +450,12 @@ int main(int argc, char *argv[]) {
   }
 
   test_info = WrongNumberOfOperandsTest(&cfg);
+  if (TEST_SUCCESSFUL != test_info.result) {
+    PrintTestInfo(test_info);
+    ++total_failures;
+  }
+
+  test_info = DetectAddressingMethodTest(&cfg);
   if (TEST_SUCCESSFUL != test_info.result) {
     PrintTestInfo(test_info);
     ++total_failures;
