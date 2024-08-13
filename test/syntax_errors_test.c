@@ -384,6 +384,7 @@ test_info_t SymbolUsedAsAMacroTest(syntax_check_config_t *cfg){
   if (TRUE != SymbolUsedAsAMacro("aaaa",table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
+
   if (FALSE != SymbolUsedAsAMacro("bbbb",table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
@@ -392,55 +393,92 @@ test_info_t SymbolUsedAsAMacroTest(syntax_check_config_t *cfg){
   return test_info;
 }
 
-/*
 test_info_t DirectiveDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
   const char *exist = ".entry";
   const char *without_dot = "entry";
   const char *not_exist = "aaaa";
-  if (TRUE == DirectiveDoesntExist(exist, cfg)) {
+  const char *uppercase_directive = ".dAta";
+
+  if (FALSE != DirectiveDoesntExist(exist, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == DirectiveDoesntExist(without_dot, cfg)) {
+  if (TRUE != DirectiveDoesntExist(without_dot, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (FALSE == DirectiveDoesntExist(not_exist, cfg)) {
+  if (TRUE != DirectiveDoesntExist(not_exist, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
+  if (TRUE != DirectiveDoesntExist(uppercase_directive, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
   return test_info;
 }
-test_info_t DirectiveIsUpperCaseTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("DirectiveIsUpperCase");
-  const char *exist = ".eNTry";
-  const char *without_dot = ".entry";
-  const char *not_exist = "aaaa";
-  if (FALSE == DirectiveIsUpperCase(exist, cfg)) {
+
+test_info_t IsIllegalDataParameterTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("IsIllegalDataParameterTest");
+  const char *not_enough_commas = "13, 145 7";
+  const char *too_many_commas = "13, , 15";
+  const char *illegal_characters = "13, 32x4";
+  const char *empty_parameters = "";
+  const char *ok1 = "+32";
+  const char *ok2 = "1, -2";
+  const char *ok3 = "11, -222, 3333";
+
+  if (TRUE != IsIllegalDataParameter(not_enough_commas, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == DirectiveIsUpperCase(without_dot, cfg)) {
+
+  if (TRUE != IsIllegalDataParameter(too_many_commas, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == DirectiveIsUpperCase(not_exist, cfg)) {
+
+  if (TRUE != IsIllegalDataParameter(illegal_characters, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
+
+  if (TRUE != IsIllegalDataParameter(empty_parameters, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (FALSE != IsIllegalDataParameter(ok1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (FALSE != IsIllegalDataParameter(ok2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (FALSE != IsIllegalDataParameter(ok3, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
   return test_info;
 }
-test_info_t CommaIsMissingInDataTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("CommaIsMissingInData");
-  const char *valid = "aaa, bbb, ccc";
-  const char *with_space = "aaaa , bbbb";
-  const char *no_comma = "aaaa bbbb";
-  if (FALSE == CommaIsMissingInData(no_comma, cfg)) {
+
+test_info_t IsIllegalStringTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("IsIllegalStringTest");
+  const char *legal = "\"abc\"";
+  const char *illegal1 = "abc\"";
+  const char *illegal2 = "\"abc";
+
+  if (FALSE != IsIllegalString(legal, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == CommaIsMissingInData(with_space, cfg)) {
+
+  if (TRUE != IsIllegalString(illegal1, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == CommaIsMissingInData(valid, cfg)) {
+
+  if (TRUE != IsIllegalString(illegal2, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
+
   return test_info;
 }
+
+/*
 test_info_t RegisterNameDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("RegisterNameDoesntExist");
   const char *valid = "r0";
@@ -544,7 +582,10 @@ int main(int argc, char *argv[]) {
     SymbolAlreadyDefinedAsEntryTest,
     SymbolAlreadyDefinedAsExternTest,
     SymbolNameIsIllegalTest,
-    SymbolUsedAsAMacroTest
+    SymbolUsedAsAMacroTest,
+    DirectiveDoesntExistTest,
+    IsIllegalDataParameterTest,
+    IsIllegalStringTest
   };
 
   /* Check if -v has been passed to enable verbose mode */

@@ -342,7 +342,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   const char *start = str;
 
   if ('\"' == *str) {
-    str = EndOfString(str);
+    str = EndOfString(str) - 1;
     while (IsBlank(*str)) {
       --str;
     }

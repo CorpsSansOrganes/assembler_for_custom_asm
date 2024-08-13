@@ -92,7 +92,7 @@ static macro_t *CreateMacro(const char *macro_name,
     return NULL;
   }
 
-  macro->macro_name = strdup(macro_name);
+  macro->macro_name = StrDup(macro_name);
   if (NULL == macro->macro_name) {
     free(macro); macro = NULL;
     free((void *)macro_definition); macro_definition = NULL;

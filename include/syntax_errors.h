@@ -211,7 +211,7 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
 */
 
 /*
- * @brief Check if the directive that been called does not exist. 
+ * @brief Check if the directive that has been called does not exist. 
  * the existing directive are : .data , .string , .entry , .extern
  *
  * @param directive - Null-terminated string, which we want to check if its
