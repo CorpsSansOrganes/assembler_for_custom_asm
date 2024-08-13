@@ -76,8 +76,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
         current_word = strtok(NULL,blank_delimiters);
       }        
       current_word = strtok(current_line, " ");
-      if (NULL == current_word){
-        /*TODO print error accordingly */
+
+      if (NoDefinitionForSymbol(current_line,&syntax_check_config_print)){
+        error_count_in_line++;
       }
       else if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
@@ -108,17 +109,14 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
-        if (isIllegalOrExternOrEntryParameter(symbol_name,symbol_table, &syntax_check_config_print)){
+        if (isIllegalOrExternOrEntryParameter(current_line,symbol_table, &syntax_check_config_print)){
           error_count_in_line++;
         }
         else {
-          symbol_name = strtok (NULL,blank_delimiters);/*TODO check error*/
+          symbol_name = strtok (NULL,blank_delimiters);
           error_count_in_line += SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table);
           if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &syntax_check_config_print)){
             error_count_in_line++;
-          } 
-          if (DetectExtraCharacters(current_line+strlen (symbol_name),&syntax_check_config_print)){
-              error_count_in_line++;
           }
           if (error_count_in_line == 0){
               if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
@@ -153,8 +151,12 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
          }
       }
     total_errors += error_count_in_line;
-    
+  
   }
+  if (0 == total_errors){
+    return SUCCESS;
+  }
+  return FAILURE;
 }
 
 static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode){
@@ -224,11 +226,15 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
               *opcode_bitmap = GetSymbolAddress (symbol);
             } 
         }
+        total_errors += error_count_in_line;
         vector_counter++;
     }
 
-
   }
+  if (0 == total_errors){
+    return SUCCESS;
+  }
+  return FAILURE;
 }
 
 /* @brief - if the first word in a string ends with ':'
@@ -280,7 +286,6 @@ static int OperandToOpcode(operand_t operand){/*operand_t *? TODO add number too
     return opcode;
   }
   if (operand.addressing_method == DIRECT){
-
     /*depend by the symbol table, to handle in second pass*/
   }
   if (operand.addressing_method == DIRECT_REGISTER || operand.addressing_method == INDIRECT_REGISTER)
@@ -302,6 +307,8 @@ static int OperandToOpcode(operand_t operand){/*operand_t *? TODO add number too
 return opcode;
 }
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination){
+  /*opcode of source is in 3-5, opcode of destination 6-8.
+  minus 4 represents the A value which is set on both*/
   return (register_opcode_source+register_opcode_destination - 4);
 }              
       
@@ -310,14 +317,14 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
     int counter = 0;
     char *current_word = strtok (line, "' /n/t/r");
     if (current_word != NULL){
-      first_operand->name = strdup (current_word);
+      first_operand->name = StrDup (current_word);
       first_operand->addressing_method =DetectAddressingMethod(first_operand->name);
       first_operand->type = DESTINATION_OPERAND;
       counter++;
     }
     current_word = strtok (NULL, "' /n/t/r");
     if (current_word != NULL){
-      second_operand->name =strdup (current_word);
+      second_operand->name =StrDup (current_word);
       second_operand->addressing_method =DetectAddressingMethod(second_operand->name);
       second_operand->type = DESTINATION_OPERAND;
       first_operand->type = SOURCE_OPERAND;
@@ -333,5 +340,3 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
 
 }
 
-static void HandleSymbol (char *symbol, int line_number){
-}

@@ -61,13 +61,13 @@ if (1 == num_of_operands){
     instruction_opcode = SetBitAddressingMethod (instruction_opcode, first_operand); 
     instruction_opcode = SetBitAddressingMethod (instruction_opcode, second_operand);
     VectorAppend (line_machine_code, instruction_opcode);
-      if ((first_operand.addressing_method == DIRECT_REGISTER || first_operand.addressing_method == INDIRECT_REGISTER) &&
+    if ((first_operand.addressing_method == DIRECT_REGISTER || first_operand.addressing_method == INDIRECT_REGISTER) &&
         (second_operand.addressing_method == DIRECT_REGISTER || second_operand.addressing_method == INDIRECT_REGISTER)){
         operand_opcode = UnifyRegisterOpcode (OperandToOpcode (first_operand),OperandToOpcode (second_operand));
         VectorAppend (line_machine_code, operand_opcode);
         L=2;
-        }
-      else {
+    }
+    else {
         operand_opcode = OperandToOpcode (first_operand);
         VectorAppend (line_machine_code, operand_opcode);
         operand_opcode = OperandToOpcode (second_operand);

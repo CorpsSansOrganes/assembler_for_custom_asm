@@ -203,6 +203,17 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config);
 
 bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
                           syntax_check_config_t *config);
+/*
+ * @brief Checks if a symbol definition was called without any definition.
+ *        exapmle: SYMBOL: //Nothing after
+ *
+ * @param symbol - the line that comes after the symbol definition.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *        
+ * @return TRUE if the line is Null or contains only blanks. FALSE otherwise.
+ */
+bool_t NoDefinitionForSymbol(char *line, syntax_check_config_t *config);
+
 
 /*
 // ~~--~~--~~--~~--~~
