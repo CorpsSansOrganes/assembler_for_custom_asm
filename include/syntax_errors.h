@@ -191,7 +191,17 @@ bool_t SymbolAlreadyDefinedAsExtern(char *symbol,
 
 bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config);
 
-bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macro_list,
+/*
+ * @brief Checks if a symbol name was already used as macro name.
+ *
+ * @param symbol - The symbol name to check.
+ *        macros - The macro table.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *        
+ * @return TRUE if symbol was already used as a macro. FALSE otherwise.
+ */
+
+bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
                           syntax_check_config_t *config);
 
 /*
@@ -219,7 +229,7 @@ bool_t DirectiveDoesntExist(const char *directive,
  * @brief Checks if `.data` definitions is correct. 
  * 
  *        This function examines the input string `data` to determine whether:
- *        1. commas are properly placed between values in a `.data` definition. 
+ *        1. Commas are properly placed between values in a `.data` definition. 
  *
  *        For example:
  *        13, 145 // OK
@@ -235,6 +245,7 @@ bool_t DirectiveDoesntExist(const char *directive,
  *        For example:
  *        13, 32x  // ERROR
  *
+ *        4. There is atleast one parameter.
  *
  * @param data - A pointer to the string containing the `.data` values to be checked.
  *               e.g.: "13, 143, 12".
@@ -257,6 +268,20 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
+
+/*
+ * @brief Checks if a parameter passed to .extern or .entry directive
+ *        is legal:
+ *        1. Exactly one parameter was recieved.
+ *        2. The parameter recieved is a legal symbol name.
+ *
+ * @param data - The parameter to check (e.g. "SYMBOL").
+ *        config - Pointer the configurations about the syntax check.
+ *        
+ * @return TRUE if the parameter is illegal, FALSE otherwise.
+ */
+
+bool_t IsIllegalExternOrEntryParameter(const char *data, syntax_check_config_t *config);
 
 /*
 // ~~--~~--~~--~~--~~

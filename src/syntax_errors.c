@@ -275,10 +275,10 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
 
 
 bool_t SymbolUsedAsAMacro(char *symbol,
-                          macro_table_t *macro_list,
+                          macro_table_t *macros,
                           syntax_check_config_t *config) {
 
-  if (NULL == FindMacro(macro_list, symbol)) {
+  if (NULL == FindMacro(macros, symbol)) {
     return FALSE;
   }
 
