@@ -57,13 +57,13 @@ result_t AddExternalSymbol(symbol_table_t *table,
                            const char *symbol_name);
 
 /*
- * @brief Add a symbol to the table as an entry symbol.
- * @param table - The table we wish to add a symbol to.
+ * @brief finds the symbol by his key and changes his type to entry.
+ * @param table - The table which contains the symbol.
  *        symbol_name - The symbol's key.
  *
  * @return SUCCESS if successful, or an error code upon failure.
  */
-result_t AddEntrySymbol(symbol_table_t *table,
+result_t ChangeSymbolToEntry(symbol_table_t *table,
                        const char *symbol_name);
 
 /*

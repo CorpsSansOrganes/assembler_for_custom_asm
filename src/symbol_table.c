@@ -65,7 +65,13 @@ result_t AddExternalSymbol(symbol_table_t *table,
 
 result_t AddEntrySymbol(symbol_table_t *table,
                        const char *symbol_name) {
-  return AddSymbolWithType(table, symbol_name, 0, ENTRY);
+  symbol_t *symbol;
+  symbol = FindSymbol ( table, symbol_name);
+  if (NULL == symbol){
+    return FAILURE;
+  }
+  symbol->type = ENTRY;
+  return SUCCESS;
 }
 
 symbol_t *FindSymbol(symbol_table_t *table,
