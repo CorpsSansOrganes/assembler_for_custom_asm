@@ -478,24 +478,34 @@ test_info_t IsIllegalStringTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-/*
+test_info_t IsIllegalExternOrEntryParameterTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("IsIllegalStringTest");
+
+  RETURN_ERROR(TECHNICAL_ERROR); /* todo */
+
+  return test_info;
+}
+
 test_info_t RegisterNameDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("RegisterNameDoesntExist");
   const char *valid = "r0";
   const char *not_exist = "r9";
   const char *not_a_register = "aaaabbbb";
-  if (FALSE == RegisterNameDoesntExist(valid, cfg)) {
+
+  if (TRUE != RegisterNameDoesntExist(not_a_register, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == RegisterNameDoesntExist(not_exist, cfg)) {
+
+  if (TRUE != RegisterNameDoesntExist(not_exist, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-    if (TRUE == RegisterNameDoesntExist(not_a_register, cfg)) {
+
+  if (FALSE != RegisterNameDoesntExist(valid, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
+
   return test_info;
 }
-*/
 
 test_info_t DetectAddressingMethodTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("DetectExtraCharacters");
@@ -585,7 +595,9 @@ int main(int argc, char *argv[]) {
     SymbolUsedAsAMacroTest,
     DirectiveDoesntExistTest,
     IsIllegalDataParameterTest,
-    IsIllegalStringTest
+    IsIllegalStringTest,
+    IsIllegalExternOrEntryParameterTest,
+    RegisterNameDoesntExistTest
   };
 
   /* Check if -v has been passed to enable verbose mode */
