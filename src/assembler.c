@@ -152,22 +152,38 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table){
   char *symbol_name=NULL;
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
-
-  if (FirstWordEndsWithColon(current_line)) {
-      /*continue to the next word*/
-      }
-  if (/*word == extern/data/string*/){
-      /*move to next line*/
+  input_file = fopen(file_path, "r");
+  if (NULL == input_file) {
+    perror("Couldn't open input file");
+    DestroyMacroTable(macro_list);/*better doing it on Main*/
+    DestroySymbolTable(symbol_table);
+    return ERROR_OPENING_FILE; 
   }
-  if (/*word == .entry*/){
-    /*change to entry the symbol*/
-  }
-  if (/*word == instruction*/){
-    /*look for symbol and replace*/
-  }
+  while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
+    error_count_in_line = 0; 
+    line_counter++;
+    symbol_name = NULL;
+    if (FirstWordEndsWithColon(current_line)) {
+        current_word = strtok (current_line, blank_delimiters);
+        current_line += strlen (current_word) +1;               
+    }
+    current_word = strtok (current_line, blank_delimiters);
+    current_line += strlen (current_word) +1;      
+    if (0 == strcmp (current_word, ".extern") || 0 == strcmp (current_word, ".data") || 0 == strcmp (current_word, ".string"))){
+        /*nothing to do, continue to the next line*/
+    }
+    if (0 == strcmp (current_word, ".entry")){
+       if (ChangeSymbolToEntry(symbol_table,current_word) != SUCCESS)
+       {
+          return FAILURE;
+       }
+    }
+    if (/*word == instruction*/){
+      /*look for symbol and replace*/
+    }
 
 
-}
+  }
 
 /* @brief - if the first word in a string ends with ':'
 *  @param - line: the line
