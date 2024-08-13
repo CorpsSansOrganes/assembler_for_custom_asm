@@ -265,7 +265,11 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddEntrySymbol(table,"bbbb")) {
+  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != ChangeSymbolToEntry(table,"bbbb")) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
