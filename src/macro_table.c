@@ -1,7 +1,8 @@
 #include <stdlib.h> /* malloc, free */
-#include <string.h> /* strlen, strcpy, strdup */
+#include <string.h> /* strlen, strcpy */
 #include "macro_table.h"
 #include "list.h"
+#include "string_utils.h"
 
 struct macro_struct {
   const char *macro_name;
@@ -85,7 +86,7 @@ static macro_t *CreateMacro(const char *macro_name,
   if (NULL == macro) {
     return NULL;
   }
-  macro->macro_definition = strdup(macro_definition);
+  macro->macro_definition = StrDup(macro_definition);
   if (NULL == macro->macro_definition) {
     free(macro); macro = NULL;
     return NULL;
