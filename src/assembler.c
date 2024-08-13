@@ -23,7 +23,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   int line_counter = 0;
   int error_count_in_line = 0;
   int total_errors = 0;
-  int IC = INITIAL_IC_VALUE;
+  int IC = 0;
   int DC = 0;
   char *current_word = NULL; 
   char *current_line = NULL;
@@ -87,7 +87,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
         }
         else if (error_count_in_line==0) {
           if (symbol_name!= NULL){
-          AddSymbol (symbol_table,symbol_name,DC);
+          AddSymbol (symbol_table,symbol_name,DC,DATA);
           }
           opcode = StringLineToMachineCode(opcode, current_line); 
           DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
@@ -100,7 +100,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
           }
           if (error_count_in_line == 0){
                 if (symbol_name != NULL){
-                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,DC,DATA)){
                     return FAILURE;
                   } 
                 }
@@ -132,7 +132,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
           if (0 == error_count_in_line){
             if (symbol_name != NULL){
-             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC)){
+             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC, CODE)){
                return FAILURE;
              }
             }
@@ -152,6 +152,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       }
     total_errors += error_count_in_line;
   
+  }
+  if (SUCCESS != UpdateAdresses (symbol_table, IC)){
+    return FAILURE;
   }
   if (0 == total_errors){
     return SUCCESS;
@@ -310,8 +313,24 @@ static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_
   /*opcode of source is in 3-5, opcode of destination 6-8.
   minus 4 represents the A value which is set on both*/
   return (register_opcode_source+register_opcode_destination - 4);
-}              
+}             
       
+static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC){
+  symbol_t *symbol = GetHeadSymbol (symbol_table);
+  int address;
+  if (NULL != symbol){
+    address = GetSymbolAddress (symbol);
+  }
+  while (NULL != symbol){
+    if (DATA == GetSymbolAddress(symbol)){
+      if (SUCCESS != UpdateSymbolAddress (symbol,address+IC)){
+        return FAILURE;
+      }
+    }
+    symbol = GetNextSymbol (symbol);
+  }
+  return SUCCESS;
+}
 
 static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand ) {
     int counter = 0;

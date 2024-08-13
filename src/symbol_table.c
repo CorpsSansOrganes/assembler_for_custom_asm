@@ -8,6 +8,7 @@ struct symbol_struct {
   const char *symbol_name;
   address_t address;
   symbol_type_t type;
+  symbol_memory_area_t area;
 };
 
 struct symbol_table {
@@ -17,11 +18,13 @@ struct symbol_table {
 static result_t AddSymbolWithType(symbol_table_t *table,
                          const char *symbol_name,
                          address_t address,
-                         symbol_type_t type);
+                         symbol_type_t type,
+                         symbol_memory_area_t area);
 
 static symbol_t *CreateSymbol(const char *symbol_name,
                               address_t address,
-                              symbol_type_t type);
+                              symbol_type_t type,
+                              symbol_memory_area_t area);
 
 static int SymbolCompare (void *symbol_ptr, void *key);
 
@@ -53,14 +56,15 @@ void DestroySymbolTable(symbol_table_t *table){
 
 result_t AddSymbol(symbol_table_t *table,
                    const char *symbol_name,
-                   address_t address) {
-  return AddSymbolWithType(table, symbol_name, address, REGULAR);
+                   address_t address,
+                   symbol_memory_area_t area) {
+  return AddSymbolWithType(table, symbol_name, address, REGULAR, area);
 
 }
 
 result_t AddExternalSymbol(symbol_table_t *table,
                            const char *symbol_name) {
-  return AddSymbolWithType(table, symbol_name, 0, EXTERN);
+  return AddSymbolWithType(table, symbol_name, 0, EXTERN, CODE);
 }
 
 result_t ChangeSymbolToEntry(symbol_table_t *table,
@@ -90,6 +94,10 @@ symbol_type_t GetSymbolType(symbol_t *symbol) {
   return symbol->type;
 }
 
+symbol_memory_area_t GetSymbolMemoryArea (symbol_t *symbol) {
+  return symbol->area;
+}
+
 address_t GetSymbolAddress(symbol_t *symbol) {
   return symbol->address;
 }
@@ -102,7 +110,8 @@ static int SymbolCompare (void *symbol_ptr, void *key) {
 
 static symbol_t *CreateSymbol(const char *symbol_name,
                               address_t address,
-                              symbol_type_t type) {
+                              symbol_type_t type,
+                              symbol_memory_area_t area) {
   symbol_t *symbol = (symbol_t *)malloc(sizeof(symbol_t));
   if (NULL == symbol) {
     return NULL;
@@ -118,8 +127,9 @@ static symbol_t *CreateSymbol(const char *symbol_name,
 static result_t AddSymbolWithType(symbol_table_t *table,
                          const char *symbol_name,
                          address_t address,
-                         symbol_type_t type) {
-  symbol_t *symbol = CreateSymbol(symbol_name, address, type);
+                         symbol_type_t type,
+                         symbol_memory_area_t area) {
+  symbol_t *symbol = CreateSymbol(symbol_name, address, type, area);
   
   if (NULL == symbol) {
     return MEM_ALLOCATION_ERROR;
@@ -129,4 +139,11 @@ static result_t AddSymbolWithType(symbol_table_t *table,
     return MEM_ALLOCATION_ERROR;
   }
   return SUCCESS;
+}
+symbol_t *GetNextSymbol (symbol_t *symbol){
+    return GetNext (symbol);  
+}
+
+symbol_t *GetHeadSymbol (symbol_table_t *symbol_table){
+  return GetHead (symbol_table);
 }

@@ -19,6 +19,12 @@ typedef enum {
   REGULAR
 } symbol_type_t;
 
+typedef enum {
+  CODE,
+  DATA
+} symbol_memory_area_t;
+
+
 typedef struct symbol_struct symbol_t;
 
 /*
@@ -44,7 +50,8 @@ void DestroySymbolTable(symbol_table_t *table);
  */
 result_t AddSymbol(symbol_table_t *table,
                    const char *symbol_name,
-                   address_t address);
+                   address_t address,
+                   symbol_memory_area_t area);
 
 /*
  * @brief Add a symbol to the table as an external symbol.
@@ -66,6 +73,16 @@ result_t AddExternalSymbol(symbol_table_t *table,
 result_t ChangeSymbolToEntry(symbol_table_t *table,
                        const char *symbol_name);
 
+
+/*
+ * @brief updates the address of a symbol.
+ * @param stmbol - pointer to the symbol we wish to update.
+ *        new_address - The new address.
+ *
+ * @return SUCCESS if the update has been made. Otherwise FAILURE.
+ */
+result_t UpdateSymbolAddress (symbol_t *symbol ,int new_address);
+
 /*
  * @brief Looks for entry in the symbol table by symbol name.
  * @param table - The symbol table in which we search.
@@ -73,6 +90,7 @@ result_t ChangeSymbolToEntry(symbol_table_t *table,
  *
  * @return If a symbol with that name is found, it's returned. Otherwise NULL.
  */
+
 symbol_t *FindSymbol(symbol_table_t *table,
                     const char *symbol_name);
 
@@ -83,9 +101,33 @@ symbol_t *FindSymbol(symbol_table_t *table,
 symbol_type_t GetSymbolType(symbol_t *symbol);
 
 /*
+ * @brief Tell the memory area of a symbol.
+ * @return Symbol's area.
+ */
+
+symbol_memory_area_t GetSymbolMemoryArea (symbol_t *symbol);
+
+/*
  * @brief Tell the address of a symbol.
  * @return Symbol's address.
  */
 address_t GetSymbolAddress(symbol_t *symbol);
 
+/*
+ * @brief gets the next symbol from the symbol table.
+ * @param symbol: the symbol we want to get following one.
+ * @return the next symbol, if therers none returns NULL.
+ */
+
+symbol_t *GetNextSymbol (symbol_t *symbol);
+
+/*
+ * @brief gets the first symbol from the symbol table.
+ * @param symbol_table: the symbol table we want to get the first symbol.
+ * @return the first symbol from the symbol table, if it empty returns NULL.
+ */
+
+symbol_t *GetHeadSymbol (symbol_table_t *symbol_table);
+
 #endif /* __SYMBOL_TABLE__ */
+
