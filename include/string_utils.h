@@ -81,6 +81,17 @@ const char *EndOfString(const char *str);
 
 char *CopySubstring(const char *from, const char *to, char *dest);
 
+/*
+ * @brief Creates a deep copy of a string.
+ *
+ * @param str - The string to duplicate.
+ *
+ * @return Upon succes, a pointer to a newly allocated string. 
+ *         Upon failure, NULL.
+ */
+
+char *StrDup(const char *str);
+
 /* 
  * @brief A portable ANSI-supported implementation of 'isblank'.
  *

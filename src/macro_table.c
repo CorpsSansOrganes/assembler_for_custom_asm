@@ -2,6 +2,7 @@
 #include <string.h> /* strlen, strcpy */
 #include "macro_table.h"
 #include "list.h"
+#include "string_utils.h"
 
 struct macro_struct {
   const char *macro_name;
@@ -85,8 +86,18 @@ static macro_t *CreateMacro(const char *macro_name,
   if (NULL == macro) {
     return NULL;
   }
-  macro->macro_definition = macro_definition;
-  macro->macro_name = macro_name;
+  macro->macro_definition = StrDup(macro_definition);
+  if (NULL == macro->macro_definition) {
+    free(macro); macro = NULL;
+    return NULL;
+  }
+
+  macro->macro_name = StrDup(macro_name);
+  if (NULL == macro->macro_name) {
+    free(macro); macro = NULL;
+    free((void *)macro_definition); macro_definition = NULL;
+    return NULL;
+  }
 
   return macro;
 }

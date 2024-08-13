@@ -57,7 +57,7 @@ result_t AddExternalSymbol(symbol_table_t *table,
                            const char *symbol_name);
 
 /*
- * @brief finds the symbol by his key and changes his type to entry.
+ * @brief Finds the symbol by his key and changes his type to entry.
  * @param table - The table which contains the symbol.
  *        symbol_name - The symbol's key.
  *

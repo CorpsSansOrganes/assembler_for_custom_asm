@@ -259,9 +259,13 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
     ++ptr;
   }
 
-  if ('\0' != *ptr) {
+  if ('\0' == *ptr) {
+    return result;
+  } 
+  else {
     result = TRUE;
   }
+
 
   if (config->verbose) {
     printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Use of illegal characters in the symbol name '%s'\n\n",
@@ -338,7 +342,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   const char *start = str;
 
   if ('\"' == *str) {
-    str = EndOfString(str);
+    str = EndOfString(str) - 1;
     while (IsBlank(*str)) {
       --str;
     }
@@ -546,10 +550,11 @@ static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *con
 static bool_t SymbolExceedCharacterLimit(const char *symbol,
                                   syntax_check_config_t *config) {
   unsigned int length = 0;
+  const char *ptr = symbol;
 
-  while ('\0' != *symbol && length <= SYMBOL_CHARACTER_LIMIT) {
+  while ('\0' != *ptr && length <= SYMBOL_CHARACTER_LIMIT) {
     length++;
-    symbol++;
+    ptr++;
   }
 
   if (length <= SYMBOL_CHARACTER_LIMIT) {
