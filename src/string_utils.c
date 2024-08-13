@@ -1,4 +1,5 @@
 #include <string.h> /* strncmp, strlen */
+#include <stdlib.h> /* malloc, free */
 #include "string_utils.h"
 
 bool_t IsPrefix(const char *str, const char *prefix) {
@@ -37,6 +38,17 @@ char *CopySubstring(const char *from, const char *to, char *dest) {
   strncpy(dest, from, length);
   dest[length] = '0';
   return dest;
+}
+
+char *StrDup(const char *str) {
+  size_t len = strlen(str);
+  char *dup = (char *)malloc(len + 1);
+
+  if (NULL == dup) {
+    return NULL; 
+  }
+
+  return CopySubstring(str, str + len, dup);
 }
 
 int IsBlank(int c) {

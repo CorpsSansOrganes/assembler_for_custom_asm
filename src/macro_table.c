@@ -1,5 +1,5 @@
 #include <stdlib.h> /* malloc, free */
-#include <string.h> /* strlen, strcpy */
+#include <string.h> /* strlen, strcpy, strdup */
 #include "macro_table.h"
 #include "list.h"
 
@@ -85,8 +85,18 @@ static macro_t *CreateMacro(const char *macro_name,
   if (NULL == macro) {
     return NULL;
   }
-  macro->macro_definition = macro_definition;
-  macro->macro_name = macro_name;
+  macro->macro_definition = strdup(macro_definition);
+  if (NULL == macro->macro_definition) {
+    free(macro); macro = NULL;
+    return NULL;
+  }
+
+  macro->macro_name = strdup(macro_name);
+  if (NULL == macro->macro_name) {
+    free(macro); macro = NULL;
+    free((void *)macro_definition); macro_definition = NULL;
+    return NULL;
+  }
 
   return macro;
 }

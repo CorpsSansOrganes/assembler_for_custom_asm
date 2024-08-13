@@ -293,90 +293,106 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-/*
 test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolAlreadyDefinedAsExtern");
-  symbol_table_t *test_table = CreateSymbolTable();
-  AddExternalSymbol(test_table,"aaaa",100); 
-  AddEntrySymbol(test_table,"bbbb",100); 
-  AddSymbol(test_table,"cccc",100); 
-  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",test_table, cfg)){
+  symbol_table_t *table = CreateSymbolTable();
+
+  if (SUCCESS != AddExternalSymbol(table,"aaaa")) {
+     RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != ChangeSymbolToEntry(table,"bbbb")) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",test_table, cfg)){
+
+  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",test_table, cfg)){
+
+  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",table, cfg)){
      RETURN_ERROR(TEST_FAILED);
   }
+
+  DestroySymbolTable(table);
   return test_info;
 }
-test_info_t SymbolIsIllegalTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("SymbolIsIllegal");
+
+test_info_t SymbolNameIsIllegalTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("SymbolNameIsIllegal");
   const char *space_in_between = "asc da";
   const char *invalid_symbol = "?-c?";
   const char *valid_symbol = "ascasv";
-
-  if (FALSE == SymbolIsIllegal(space_in_between, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  if (FALSE == SymbolIsIllegal(invalid_symbol, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  if (TRUE == SymbolIsIllegal(valid_symbol, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  return test_info;
-}
-test_info_t SymbolPrefixIllegalTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("SymbolPrefixIllegal");
   const char *invalid_sprefix1 = "1da";
   const char *invalid_sprefix2 = " ?-c?";
   const char *valid_prefix = "aaaa";
-
-  if (FALSE == SymbolPrefixIllegal(invalid_sprefix1, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  if (FALSE == SymbolPrefixIllegal(invalid_sprefix2, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  if (TRUE == SymbolPrefixIllegal(valid_prefix, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-  return test_info;
-}
-test_info_t SymbolExceedCharacterLimitTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("SymbolExceedCharacterLimit");
   const char *exceed = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  const char *not_exceed = "aaaa";
 
-  if (FALSE == SymbolExceedCharacterLimit(exceed, cfg)) {
+  /* Illegal characters */
+  if (TRUE != SymbolNameIsIllegal(space_in_between, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (FALSE == SymbolExceedCharacterLimit(not_exceed, cfg)) {
+  if (TRUE != SymbolNameIsIllegal(invalid_symbol, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != SymbolNameIsIllegal(valid_symbol, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  /* Prefix */
+  if (TRUE != SymbolNameIsIllegal(invalid_sprefix1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != SymbolNameIsIllegal(invalid_sprefix2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != SymbolNameIsIllegal(valid_prefix, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  /* Exceeded character limit */
+  if (TRUE != SymbolNameIsIllegal(exceed, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
   return test_info;
 }
-*/
-/*
-*to do
-*/
-/*
+
 test_info_t SymbolUsedAsAMacroTest(syntax_check_config_t *cfg){
-      test_info_t test_info = InitTestInfo("SymbolUsedAsAMacroTest");
-  macro_table_t *test_table = CreateMacroTable();
-  AddMacroIfUnique(test_table,"aaaa","definition"); 
-  if (FALSE ==  SymbolUsedAsAMacro("aaaa",test_table, cfg)){
+  test_info_t test_info = InitTestInfo("SymbolUsedAsAMacroTest");
+  macro_table_t *table = CreateMacroTable();
+
+  if (NULL == table) {
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (SUCCESS != AddMacroIfUnique(table,"aaaa","definition")) {
+    DestroyMacroTable(table);
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (TRUE != SymbolUsedAsAMacro("aaaa",table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE ==  SymbolUsedAsAMacro("bbbb",test_table, cfg)){
+  if (FALSE != SymbolUsedAsAMacro("bbbb",table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
+
+  DestroyMacroTable(table);
   return test_info;
 }
 
-
+/*
 test_info_t DirectiveDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
   const char *exist = ".entry";
@@ -525,7 +541,10 @@ int main(int argc, char *argv[]) {
     IncorrectAddressingMethodTest,
     SymbolDefinedMoreThanOnceTest,
     SymbolWasntDefinedTest,
-    SymbolAlreadyDefinedAsEntryTest
+    SymbolAlreadyDefinedAsEntryTest,
+    SymbolAlreadyDefinedAsExternTest,
+    SymbolNameIsIllegalTest,
+    SymbolUsedAsAMacroTest
   };
 
   /* Check if -v has been passed to enable verbose mode */
