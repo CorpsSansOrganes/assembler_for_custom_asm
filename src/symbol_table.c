@@ -90,6 +90,10 @@ symbol_t *FindSymbol(symbol_table_t *table,
   }
 }
 
+address_t GetSymbolName(symbol_t *symbol) {
+  return symbol->symbol_name;
+}
+
 symbol_type_t GetSymbolType(symbol_t *symbol) {
   return symbol->type;
 }

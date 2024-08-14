@@ -95,6 +95,12 @@ symbol_t *FindSymbol(symbol_table_t *table,
                     const char *symbol_name);
 
 /*
+ * @brief Tell the name of a symbol.
+ * @return Symbol's name.
+ */
+address_t GetSymbolName(symbol_t *symbol);
+
+/*
  * @brief Tell the type of a symbol.
  * @return Symbol's type.
  */
