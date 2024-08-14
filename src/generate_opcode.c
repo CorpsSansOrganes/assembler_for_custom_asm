@@ -6,6 +6,8 @@
 
 static instruction_t FindInstruction (char *instruction_name);
 static int CountParameters(char *line);
+static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
+static int OperandToOpcode(operand_t operand);
 
 vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC){
     int i;
@@ -112,4 +114,52 @@ static instruction_t FindInstruction (char *instruction_name, int *instruction_n
   instruction_name = i;
   return reserved_instructions[i];
 
+}
+/* @brief - generating one opcode out of two opcodes that belongs to register operands. 
+*           doesnt matter if its direct or indirect
+*  @param - register_opcode_source: the opcode of the register source operand
+*           register_opcode_destination: the opcode of the register destination operand
+*  @return - the opcode of the operand
+*/
+static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination){
+  /*opcode of source is in 3-5, opcode of destination 6-8.
+  minus 4 represents the A value which is set on both*/
+  return (register_opcode_source+register_opcode_destination - 4);
+}             
+      
+static int OperandToOpcode(operand_t operand){/* TODO add number too big error */
+  char *extract_operand;
+  int opcode =0;
+  if (operand.addressing_method == IMMEDIATE)
+  {
+    if (*(operand.name+1) == '-' || *(operand.name+1) == '+'){
+      opcode = atoi (operand.name+2);
+    }
+    else{
+      opcode = atoi (operand.name+1);
+    }
+    opcode = opcode << 3;/*make space for ARE*/
+    opcode += 4; /*add A=1, R=0, E=0*/
+    return opcode;
+  }
+  if (operand.addressing_method == DIRECT){
+    /*depend by the symbol table, to handle in second pass*/
+  }
+  if (operand.addressing_method == DIRECT_REGISTER || operand.addressing_method == INDIRECT_REGISTER)
+  {
+    if (operand.addressing_method == DIRECT_REGISTER){
+      opcode = atoi (operand.name+1);
+    } 
+    else {
+      opcode = atoi (operand.name+2);
+    }
+    if (operand.type == SOURCE_OPERAND){
+      opcode = opcode << 6;
+    }
+    else {
+      opcode = opcode << 3;
+    }
+    opcode += 4; /*add A=1, R=0, E=0( add macro A)*/
+  }
+return opcode;
 }

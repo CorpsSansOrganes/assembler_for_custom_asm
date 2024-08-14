@@ -2,6 +2,7 @@
 #include "symbol_table.h"
 #include "list.h"
 #include "utils.h"
+#include "vector.h"
 #include "string.h"
 
 struct symbol_struct {
@@ -64,8 +65,18 @@ result_t AddSymbol(symbol_table_t *table,
 
 result_t AddExternalSymbol(symbol_table_t *table,
                            const char *symbol_name) {
-  return AddSymbolWithType(table, symbol_name, 0, EXTERN, CODE);
+ external_symbol_t *symbol = CreateExternalSymbol(symbol_name);
+  
+  if (NULL == symbol) {
+    return MEM_ALLOCATION_ERROR;
+  }
+  if (NULL == AddNode(table->list,  symbol)) {
+    free(symbol);
+    return MEM_ALLOCATION_ERROR;
+  }
+  return SUCCESS;
 }
+
 
 result_t ChangeSymbolToEntry(symbol_table_t *table,
                        const char *symbol_name) {
@@ -124,8 +135,28 @@ static symbol_t *CreateSymbol(const char *symbol_name,
   symbol->symbol_name = symbol_name;
   symbol->address = address;
   symbol->type = type;
+  symbol->area = area;
   return symbol;
 }
+
+/*static symbol_t *CreateExternalSymbol(const char *symbol_name) {
+  external_symbol_t *symbol = (external_symbol_t *)malloc(sizeof(external_symbol_t));
+  if (NULL == symbol) {
+    return NULL;
+  }
+
+  symbol->symbol_name = symbol_name;
+  symbol->address = 0;
+  symbol->type = EXTERN;
+  symbol->area = CODE;
+  symbol->occurences = CreateVector(0,sizeof(int));
+  if (NULL == symbol->occurences )
+  {
+    return NULL;
+  }
+  return symbol;
+}*/
+
 
 
 static result_t AddSymbolWithType(symbol_table_t *table,

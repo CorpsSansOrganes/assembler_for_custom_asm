@@ -6,26 +6,61 @@
 #include "generate_opcode.h"
 #include "vector.h"
 #include "string_utils.h"
+#include "generate_output_files.h"
 #include <stdio.h> /* perror */
 #include <string.h> 
 #include <stdlib.h>
 
 static bool_t FirstWordEndsWithColon(char *line);
 static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
-static result_t FirstPass(char *file_path, macro_table_t *macro_list);
-static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
+static result_t FirstPass(char *file_path, macro_table_t *macro_list,
+                         symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC);
+static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode);
+static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC);
+static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand );
 
-result_t AssembleFile(char *file_path) {
-  return 0; // TODO
+result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
+  int IC = 0;
+  int DC = 0;
+  symbol_table_t *symbol_table;
+  vector_t *opcode;
+  symbol_table = CreateSymbolTable();
+  if (NULL == symbol_table) {
+    perror("Memory allocation error: couldn't allocate a symbol table\n");
+    return MEM_ALLOCATION_ERROR;
+  }  
+  opcode = CreateVector(0,sizeof(vector_t *));
+  if (NULL == opcode) {
+    perror("Memory allocation error: couldn't allocate a vecotr\n");
+    return MEM_ALLOCATION_ERROR;
+  }  
+  if (SUCCESS != FirstPass (file_path,macro_list,symbol_table, opcode, &IC, &DC)){
+    DestroyMacroTable(macro_list);
+    DestroySymbolTable(symbol_table);
+    DestroyVector (opcode);
+    return FAILURE;
+  }
+  DestroyMacroTable(macro_list);
+  if (SUCCESS != SecondPass(file_path, symbol_table,opcode)){
+    DestroySymbolTable(symbol_table);
+    DestroyVector (opcode);
+    return FAILURE;
+  }
+  if (SUCCESS != GenerateOutputFiles(opcode, symbol_table,file_path,IC,DC)){
+    DestroySymbolTable(symbol_table);
+    DestroyVector (opcode);
+    return FAILURE;
+  }
+    DestroySymbolTable(symbol_table);
+    DestroyVector (opcode);
+    return SUCCESS;
 }
 
-static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
-  vector_t *opcode = CreateVector(0,sizeof(vector_t *));
+static result_t FirstPass(char *file_path, macro_table_t *macro_list,
+                         symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC) {
   int line_counter = 0;
   int error_count_in_line = 0;
   int total_errors = 0;
-  int IC = 0;
-  int DC = 0;
   char *current_word = NULL; 
   char *current_line = NULL;
   char *symbol_name=NULL;
@@ -38,22 +73,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
   syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
                                                  0,
                                                  TRUE);
-  syntax_check_config_t syntax_check_config__no_print = CreateSyntaxCheckConfig ("default",
-                                                  0,
-                                                  FALSE);
-
-  symbol_table_t *symbol_table = CreateSymbolTable();
-  if (NULL == symbol_table) {
-    perror("Memory allocation error: couldn't allocate a macro table\n");
-    DestroyMacroTable(macro_list);
-    return MEM_ALLOCATION_ERROR;
-  }
-
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
     perror("Couldn't open input file");
-    DestroyMacroTable(macro_list);
-    DestroySymbolTable(symbol_table);
     return ERROR_OPENING_FILE; 
   }
 
@@ -88,10 +110,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
         }
         else if (error_count_in_line==0) {
           if (symbol_name!= NULL){
-          AddSymbol (symbol_table,symbol_name,DC,DATA);
+          AddSymbol (symbol_table,symbol_name,*DC,DATA);
           }
           opcode = StringLineToMachineCode(opcode, current_line); 
-          DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
+          *DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
         }  
       }  
       else if (0 == strcmp(current_word,".data")) {
@@ -123,7 +145,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
               if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
                 return FAILURE;
               }
-              DC += CountParameters(current_line);
+              *DC += CountParameters(current_line);
           }
         }
       }
@@ -133,7 +155,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
           if (0 == error_count_in_line){
             if (symbol_name != NULL){
-             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC+INITIAL_IC_VALUE, CODE)){
+             if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
                return FAILURE;
              }
             }
@@ -154,7 +176,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
     total_errors += error_count_in_line;
   
   }
-  if (SUCCESS != UpdateAdresses (symbol_table, IC)){
+  if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
     return FAILURE;
   }
   if (0 == total_errors){
@@ -164,12 +186,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
 }
 
 static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode){
-  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
+  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
                                                  0,
                                                  TRUE);
-  syntax_check_config_t syntax_check_config__no_print = CreateSyntaxCheckConfig ("default",
-                                                  0,
-                                                  FALSE);
   int line_counter = 0;
   symbol_t *symbol = NULL;
   int error_count_in_line = 0;
@@ -184,7 +203,6 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
     perror("Couldn't open input file");
-    DestroySymbolTable(symbol_table);
     return ERROR_OPENING_FILE; 
   }
   while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
@@ -219,6 +237,9 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             opcode_line = GetElementVector (opcode, vector_counter);
             opcode_bitmap = GetElementVector (opcode_line,1);
             *opcode_bitmap = GetSymbolAddress (symbol);
+            if (EXTERN == GetSymbolType (symbol)){
+              addoccurence (symbol, line_counter);/*pseudocode, to change!*/
+            }
           } 
         }
         current_word = strtok (NULL,", \n\t\r");
@@ -233,6 +254,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
         total_errors += error_count_in_line;
         vector_counter++;
     }
+  
 
   }
   if (0 == total_errors){
@@ -274,48 +296,14 @@ static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_che
       return internal_counter;
 }
 
-static int OperandToOpcode(operand_t operand){/*operand_t *? TODO add number too big error */
-  char *extract_operand;
-  int opcode =0;
-  if (operand.addressing_method == IMMEDIATE)
-  {
-    if (*(operand.name+1) == '-' || *(operand.name+1) == '+'){
-      opcode = atoi (operand.name+2);
-    }
-    else{
-      opcode = atoi (operand.name+1);
-    }
-    opcode = opcode << 3;/*make space for ARE*/
-    opcode += 4; /*add A=1, R=0, E=0*/
-    return opcode;
-  }
-  if (operand.addressing_method == DIRECT){
-    /*depend by the symbol table, to handle in second pass*/
-  }
-  if (operand.addressing_method == DIRECT_REGISTER || operand.addressing_method == INDIRECT_REGISTER)
-  {
-    if (operand.addressing_method == DIRECT_REGISTER){
-      opcode = atoi (operand.name+1);
-    } 
-    else {
-      opcode = atoi (operand.name+2);
-    }
-    if (operand.type == SOURCE_OPERAND){
-      opcode = opcode << 6;
-    }
-    else {
-      opcode = opcode << 3;
-    }
-    opcode += 4; /*add A=1, R=0, E=0( add macro A)*/
-  }
-return opcode;
-}
-static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination){
-  /*opcode of source is in 3-5, opcode of destination 6-8.
-  minus 4 represents the A value which is set on both*/
-  return (register_opcode_source+register_opcode_destination - 4);
-}             
-      
+/* @brief - generating the opcode of an operand, according to its adressing method.
+*           if its addressing is Direct (which means it is a symbol) 
+*           nothing it will return 0, and it will be computed in the second pass
+*  @param - operand: the operand
+*  @return - the opcode of the operand
+*/
+
+
 static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC){
   symbol_t *symbol = GetHeadSymbol (symbol_table);
   int address;
@@ -333,7 +321,7 @@ static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC){
   return SUCCESS;
 }
 
-static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand ) {
+static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand) {
     int counter = 0;
     char *current_word = strtok (line, "' /n/t/r");
     if (current_word != NULL){
@@ -355,8 +343,9 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
       }
       current_word++;
     }
-    return counter;
     }
+    return counter;
+  }   
 
-}
+
 

@@ -4,7 +4,7 @@
 /*
  * @brief Data structure representing a symbol table.
  *
- *        A symbol has 3 key attributes: (1) name, (2) address and (3) type.
+ *        A symbol has 4 key attributes: (1) name, (2) address, (3) type and (4) memory area.
  *        The symbol's name acts as its key.
  */
 
@@ -26,6 +26,8 @@ typedef enum {
 
 
 typedef struct symbol_struct symbol_t;
+typedef struct external_symbol_struct external_symbol_t;
+
 
 /*
  * @brief Creates a empty symbol table.

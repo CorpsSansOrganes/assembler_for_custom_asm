@@ -10,11 +10,19 @@
 #include <stdio.h>
 #define ADDRESS_LENGTH 4
 #define BITMAP_LENGTH 5
-result_t GENERATE_OUTPUT_FILES (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, int IC, int DC){
+
+static void IntToConstDigitString(int num, char *output, const int num_of_digits);
+static result_t WriteHeader (char *output_path, int IC, int DC);
+static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path);
+static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
+static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC);
+
+
+result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, int IC, int DC){
     char *obj_path = StrDup(input_path);
     char *extern_path = StrDup(input_path);
     char *entry_path = StrDup(input_path);
-    strcat (obj_path,".obj");
+    strcat (obj_path,".ob");
     if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
         return FAILURE;
     }
@@ -170,7 +178,7 @@ static result_t WriteHeader (char *output_path, int IC, int DC){
 }
 
 /*maximum 5 digits*/
-void IntToConstDigitString(int num, char *output, const int num_of_digits) {
+static void IntToConstDigitString(int num, char *output, const int num_of_digits) {
     char temp [6];  
     int num_length;
     int leading_zeros;  

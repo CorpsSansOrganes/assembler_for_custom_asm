@@ -60,3 +60,14 @@ vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC);
 *@return the bitmap with the correct bit turned on
 */
  bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t operand);
+
+/* 
+*@brief set the bit of the correct encoding type, where A=2, R=1, E=0
+*
+*@param bitmap: the bitmap of the onstruction 
+*       ARE: the encoding type.
+*
+*@return the bitmap with the correct bit turned on
+*/
+
+bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE);
