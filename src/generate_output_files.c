@@ -4,13 +4,32 @@
 #include "vector.h"
 #include "symbol_table.h"
 #include "preprocessing.h"
+#include "string_utils.h"
 #include <string.h> 
 #include <stdlib.h>
 #include <stdio.h>
 #define ADDRESS_LENGTH 4
 #define BITMAP_LENGTH 5
+result_t GENERATE_OUTPUT_FILES (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, int IC, int DC){
+    char *obj_path = StrDup(input_path);
+    char *extern_path = StrDup(input_path);
+    char *entry_path = StrDup(input_path);
+    strcat (obj_path,".obj");
+    if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
+        return FAILURE;
+    }
+    strcat (extern_path,".ext");
+    if (SUCCESS != GenerateExternFile(symbol_table, extern_path)){
+        return FAILURE;
+    }
+    strcat (entry_path,".ent");
+    if (SUCCESS != GenerateEntriesFile(symbol_table,entry_path)){
+        return FAILURE;
+    }
+    return SUCCESS;
+}
 
-result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC){
+static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC){
     int counter = 100;
     vector_t *opcode_line;
     bitmap_t single_opcode;
@@ -40,6 +59,7 @@ result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC){
             sprintf(str_to_write, "%s %s\n", counter, address);
             if (EOF == fputs(str_to_write, obj_file)) {
                 perror("Error writing to file");
+                free (obj_file);
                 return ERROR_WRITING_TO_FILE;
             }
             counter++;
@@ -74,50 +94,54 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
     if (ENTRY == GetSymbolType(symbol)){
         sprintf (str_to_write, "%s %d\n", GetSymbolName(symbol),GetSymbolAddress(symbol));
         if (EOF == fputs(str_to_write, entry_file)) {
+            free (entry_file);
             perror("Error writing to file");
             return ERROR_WRITING_TO_FILE;
         }
     }
     symbol = GetNextSymbol (symbol);
   }
+  fclose(entry_file);
   return SUCCESS;
 }
 
 
-static result_t GenerateExternFile (symbol_table_t *symbol_table, char *input_path, char *output_path){
-  int line_counter=0;
-  FILE *input_file = NULL;
+static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path){
   FILE *extern_file = NULL;
-  char *line =NULL;
-  const char *extern_word = ".extern ";
-  char *search;
-  char *str_to_write [40];/*character limit plus arbitrary number. TODO change*/
-  line = (char *)malloc(MAX_LINE_SIZE * sizeof(char));
-  while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
-        line_counter++;
-        search = strstr (line,extern_word);
-        if (NULL == search){
-            str_to_write[0]= '\0';
-            search += strlen(extern_word);
-            search = strtok (search, blank_delimiters);
-            extern_file = fopen(output_path, "a");
-            if (NULL == extern_file) {
-                perror("Couldn't open extern file");
-                return ERROR_OPENING_FILE; 
+  char *str_to_write [39] = "";/*character limit + len (max lines in code) + " \n" + terminating null*/
+  symbol_t *symbol = GetHeadSymbol (symbol_table);
+  vector_t *line_numbers;
+  int i;
+  if (NULL == symbol){
+    return SUCCESS; /*no need to make file*/
+  }
+  while (NULL != symbol){
+    if (EXTERN == GetSymbolType(symbol) && (NULL != line_number_vector)){/*pseudocode. to change*/
+        extern_file = fopen(output_path, "a");
+        if (NULL == extern_file) {
+            free (extern_file);
+            perror("Couldn't open extern file");
+            return ERROR_OPENING_FILE; 
+        }
+        break;
+    }
+    symbol = GetNextSymbol (symbol);
+  }
+    while (NULL != symbol){
+    if (EXTERN == GetSymbolType(symbol)){
+        line_numbers = getsymbolLineNumbers (symbol);/*pseudocode, to change*/
+        for (i=0; i<GetSizeVector(line_numbers);i++){
+            sprintf (str_to_write, "%s %d\n", GetSymbolName(symbol),GetElementVector(line_numbers,i));
+            if (EOF == fputs(str_to_write, extern_file)) {
+                perror("Error writing to file");
+                return ERROR_WRITING_TO_FILE;
             }
-            break;
-        } 
+        }
+    }
+    symbol = GetNextSymbol (symbol);
   }
-    while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
-        if (NULL != search){
-            str_to_write[0]= '\0';
-            search += strlen(extern_word);
-            search = strtok (search, blank_delimiters);
-            extern_file = fopen(output_path, "a");
-        } 
-        line_counter++;
-        search = strstr (line,extern_word);
-  }
+  fclose(extern_file);
+  return SUCCESS;
   }
 
 

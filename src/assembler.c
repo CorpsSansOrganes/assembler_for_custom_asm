@@ -5,6 +5,7 @@
 #include "symbol_table.h"
 #include "generate_opcode.h"
 #include "vector.h"
+#include "string_utils.h"
 #include <stdio.h> /* perror */
 #include <string.h> 
 #include <stdlib.h>
@@ -132,7 +133,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list) {
       else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
           if (0 == error_count_in_line){
             if (symbol_name != NULL){
-             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC, CODE)){
+             if (SUCCESS != AddSymbol (symbol_table, symbol_name,IC+INITIAL_IC_VALUE, CODE)){
                return FAILURE;
              }
             }
