@@ -296,6 +296,19 @@ bool_t SymbolUsedAsAMacro(char *symbol,
   return TRUE;
 }
 
+bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config) {
+  if (TRUE == DetectExtraCharacters(after_symbol, &silent_syntax_cfg)) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n No definition after symbol label \n\n",
+            config->file_name,
+            config->line_number);
+  }
+  return TRUE;
+}
+
 bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config) {
   int i = 0;
   while (i < NUM_OF_DIRECTIVES && strcmp(directive, reserved_directives[i])) {
@@ -359,6 +372,22 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
             start);
   }
 
+  return TRUE;
+}
+
+bool_t IsIllegalExternOrEntryParameter(const char *param,
+                                       syntax_check_config_t *config) {
+  if (!SymbolNameIsIllegal(param, &silent_syntax_cfg)) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
+           config->file_name,
+           config->line_number,
+           param);
+  }
+  
   return TRUE;
 }
 

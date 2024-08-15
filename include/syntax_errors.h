@@ -207,12 +207,13 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
  * @brief Checks if a symbol definition was called without any definition.
  *        exapmle: SYMBOL: //Nothing after
  *
- * @param symbol - the line that comes after the symbol definition.
+ * @param after_symbol - The line that comes after the symbol definition (i.e. after "SYMBOL:")
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *        
- * @return TRUE if the line is Null or contains only blanks. FALSE otherwise.
+ * @return TRUE if the line is empty. FALSE otherwise.
  */
-bool_t NoDefinitionForSymbol(char *line, syntax_check_config_t *config);
+
+bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config);
 
 
 /*
@@ -286,13 +287,16 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
  *        1. Exactly one parameter was recieved.
  *        2. The parameter recieved is a legal symbol name.
  *
+ *        Function assumes no leading or trailing whitespaces.
+ *
  * @param data - The parameter to check (e.g. "SYMBOL").
  *        config - Pointer the configurations about the syntax check.
  *        
  * @return TRUE if the parameter is illegal, FALSE otherwise.
  */
 
-bool_t IsIllegalExternOrEntryParameter(const char *data, syntax_check_config_t *config);
+bool_t IsIllegalExternOrEntryParameter(const char *param,
+                                       syntax_check_config_t *config);
 
 /*
 // ~~--~~--~~--~~--~~

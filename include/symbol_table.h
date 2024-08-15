@@ -83,7 +83,7 @@ result_t ChangeSymbolToEntry(symbol_table_t *table,
  *
  * @return SUCCESS if the update has been made. Otherwise FAILURE.
  */
-result_t UpdateSymbolAddress (symbol_t *symbol ,int new_address);
+result_t UpdateSymbolAddress (symbol_t *symbol ,address_t new_address);
 
 /*
  * @brief Looks for entry in the symbol table by symbol name.
