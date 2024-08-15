@@ -20,9 +20,9 @@ FILE_HANDLING_OBJ := file_handling.o file_handling_test.o
 LINTING_OBJ := linting.o file_handling.o
 SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
 MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
-PREPROCESSING_OBJ := macro_table.o string_utils.o preprocessing.o
-SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) syntax_errors.o macro_table.o string_utils.o bitmap.o language_definitions.o
 BITMAP_OBJ := bitmap.o
+SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) $(MACRO_TABLE_OBJ) $(BITMAP_OBJ) syntax_errors.o string_utils.o language_definitions.o
+PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o 
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
@@ -30,6 +30,7 @@ TEST_LINTING_OBJ := $(LINTING_OBJ) linting_test.o test_utils.o
 TEST_SYMBOL_TABLE := $(SYMBOL_TABLE_OBJ) symbol_table_test.o test_utils.o
 TEST_SYNTAX_ERRORS := $(SYNTAX_ERROR_OBJ) $(MACRO_TABLE) syntax_errors_test.o test_utils.o
 TEST_BITMAP_OBJ := $(BITMAP_OBJ)  bitmap_test.o test_utils.o
+TEST_PREPROCESSING_OBJ := $(PREPROCESSING_OBJ) preprocessing_test.o test_utils.o
 
 # ----------
 # Executables
@@ -58,6 +59,10 @@ test_syntax_errors: $(addprefix $(OBJ_DEBUG)/, $(TEST_SYNTAX_ERRORS))
 test_bitmap: $(addprefix $(OBJ_DEBUG)/, $(TEST_BITMAP_OBJ))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
+# Test preprocessor
+test_preprocessor: $(addprefix $(OBJ_DEBUG)/, $(TEST_PREPROCESSING_OBJ))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
 # ----------
 # Object files 
 #  ---------
@@ -75,4 +80,4 @@ $(OBJ_DEBUG)/test_utils.o: $(TEST)/test_utils.c $(INCLUDE)/test_utils.h
 
 # Clean up build artifacts
 clean:
-	rm -rf $(OBJ_DEBUG)/*.o test_*
+	rm -rf $(OBJ_DEBUG)/*.o test_* ./test/preprocessing_test_files/output/*

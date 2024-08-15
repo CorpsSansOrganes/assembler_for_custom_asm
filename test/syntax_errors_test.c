@@ -53,6 +53,25 @@ test_info_t IsReservedNameTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
+test_info_t MacroDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("MacroDefinedMoreThanOnce");
+  macro_table_t *table = CreateMacroTable();
+  const char *macro_name = "aaa";
+  const char *not_macro_name = "ccc";
+  const char *macro_definition = "bbb";
+
+  AddMacro(table, macro_name, macro_definition);
+  if (TRUE != MacroDefinedMoreThanOnce(macro_name, table, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (FALSE != MacroDefinedMoreThanOnce(not_macro_name, table, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  return test_info;
+}
+
 test_info_t InstructionDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("InstructionDoesntExist");
   const char *reserved_instruction = "cmp";
@@ -215,7 +234,7 @@ test_info_t SymbolDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+  if (SUCCESS != AddSymbol(table,"aaaa",100, CODE)) {
     perror("Couldn't add symbol in SymbolDefinedMoreThanOnceTest");
     RETURN_ERROR(TECHNICAL_ERROR);
   }
@@ -241,7 +260,7 @@ test_info_t SymbolWasntDefinedTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+  if (SUCCESS != AddSymbol(table,"aaaa",100, DATA)) {
     perror("Couldn't add symbol");
     RETURN_ERROR(TECHNICAL_ERROR);
   }
@@ -265,7 +284,7 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+  if (SUCCESS != AddSymbol(table,"bbbb", 100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -273,7 +292,7 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+  if (SUCCESS != AddSymbol(table,"cccc",100, DATA)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -301,7 +320,7 @@ test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
      RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+  if (SUCCESS != AddSymbol(table,"bbbb", 100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -309,19 +328,19 @@ test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+  if (SUCCESS != AddSymbol(table,"cccc",100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",table, cfg)){
+  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 
-  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",table, cfg)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 
-  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",table, cfg)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 
@@ -393,6 +412,26 @@ test_info_t SymbolUsedAsAMacroTest(syntax_check_config_t *cfg){
   return test_info;
 }
 
+test_info_t NoDefinitionForSymbolTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("NoDefinitionForSymbol");
+  const char *definition = ".data 53, 31";
+  const char *no_definition1 = "  ";
+  const char *no_definition2 = "";
+
+  if (FALSE != NoDefinitionForSymbol(definition, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != NoDefinitionForSymbol(no_definition1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != NoDefinitionForSymbol(no_definition2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  return test_info;
+}
 test_info_t DirectiveDoesntExistTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
   const char *exist = ".entry";
@@ -480,8 +519,26 @@ test_info_t IsIllegalStringTest(syntax_check_config_t *cfg) {
 
 test_info_t IsIllegalExternOrEntryParameterTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("IsIllegalStringTest");
+  const char *legal_param = "InnocentSymbol";
+  const char *illegal_param1 = "1InnocentSymbol";
+  const char *illegal_param2= "InnocentSymbol, Another One";
+  const char *illegal_param3= "InnocentSymbol Another One";
 
-  RETURN_ERROR(TECHNICAL_ERROR); /* todo */
+  if (FALSE != IsIllegalExternOrEntryParameter(legal_param, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param3, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
 
   return test_info;
 }
@@ -583,6 +640,7 @@ int main(int argc, char *argv[]) {
   test_func_t tests[] = {
     DetectExtraCharactersTest,
     IsReservedNameTest,
+    MacroDefinedMoreThanOnceTest,
     InstructionDoesntExistTest,
     WrongNumberOfOperandsTest,
     DetectAddressingMethodTest,
@@ -593,6 +651,7 @@ int main(int argc, char *argv[]) {
     SymbolAlreadyDefinedAsExternTest,
     SymbolNameIsIllegalTest,
     SymbolUsedAsAMacroTest,
+    NoDefinitionForSymbolTest,
     DirectiveDoesntExistTest,
     IsIllegalDataParameterTest,
     IsIllegalStringTest,

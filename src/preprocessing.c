@@ -1,43 +1,53 @@
 #include <stdio.h> /* perror */
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strcpy */
-#include <ctype.h> /* isblank */
+#include <ctype.h> /* IsBlank */
 #include "preprocessing.h"
 #include "syntax_errors.h"
 #include "string_utils.h"
 
 static bool_t IsComment(const char *line);
+
 static bool_t IsBlankLine(const char *line);
+
 static bool_t IsNewMacro(const char *line);
+
 static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
                            syntax_check_config_t *config);
+
 static result_t ReadMacrosInFile(FILE *file,
                                  macro_table_t *table,
                                  char *buffer,
                                  syntax_check_config_t *cfg,
                                  bool_t *error_occurred);
+
+static char *ReadMacroDefinition(FILE *file,
+                                 char *line,
+                                 syntax_check_config_t *cfg);
+
 static result_t PerformPreprocessing(FILE *input_file,
                                    FILE *output_file,
                                    macro_table_t *table,
                                    char *buffer);
 
+static char *CleanLine(char *line);
+
 /* ~~--~~--~~--~~--~~
   Preprocessor
   ~~--~~--~~--~~--~~ */
+
 macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   bool_t error_occurred = FALSE;
   char *line = NULL;
   FILE *input_file = NULL;
   FILE *output_file = NULL;
   macro_table_t *table = CreateMacroTable();
-  long pos = 0;
-  result_t res;
   syntax_check_config_t cfg = CreateSyntaxCheckConfig(input_path, 1, TRUE);
 
   /* Acquire resources */
-  line = (char *)malloc(MAX_LINE_SIZE * sizeof(char));
+  line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == line) {
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
@@ -95,9 +105,6 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   free(line);
   fclose(input_file);
   fclose(output_file);
-  DestroyMacroTable(table);
-  return NULL;
-
   return table;
 }
 
@@ -106,11 +113,11 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   ~~--~~--~~--~~--~~ */
 /*
  * @brief Checks if a line is a comment.
- *        We assume there are no leading white spaces (spaces or tabs).
  * 
  * @param line - Pointer to a null-terminated string containing the line to be
  *               checked.
- * 
+ *               We assume there are no leading white spaces (spaces or tabs).
+ *
  * @return TRUE if the line is a comment, FALSE otherwise.
  */
 
@@ -124,22 +131,17 @@ static bool_t IsComment(const char *line) {
  * 
  * @param line - Pointer to a null-terminated string containing the line to be
  *               checked.
+ *               We assume that StripWhitespaces has been called on line.
  * 
  * @return TRUE if the line is blank, FALSE otherwise.
  */
 
 static bool_t IsBlankLine(const char *line) {
-  char *ptr = (char *)StripLeadingWhitespaces(line);
-  while (isblank(*ptr)) {
-    ++ptr;
-  }
-
-  if ('\0' == *ptr) {
-    return TRUE;
-  }
-  else {
+  if (0 != strcmp(line, "\n")) {
     return FALSE;
   }
+
+  return TRUE;
 }
 
 /*
@@ -162,7 +164,7 @@ static bool_t IsNewMacro(const char *line) {
  *
  * This function reads through the provided file line by line, using the 
  * provided buffer, and adds any detected macros to the specified macro table.
- * The buffer must have a size of at least MAX_LINE_SIZE.
+ * The buffer must have a size of at least MAX_LINE_LENGTH.
  *
  * The function analyzes the entire file and, upon completion, returns whether
  * the operation was successful.
@@ -173,7 +175,7 @@ static bool_t IsNewMacro(const char *line) {
  *             be opened for reading prior to calling this function.
  *        table - A pointer to the macro table where detected macros will be added.
  *        buffer - A pointer to a pre-allocated buffer with a size of at least 
- *                 MAX_LINE_SIZE used for reading lines from the file.
+ *                 MAX_LINE_LENGTH used for reading lines from the file.
  *        error_occurred - A pointer to a boolean flag that will be set to TRUE 
  *                       if any syntax errors occur during the file analysis; 
  *                       otherwise, it will be set to FALSE.
@@ -196,7 +198,7 @@ static result_t ReadMacrosInFile(FILE *file,
     return FILE_HANDLING_ERROR;
   }
 
-  while (NULL != fgets(buffer, MAX_LINE_SIZE, file)) {
+  while (NULL != fgets(buffer, MAX_LINE_LENGTH, file)) {
     buffer = StripWhitespaces(buffer);
 
     if (IsNewMacro(buffer)) {
@@ -278,31 +280,34 @@ static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
                            syntax_check_config_t *cfg) {
-  /*
-   * Syntax errors to check:
-   * 1. No extra characters at the end of macr or endmacr line.
-   * 2. Macro name isn't a reserved name.
-   */
 
   char *macro_name_start = NULL;
   char *macro_name_end = NULL;
   char *macro_name = NULL;
+  char *macro_definition = NULL;
 
-  /* Reading macro name */ 
-  if (NULL == fgets(line, MAX_LINE_SIZE, file)) {
+  /*
+   * Reading macro name
+   */ 
+  if (NULL == fgets(line, MAX_LINE_LENGTH, file)) {
     perror("Error reading from file");
     return FILE_HANDLING_ERROR;
   }
 
-  line = (char *)StripLeadingWhitespaces(line);
+  /* Finding where the name starts & ends */
+  line = CleanLine(line); 
   macro_name_start = line + 5; /* strlen("macr "); */
   macro_name_start = (char *)StripLeadingWhitespaces(macro_name_start);
   macro_name_end = macro_name_start;
-  while (!isblank(*macro_name_end)) {
+  while (!IsBlank(*macro_name_end)) {
     ++macro_name_end;
   }
 
-  /* e.g.: "macr m_name asd" */
+  /*
+   * SYNTAX CHECK:
+   * extra characters after macro's name 
+   * e.g.: "macr m_name asd" 
+   */
   if (DetectExtraCharacters(macro_name_end, cfg)) {
     return FAILURE;
   }
@@ -315,17 +320,36 @@ static result_t ParseMacro(FILE *file,
 
   macro_name = CopySubstring(macro_name_start, macro_name_end, macro_name);
   
-  /* e.g.: "macr mov" */
+  /*
+   * SYNTAX CHECK:
+   * using reserved name as a macro's name 
+   * e.g.: "macr mov" 
+   */
   if (IsReservedName(macro_name, cfg)) {
     free(macro_name);
     return FAILURE;
   }
   
   /*
+   * SYNTAX CHECK:
+   * using a name which was already used to define a macro
+   */
+
+  if (MacroDefinedMoreThanOnce(macro_name, table, cfg)) {
+    free(macro_name);
+    return FAILURE;
+  }
+
+  /*
    * Reading macro definition 
    */
 
-  return SUCCESS; // TODO
+  macro_definition = ReadMacroDefinition(file, line, cfg);
+  if (NULL == macro_definition) {
+    return FAILURE; /* Either syntax or memory */
+  }
+
+  return AddMacro(table, macro_name, macro_definition);
 }
 
 /*
@@ -356,11 +380,15 @@ static char *ReadMacroDefinition(FILE *file,
   }
 
   /* Sum up file size */
-  while (fgets(line, MAX_LINE_SIZE, file) && 
+  while (fgets(line, MAX_LINE_LENGTH, file) && 
     FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
     definition_size += strlen(StripTrailingWhitespaces(line));
   }
 
+  /*
+   * SYNTAX CHECK: 
+   * extra characters after endmacr 
+   */
   if (DetectExtraCharacters(line + strlen("endmacr"), cfg)) {
     return NULL;
   }
@@ -379,7 +407,7 @@ static char *ReadMacroDefinition(FILE *file,
   }
 
   current_position = definition;
-  while (fgets(line, MAX_LINE_SIZE, file) && 
+  while (fgets(line, MAX_LINE_LENGTH, file) && 
          FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
     char *stripped_line = StripTrailingWhitespaces(line);
     size_t line_length = strlen(stripped_line);
@@ -418,18 +446,21 @@ static result_t PerformPreprocessing(FILE *input_file,
 
   bool_t should_write_line = TRUE;
 
-  while (NULL != fgets(line, MAX_LINE_SIZE, input_file)) {
-    line = StripWhitespaces(line);
+  while (NULL != fgets(line, MAX_LINE_LENGTH, input_file)) {
     const char *str_to_write = NULL;
+    /* Remove leading and trailing whitespaces & collapse extra whitespaces 
+     * into one.
+     */
+    line = CleanLine(line);
 
     /* Skip macro definitions */
     if (IsNewMacro(line)) {
       while(FALSE == IsPrefix(line, "endmacr")) {
         /* Assuming every macro has endmacr! */
-        fgets(line, MAX_LINE_SIZE, input_file); 
+        fgets(line, MAX_LINE_LENGTH, input_file); 
         line = (char *)StripLeadingWhitespaces(line);
       }
-      line = StripTrailingWhitespaces(line);
+      line = CleanLine(line);
     }
 
     else if (IsComment(line) | IsBlankLine(line)) {
@@ -457,4 +488,48 @@ static result_t PerformPreprocessing(FILE *input_file,
   }
 
   return SUCCESS;
+}
+
+/*
+ * @brief This function removes any extrenuous whitespaces.
+ *        
+ *        1. Leading & trailing whitespaces are removed.
+ *        2. Any numeruous continuous whitespaces are replaced w/ only one.
+ *
+ *        We assume that the line isn't blank.
+ *
+ * @param line - A line of text, terminated by '\n'.
+ *
+ * @return Pointer to the beginning of the clean line.
+ */
+
+static char *CleanLine(char *line) {
+  char *src = StripWhitespaces(line);
+  char *dest = src;
+  char *newline_pos = src + strlen(src) - 1;
+  bool_t in_whitespace = FALSE;
+
+  /* Collapse multiple whitespaces between words */
+  while (src < newline_pos) {
+    /* Copy characters from src to dest if non-blanks */
+    if (!IsBlank(*src)) {
+      *dest = *src;
+      ++dest;
+      in_whitespace = FALSE;
+    }
+
+    /* Copy just one space when in a sequence of whitespaces */
+    else if (FALSE == in_whitespace) {
+      *dest = ' ';
+      ++dest;
+      in_whitespace = TRUE;
+    }
+    ++src;
+  }
+
+  /* Restore terminating characters */
+  *dest = '\n';
+  *(dest + 1) = '\0';
+  
+  return line;
 }

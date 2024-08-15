@@ -4,14 +4,24 @@
 /*
  * @brief Data structure representing a symbol table.
  *
+ *        A symbol is any label, e.g.:
+ *        HELLO: mov #4, r1
+ *        HEY: .data 13, -953, 17
+ *
+ *        In essence, it is a symbolic representation of a memory address.
+ *        This memory address may be in the data or the code segments, depending on whether
+ *        the label is of a .string or .data directive or an instruction statement.
+ *        
  *        A symbol has 4 key attributes: (1) name, (2) address, (3) type and (4) memory area.
  *        The symbol's name acts as its key.
  */
 
 #include "utils.h"
+#include "list.h"
 
 typedef struct symbol_table symbol_table_t;
 typedef int address_t;
+
 
 typedef enum {
   EXTERN,
@@ -26,8 +36,6 @@ typedef enum {
 
 
 typedef struct symbol_struct symbol_t;
-typedef struct external_symbol_struct external_symbol_t;
-
 
 /*
  * @brief Creates a empty symbol table.
@@ -62,6 +70,7 @@ result_t AddSymbol(symbol_table_t *table,
  *
  * @return SUCCESS if successful, or an error code upon failure.
  */
+
 result_t AddExternalSymbol(symbol_table_t *table,
                            const char *symbol_name);
 
@@ -70,7 +79,7 @@ result_t AddExternalSymbol(symbol_table_t *table,
  * @param table - The table which contains the symbol.
  *        symbol_name - The symbol's key.
  *
- * @return SUCCESS if successful, or an error code upon failure.
+ * @return SUCCESS if successful, FAILURE if a symbol with that name isn't found.
  */
 result_t ChangeSymbolToEntry(symbol_table_t *table,
                        const char *symbol_name);
@@ -78,12 +87,11 @@ result_t ChangeSymbolToEntry(symbol_table_t *table,
 
 /*
  * @brief updates the address of a symbol.
- * @param stmbol - pointer to the symbol we wish to update.
+ * @param symbol - Pointer to the symbol we wish to update.
  *        new_address - The new address.
- *
- * @return SUCCESS if the update has been made. Otherwise FAILURE.
  */
-result_t UpdateSymbolAddress (symbol_t *symbol ,address_t new_address);
+
+void UpdateSymbolAddress (symbol_t *symbol ,address_t new_address);
 
 /*
  * @brief Looks for entry in the symbol table by symbol name.
@@ -97,15 +105,17 @@ symbol_t *FindSymbol(symbol_table_t *table,
                     const char *symbol_name);
 
 /*
- * @brief Tell the name of a symbol.
+ * @brief Get a symbol's name.
  * @return Symbol's name.
  */
-address_t GetSymbolName(symbol_t *symbol);
+
+const char *GetSymbolName(symbol_t *symbol);
 
 /*
- * @brief Tell the type of a symbol.
+ * @brief Get a symbol's type
  * @return Symbol's type.
  */
+
 symbol_type_t GetSymbolType(symbol_t *symbol);
 
 /*
@@ -122,20 +132,12 @@ symbol_memory_area_t GetSymbolMemoryArea (symbol_t *symbol);
 address_t GetSymbolAddress(symbol_t *symbol);
 
 /*
- * @brief gets the next symbol from the symbol table.
- * @param symbol: the symbol we want to get following one.
- * @return the next symbol, if therers none returns NULL.
+ * @brief Return a symbol table as a list of symbols.
+ * @param table - The symbol we wish to turn into a list.
+ * @return A list where the value of each node is a pointer to a symbol.
  */
 
-symbol_t *GetNextSymbol (symbol_t *symbol);
-
-/*
- * @brief gets the first symbol from the symbol table.
- * @param symbol_table: the symbol table we want to get the first symbol.
- * @return the first symbol from the symbol table, if it empty returns NULL.
- */
-
-symbol_t *GetHeadSymbol (symbol_table_t *symbol_table);
+list_t *AsList(symbol_table_t *table);
 
 #endif /* __SYMBOL_TABLE__ */
 

@@ -77,6 +77,24 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
   return FALSE;
 }
 
+bool_t MacroDefinedMoreThanOnce(const char *macro_name,
+                                macro_table_t *table,
+                                syntax_check_config_t *config) {
+
+  if (NULL == FindMacro(table, macro_name)) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to redefine macro with the name '%s'.\n\n",
+            config->file_name,
+            config->line_number, 
+            macro_name);
+  }
+
+  return TRUE;
+}
+
 bool_t InstructionDoesntExist(const char *instruction,
                               syntax_check_config_t *config) {
   int i = 0;

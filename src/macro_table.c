@@ -1,5 +1,6 @@
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strlen, strcpy */
+#include <stdio.h> /* fprintf */
 #include "macro_table.h"
 #include "list.h"
 #include "string_utils.h"
@@ -35,32 +36,37 @@ result_t AddMacroIfUnique(macro_table_t *table,
                           const char *macro_name,
                           const char *macro_definition) {
 
-  macro_t *macro = NULL;
   if (NULL != FindMacro(table, macro_name)) {
     return FAILURE;
   }
 
-  macro = CreateMacro(macro_name, macro_definition);
-  if (NULL == macro) {
-    return MEM_ALLOCATION_ERROR;
-  }
-
-  AddNode(table->list, macro);
-  return SUCCESS;
+  return AddMacro(table, macro_name, macro_definition);
 }
 
 void DestroyMacroTable(macro_table_t *table) {
   node_t *node = GetHead(table->list);
   while (NULL != node) {
     macro_t *macro = GetValue(node);
-    free((void *)macro->macro_definition);
-    free((void *)macro->macro_name);
     free(macro);
     node = GetNext(node);
   }
 
   DestroyList(table->list);
   free(table);
+}
+
+result_t AddMacro(macro_table_t *table,
+                  const char *macro_name,
+                  const char *macro_definition) {
+
+  macro_t *macro = CreateMacro(macro_name, macro_definition);
+
+  if (NULL == macro) {
+    return MEM_ALLOCATION_ERROR;
+  }
+
+  AddNode(table->list, macro);
+  return SUCCESS;
 }
 
 const char *GetMacroDefinition(macro_t *macro) {
@@ -84,20 +90,14 @@ static macro_t *CreateMacro(const char *macro_name,
   macro_t *macro = (macro_t *)malloc(sizeof(macro_t));
 
   if (NULL == macro) {
-    return NULL;
-  }
-  macro->macro_definition = StrDup(macro_definition);
-  if (NULL == macro->macro_definition) {
-    free(macro); macro = NULL;
+    fprintf(stderr,
+            "CreateMacro: Couldn't allocate memory for new macro '%s'\n",
+            macro_name);
     return NULL;
   }
 
-  macro->macro_name = StrDup(macro_name);
-  if (NULL == macro->macro_name) {
-    free(macro); macro = NULL;
-    free((void *)macro_definition); macro_definition = NULL;
-    return NULL;
-  }
+  macro->macro_definition = macro_definition;
+  macro->macro_name = macro_name;
 
   return macro;
 }
@@ -107,3 +107,12 @@ static int CmpMacro(void *value, void *key) {
   return (0 == strcmp(macro->macro_name, (const char *)key));
 }
 
+/* TODO: delete */
+void PrintAllMacros(macro_table_t *table) {
+  node_t *iter = GetHead(table->list);
+  while (NULL != iter) {
+    macro_t *macro = GetValue(iter);
+    printf("macro name: %s\n", macro->macro_name);
+    printf("macro definition:\n %s\n\n", macro->macro_definition);
+  }
+}

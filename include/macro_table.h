@@ -48,9 +48,20 @@ macro_table_t *CreateMacroTable(void);
  *
  * NOTE: the function performs a shallow copy of macro_name & macro_definition.
  */
+
 result_t AddMacroIfUnique(macro_table_t *table,
                           const char *macro_name,
                           const char *macro_definition);
+
+/* @brief Same as a AddMacroIfUnique, without checking if a macro of the
+ *        same name exists.
+ *
+ * @return Same as AddMacroIfUnique, but FAILURE isn't returned.
+ */
+
+result_t AddMacro(macro_table_t *table,
+                  const char *macro_name,
+                  const char *macro_definition);
 
 /*
  * @brief Deallocates the memory of a macro table, including macro names &
@@ -76,5 +87,8 @@ macro_t *FindMacro(macro_table_t *table,
  * @return The macro's definition, or NULL if it cant find the macro.
  */
 const char *GetMacroDefinition(macro_t *macro);
+
+/* TODO: delete */
+void PrintAllMacros(macro_table_t *table);
 
 #endif /* __MACRO_TABLE__ */
