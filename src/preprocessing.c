@@ -7,24 +7,32 @@
 #include "string_utils.h"
 
 static bool_t IsComment(const char *line);
+
 static bool_t IsBlankLine(const char *line);
+
 static bool_t IsNewMacro(const char *line);
+
 static result_t ParseMacro(FILE *file,
                            macro_table_t *table,
                            char *line,
                            syntax_check_config_t *config);
+
 static result_t ReadMacrosInFile(FILE *file,
                                  macro_table_t *table,
                                  char *buffer,
                                  syntax_check_config_t *cfg,
                                  bool_t *error_occurred);
+
 static char *ReadMacroDefinition(FILE *file,
                                  char *line,
                                  syntax_check_config_t *cfg);
+
 static result_t PerformPreprocessing(FILE *input_file,
                                    FILE *output_file,
                                    macro_table_t *table,
                                    char *buffer);
+
+static char *CleanLine(char *line);
 
 /* ~~--~~--~~--~~--~~
   Preprocessor
@@ -80,11 +88,6 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
       error_occurred = TRUE;
   }
 
-  /* TODO: delete */
-  PrintAllMacros(table);
-  return table;
-
-
   /*
    * Second pass:
    * Since no errors occurred, write to file.
@@ -102,9 +105,6 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   free(line);
   fclose(input_file);
   fclose(output_file);
-  DestroyMacroTable(table);
-  return NULL;
-
   return table;
 }
 
@@ -113,11 +113,11 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
   ~~--~~--~~--~~--~~ */
 /*
  * @brief Checks if a line is a comment.
- *        We assume there are no leading white spaces (spaces or tabs).
  * 
  * @param line - Pointer to a null-terminated string containing the line to be
  *               checked.
- * 
+ *               We assume there are no leading white spaces (spaces or tabs).
+ *
  * @return TRUE if the line is a comment, FALSE otherwise.
  */
 
@@ -131,22 +131,17 @@ static bool_t IsComment(const char *line) {
  * 
  * @param line - Pointer to a null-terminated string containing the line to be
  *               checked.
+ *               We assume that StripWhitespaces has been called on line.
  * 
  * @return TRUE if the line is blank, FALSE otherwise.
  */
 
 static bool_t IsBlankLine(const char *line) {
-  char *ptr = (char *)StripLeadingWhitespaces(line);
-  while (IsBlank(*ptr)) {
-    ++ptr;
-  }
-
-  if ('\0' == *ptr) {
-    return TRUE;
-  }
-  else {
+  if (0 != strcmp(line, "\n")) {
     return FALSE;
   }
+
+  return TRUE;
 }
 
 /*
@@ -299,7 +294,8 @@ static result_t ParseMacro(FILE *file,
     return FILE_HANDLING_ERROR;
   }
 
-  line = (char *)StripLeadingWhitespaces(line);
+  /* Finding where the name starts & ends */
+  line = CleanLine(line); 
   macro_name_start = line + 5; /* strlen("macr "); */
   macro_name_start = (char *)StripLeadingWhitespaces(macro_name_start);
   macro_name_end = macro_name_start;
@@ -452,7 +448,10 @@ static result_t PerformPreprocessing(FILE *input_file,
 
   while (NULL != fgets(line, MAX_LINE_LENGTH, input_file)) {
     const char *str_to_write = NULL;
-    line = StripWhitespaces(line);
+    /* Remove leading and trailing whitespaces & collapse extra whitespaces 
+     * into one.
+     */
+    line = CleanLine(line);
 
     /* Skip macro definitions */
     if (IsNewMacro(line)) {
@@ -461,7 +460,7 @@ static result_t PerformPreprocessing(FILE *input_file,
         fgets(line, MAX_LINE_LENGTH, input_file); 
         line = (char *)StripLeadingWhitespaces(line);
       }
-      line = StripTrailingWhitespaces(line);
+      line = CleanLine(line);
     }
 
     else if (IsComment(line) | IsBlankLine(line)) {
@@ -489,4 +488,50 @@ static result_t PerformPreprocessing(FILE *input_file,
   }
 
   return SUCCESS;
+}
+
+/*
+ * @brief This function removes any extrenuous whitespaces.
+ *        
+ *        1. Leading & trailing whitespaces are removed.
+ *        2. Any numeruous continuous whitespaces are replaced w/ only one.
+ *
+ *        We assume that the line isn't blank.
+ *        We also assume that the line has no leading or trailing whitespaces.
+ *
+ * @param line - A line of text, terminated by '\n'.
+ *               We assume there is only one '\n' in line.
+ *
+ * @return Pointer to the beginning of the clean line.
+ */
+
+static char *CleanLine(char *line) {
+  char *src = CleanLine(line);
+  char *dest = src;
+  char *newline_pos = src + strlen(src) - 1;
+  bool_t in_whitespace = FALSE;
+
+  /* Collapse multiple whitespaces between words */
+  while (src < newline_pos) {
+    /* Copy characters from src to dest if non-blanks */
+    if (!IsBlank(*src)) {
+      *dest = *src;
+      ++dest;
+      in_whitespace = FALSE;
+    }
+
+    /* Copy just one space when in a sequence of whitespaces */
+    else if (FALSE == in_whitespace) {
+      *dest = ' ';
+      ++dest;
+      in_whitespace = TRUE;
+    }
+    ++src;
+  }
+
+  /* Restore terminating characters */
+  *dest = '\n';
+  *(dest + 1) = '\0';
+  
+  return line;
 }

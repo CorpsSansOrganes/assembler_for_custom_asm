@@ -5,7 +5,9 @@
 #include "test_utils.h"
 
 result_t static CompareFiles(const char *file1_path, const char *file2_path);
+
 static result_t RunComparison(const char *file_name);
+
 static const char *ProduceFilePath(const char *dir_path,
                                    const char *file_name,
                                    const char *extension,

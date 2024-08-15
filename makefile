@@ -80,4 +80,4 @@ $(OBJ_DEBUG)/test_utils.o: $(TEST)/test_utils.c $(INCLUDE)/test_utils.h
 
 # Clean up build artifacts
 clean:
-	rm -rf $(OBJ_DEBUG)/*.o test_*
+	rm -rf $(OBJ_DEBUG)/*.o test_* ./test/preprocessing_test_files/output/*
