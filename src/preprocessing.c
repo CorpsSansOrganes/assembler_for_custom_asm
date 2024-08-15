@@ -497,10 +497,8 @@ static result_t PerformPreprocessing(FILE *input_file,
  *        2. Any numeruous continuous whitespaces are replaced w/ only one.
  *
  *        We assume that the line isn't blank.
- *        We also assume that the line has no leading or trailing whitespaces.
  *
  * @param line - A line of text, terminated by '\n'.
- *               We assume there is only one '\n' in line.
  *
  * @return Pointer to the beginning of the clean line.
  */
