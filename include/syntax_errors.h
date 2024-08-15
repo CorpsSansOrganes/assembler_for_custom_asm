@@ -21,7 +21,9 @@ typedef struct {
 
 /*
  * @brief Checks if there are any characters after a certain point
- *   in a string, ignoring blank spaces (' ', '\t' etc).
+ *   in a string, ignoring blank spaces (' ', '\t' etc). 
+ *
+ * Prints appropriate error message if a syntax error occurred.
  *
  * @param starting_from - Pointer to the point from which we check for
  *                        extrenuous characters.
@@ -37,6 +39,8 @@ bool_t DetectExtraCharacters(const char *starting_from,
 /*
  * @brief Checks if name is reserved by the language.
  *
+ * Prints appropriate error message if a syntax error occurred.
+ *
  * @param name - The name to check.
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
@@ -46,6 +50,22 @@ bool_t DetectExtraCharacters(const char *starting_from,
 bool_t IsReservedName(const char *name, syntax_check_config_t *config);
 
 /*
+ * @brief Checks if a macro has already been defined.
+ *
+ * Prints appropriate error message if a syntax error occurred.
+ *
+ * @param macro_name - The name to check
+ *        table - The macro table to check.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ * @return TRUE if a macro with the name 'macro_name' was already defined, FALSE otherwise.
+ */
+
+bool_t MacroDefinedMoreThanOnce(const char *macro_name,
+                                macro_table_t *table,
+                                syntax_check_config_t *config);
+
+/*
 // ~~--~~--~~--~~--~~
 // Instruction errors
 // ~~--~~--~~--~~--~~
@@ -53,6 +73,8 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config);
 
 /*
  * @brief Checks if an instruction doesnt exist.
+ *
+ * Prints appropriate error message if a syntax error occurred.
  *
  * @param instruction - The suspected instruction.
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)

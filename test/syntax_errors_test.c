@@ -215,7 +215,7 @@ test_info_t SymbolDefinedMoreThanOnceTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+  if (SUCCESS != AddSymbol(table,"aaaa",100, CODE)) {
     perror("Couldn't add symbol in SymbolDefinedMoreThanOnceTest");
     RETURN_ERROR(TECHNICAL_ERROR);
   }
@@ -241,7 +241,7 @@ test_info_t SymbolWasntDefinedTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"aaaa",100)) {
+  if (SUCCESS != AddSymbol(table,"aaaa",100, DATA)) {
     perror("Couldn't add symbol");
     RETURN_ERROR(TECHNICAL_ERROR);
   }
@@ -265,7 +265,7 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+  if (SUCCESS != AddSymbol(table,"bbbb", 100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -273,7 +273,7 @@ test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+  if (SUCCESS != AddSymbol(table,"cccc",100, DATA)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -301,7 +301,7 @@ test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
      RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"bbbb", 100)) {
+  if (SUCCESS != AddSymbol(table,"bbbb", 100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
@@ -309,19 +309,19 @@ test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (SUCCESS != AddSymbol(table,"cccc",100)) {
+  if (SUCCESS != AddSymbol(table,"cccc",100, CODE)) {
     RETURN_ERROR(TECHNICAL_ERROR);
   }
 
-  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa",table, cfg)){
+  if (FALSE == SymbolAlreadyDefinedAsExtern("aaaa", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 
-  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc",table, cfg)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("cccc", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 
-  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb",table, cfg)){
+  if (TRUE == SymbolAlreadyDefinedAsExtern("bbbb", table, cfg)) {
      RETURN_ERROR(TEST_FAILED);
   }
 

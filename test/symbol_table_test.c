@@ -34,7 +34,7 @@ test_info_t AddSymbolTest(void) {
   }
   
   for (i = 0; i < n; ++i) {
-    AddSymbol(table, symbols[i], address);
+    AddSymbol(table, symbols[i], address, CODE);
     ++address;
   }
 
@@ -62,7 +62,7 @@ test_info_t FindSymbolTest(void) {
   }
   
   for (i = 0; i < n; ++i) {
-    AddSymbol(table, symbols[i], address);
+    AddSymbol(table, symbols[i], address, DATA);
     ++address;
   }
 
@@ -126,7 +126,7 @@ int main(void) {
   }
 
   if (0 == total_failures) {
-    printf("Test successful: symbol table\n");
+    printf(BOLD_GREEN "Test successful: " COLOR_RESET "symbol table\n");
   }
 
   return total_failures;

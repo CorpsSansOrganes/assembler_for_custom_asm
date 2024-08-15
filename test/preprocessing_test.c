@@ -19,8 +19,6 @@ test_info_t ValidPreprocessingTest(const char *file_name) {
 
 int main(void) {
   int total_failures = 0;
-  const char *result_path;
-  const char *expected_path;
   int i = 0;
 
   char *valid_files[] = {
@@ -28,6 +26,11 @@ int main(void) {
   };
 
   for (i = 0 ; i < sizeof(valid_files) / sizeof(valid_files[0]); ++i) {
+    test_info_t test_info = ValidPreprocessingTest(valid_files[i]);
+    if (!WasTestSuccessful(test_info)) {
+      PrintTestInfo(test_info);
+      ++total_failures;
+    }
   }
 
   if (0 == total_failures) {
@@ -69,7 +72,7 @@ result_t static CompareFiles(const char *file1_path, const char *file2_path) {
       ++line_number;
   }
 
-  // Check if one file has more lines than the other
+  /* Check if one file has more lines than the other */
   if (fgets(line1, sizeof(line1), file1) != NULL || fgets(line2, sizeof(line2), file2) != NULL) {
     printf("Files differ in length starting at line %d.\n", line_number + 1);
     test_res = FAILURE;
