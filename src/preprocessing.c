@@ -504,7 +504,7 @@ static result_t PerformPreprocessing(FILE *input_file,
  */
 
 static char *CleanLine(char *line) {
-  char *src = CleanLine(line);
+  char *src = StripWhitespaces(line);
   char *dest = src;
   char *newline_pos = src + strlen(src) - 1;
   bool_t in_whitespace = FALSE;
