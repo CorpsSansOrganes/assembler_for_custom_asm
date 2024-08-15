@@ -5,11 +5,30 @@
 #include "test_utils.h"
 
 result_t static CompareFiles(const char *file1_path, const char *file2_path);
+static result_t RunComparison(const char *file_name);
+
+test_info_t ValidPreprocessingTest(const char *file_name) {
+  test_info_t test_info = InitTestInfo("ValidPreprocessing");
+  if (SUCCESS != RunComparison(file_name)) {
+    printf("%s failed\n", file_name);
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  return test_info;
+}
 
 int main(void) {
   int total_failures = 0;
   const char *result_path;
   const char *expected_path;
+  int i = 0;
+
+  char *valid_files[] = {
+    "valid_1_wo_macro.as"
+  };
+
+  for (i = 0 ; i < sizeof(valid_files) / sizeof(valid_files[0]); ++i) {
+  }
 
   if (0 == total_failures) {
     printf(BOLD_GREEN "Test successful: " COLOR_RESET "Preprocessing\n");
@@ -59,4 +78,15 @@ result_t static CompareFiles(const char *file1_path, const char *file2_path) {
   fclose(file1);
   fclose(file2);
   return test_res;
+}
+
+static result_t RunComparison(const char *file_name) {
+  const char *input_path_dir = "./test/preprocessing_test_files/input";
+  const char *expected_path_dir = "./test/preprocessing_test_files/expected";
+  char input_file_path[256];
+  char expected_file_path[256];
+  sprintf(input_file_path, "%s/%s", input_path_dir, file_name);
+  sprintf(expected_file_path, "%s/%s", expected_path_dir, file_name);
+  
+  return CompareFiles(input_file_path, expected_file_path);
 }

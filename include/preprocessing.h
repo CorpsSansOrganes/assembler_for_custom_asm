@@ -10,7 +10,8 @@
  *        1. Finds macro usage, and swaps them for their definitions.
  *        2. Removes comments.
  *        3. Removes blank lines.
- *        4. Removes extraneous spaces, tabs, etc.
+ *        4. Removes leading & trailing whitespaces (spaces, tabs).
+ *        5. Any numeruous continuous whitespaces are replaced w/ only one.
  */
 
 #include "utils.h"
