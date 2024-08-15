@@ -80,6 +80,11 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
       error_occurred = TRUE;
   }
 
+  /* TODO: delete */
+  PrintAllMacros(table);
+  return table;
+
+
   /*
    * Second pass:
    * Since no errors occurred, write to file.
@@ -446,8 +451,8 @@ static result_t PerformPreprocessing(FILE *input_file,
   bool_t should_write_line = TRUE;
 
   while (NULL != fgets(line, MAX_LINE_LENGTH, input_file)) {
-    line = StripWhitespaces(line);
     const char *str_to_write = NULL;
+    line = StripWhitespaces(line);
 
     /* Skip macro definitions */
     if (IsNewMacro(line)) {

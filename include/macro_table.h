@@ -88,4 +88,7 @@ macro_t *FindMacro(macro_table_t *table,
  */
 const char *GetMacroDefinition(macro_t *macro);
 
+/* TODO: delete */
+void PrintAllMacros(macro_table_t *table);
+
 #endif /* __MACRO_TABLE__ */

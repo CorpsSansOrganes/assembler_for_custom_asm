@@ -107,3 +107,12 @@ static int CmpMacro(void *value, void *key) {
   return (0 == strcmp(macro->macro_name, (const char *)key));
 }
 
+/* TODO: delete */
+void PrintAllMacros(macro_table_t *table) {
+  node_t *iter = GetHead(table->list);
+  while (NULL != iter) {
+    macro_t *macro = GetValue(iter);
+    printf("macro name: %s\n", macro->macro_name);
+    printf("macro definition:\n %s\n\n", macro->macro_definition);
+  }
+}
