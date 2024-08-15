@@ -7,7 +7,11 @@
 #define NUM_OF_INSTRUCTIONS 16
 #define NUM_OF_DIRECTIVES 4
 #define NUM_OF_REGISTERS 8
+
 #define SYMBOL_CHARACTER_LIMIT 31
+
+/* Line length in the source code cannot be more than 80 characters + \n */
+#define MAX_LINE_LENGTH 81
 
 /*
  * @brief Definitions for reserved words and other building blocks

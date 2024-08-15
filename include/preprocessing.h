@@ -16,8 +16,6 @@
 #include "utils.h"
 #include "macro_table.h"
 
-#define MAX_LINE_SIZE 100
-
 /*
  * @brief Performs preprocessing on a .as file:
  *  1. Indentifying macro definitions, and swaps macro for
