@@ -2,7 +2,6 @@
 #include <stdio.h> /* perror */
 #include <assert.h> /* assert */
 #include "symbol_table.h"
-#include "list.h"
 #include "utils.h"
 #include "string.h"
 
@@ -137,17 +136,10 @@ address_t GetSymbolAddress(symbol_t *symbol) {
   return symbol->address;
 }
 
-/*
- * Problem: User gets symbol, which is the value of the node, not 
- *          the node itself.
-symbol_t *GetNextSymbol(symbol_t *symbol) {
-    return GetNext(symbol);  
+list_t *AsList(symbol_table_t *table) {
+  assert(table);
+  return table->list;
 }
-
-symbol_t *GetHeadSymbol (symbol_table_t *symbol_table) {
-  return GetHead(symbol_table->list);
-}
-*/
 
 static int SymbolCompare(void *symbol_ptr, void *key) {
   symbol_t *symbol = (symbol_t *)symbol_ptr;

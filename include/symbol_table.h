@@ -17,9 +17,11 @@
  */
 
 #include "utils.h"
+#include "list.h"
 
 typedef struct symbol_table symbol_table_t;
 typedef int address_t;
+
 
 typedef enum {
   EXTERN,
@@ -130,20 +132,12 @@ symbol_memory_area_t GetSymbolMemoryArea (symbol_t *symbol);
 address_t GetSymbolAddress(symbol_t *symbol);
 
 /*
- * @brief gets the next symbol from the symbol table.
- * @param symbol: the symbol we want to get following one.
- * @return the next symbol, if therers none returns NULL.
+ * @brief Return a symbol table as a list of symbols.
+ * @param table - The symbol we wish to turn into a list.
+ * @return A list where the value of each node is a pointer to a symbol.
  */
 
-symbol_t *GetNextSymbol (symbol_t *symbol);
-
-/*
- * @brief gets the first symbol from the symbol table.
- * @param symbol_table: the symbol table we want to get the first symbol.
- * @return the first symbol from the symbol table, if it empty returns NULL.
- */
-
-symbol_t *GetHeadSymbol (symbol_table_t *symbol_table);
+list_t *AsList(symbol_table_t *table);
 
 #endif /* __SYMBOL_TABLE__ */
 
