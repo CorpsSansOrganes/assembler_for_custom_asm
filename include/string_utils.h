@@ -42,7 +42,7 @@ char *StripWhitespaces(char *str);
  *
  * @return Pointer to the start of the stripped string.
  */
-const char *StripLeadingWhitespaces(const char *str);
+char *StripLeadingWhitespaces(char *str);
 
 /*
  * @brief Same as StripWhitespaces, but only removes trailing whitespaces.

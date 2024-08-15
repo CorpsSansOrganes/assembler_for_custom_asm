@@ -10,17 +10,34 @@ char *StripWhitespaces(char *str) {
   return StripTrailingWhitespaces((char *)StripLeadingWhitespaces(str));
 }
 
-const char *StripLeadingWhitespaces(const char *str) {
+char *StripLeadingWhitespaces(char *str) {
+  char *to = str;
+  size_t length = 0;
+
   while (IsBlank(*str)) {
     ++str;
   }
+
+  /* No leading whitespaces */
+  if (str == to) {
+    return str;
+  }
+
+  length = strlen(str) + 1;
+  memmove(to, str, length);
 
   return str;
 }
 
 char *StripTrailingWhitespaces(char *str) {
-  char *end = (char *)EndOfString(str) - 1;
-  while (IsBlank(*end) && end > str) {
+  char *end = NULL;
+
+  if ('\0' == *str) {
+    return str;
+  }
+
+  end = (char *)EndOfString(str) - 1;
+  while (end > str && IsBlank(*end)) {
     --end;
   }
 
