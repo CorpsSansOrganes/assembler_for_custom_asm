@@ -5,6 +5,11 @@
 
 #define INITIAL_IC_VALUE 100
 
+typedef struct external_symbol_data {
+  const char *symbol_name;
+  vector_t *occurences;
+}external_symbol_data_t;
+
 /*
  * @brief Assembler which takes .am files (after preprocessing) and the macro table of the file 
  *        and converts it to corresponding object files.

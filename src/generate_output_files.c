@@ -3,22 +3,24 @@
 #include "bitmap.h"
 #include "vector.h"
 #include "symbol_table.h"
+#include "assembler.h"
 #include "preprocessing.h"
 #include "string_utils.h"
+#include "language_definitions.h"
 #include <string.h> 
 #include <stdlib.h>
 #include <stdio.h>
 #define ADDRESS_LENGTH 4
 #define BITMAP_LENGTH 5
 
-static void IntToConstDigitString(int num, char *output, const int num_of_digits);
 static result_t WriteHeader (char *output_path, int IC, int DC);
 static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path);
 static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
 static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC);
+static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,list_t *external_symbol_data_list);
 
 
-result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, int IC, int DC){
+result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, list_t *external_symbol_data_list, int IC, int DC){
     char *obj_path = StrDup(input_path);
     char *extern_path = StrDup(input_path);
     char *entry_path = StrDup(input_path);
@@ -29,7 +31,7 @@ result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, ch
     if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
         return FAILURE;
     }
-    if (SUCCESS != GenerateExternFile(symbol_table, extern_path)){
+    if (SUCCESS != GenerateExternFile(symbol_table, extern_path,external_symbol_data_list)){
         return FAILURE;
     }
     if (SUCCESS != GenerateEntriesFile(symbol_table,entry_path)){
@@ -47,7 +49,7 @@ static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, in
     char *address [6];
     char *bitmap [6];
     FILE *obj_file = NULL;
-    char *str_to_write [11] = "";/*ADDRESS LENGTH + " " +BITMAP LENGTH +terminating null*/
+    char *str_to_write [MAX_LINE_LENGTH] = "";
     if (SUCCESS != WriteHeader (output_path, IC, DC)){
         return FAILURE;
     }
@@ -62,10 +64,10 @@ static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, in
         for (j=0; j<GetSizeVector(opcode_line); j++)
         {
             str_to_write[0] = "\0";
-            IntToConstDigitString (counter,address,ADDRESS_LENGTH);
+            sprintf(address, "%04d", counter);
             single_opcode = GetElementVector (opcode_line,j);
-            IntToConstDigitString (single_opcode,bitmap,BITMAP_LENGTH);
-            sprintf(str_to_write, "%s %s\n", counter, address);
+            sprintf(bitmap, "%05o", single_opcode);
+            sprintf(str_to_write, "%s %s\n", address, bitmap);
             if (EOF == fputs(str_to_write, obj_file)) {
                 perror("Error writing to file");
                 free (obj_file);
@@ -83,8 +85,9 @@ static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, in
 
 static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path){
   FILE *entry_file = NULL;
-  char *str_to_write [39] = "";/*character limit + len (max lines in code) + " \n" + terminating null*/
-  symbol_t *symbol = GetHeadSymbol (symbol_table);
+  list_t *symbol_list =AsList(symbol_table);
+  char *str_to_write [MAX_LINE_LENGTH] = "";
+  symbol_t *symbol = (symbol_t *) GetHead (symbol_list);
   if (NULL == symbol){
     return SUCCESS; /*no need to make file*/
   }
@@ -97,7 +100,7 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
         }
         break;
     }
-    symbol = GetNextSymbol (symbol);
+    symbol = (symbol_t *) GetNext(symbol);
   }
     while (NULL != symbol){
     if (ENTRY == GetSymbolType(symbol)){
@@ -108,46 +111,31 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
             return ERROR_WRITING_TO_FILE;
         }
     }
-    symbol = GetNextSymbol (symbol);
+    symbol = (symbol_t *) GetNext (symbol);
   }
   fclose(entry_file);
   return SUCCESS;
 }
 
 
-static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path){
+static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,list_t *external_symbol_data_list){
   FILE *extern_file = NULL;
-  char *str_to_write [39] = "";/*character limit + len (max lines in code) + " \n" + terminating null*/
-  symbol_t *symbol = GetHeadSymbol (symbol_table);
-  vector_t *line_numbers;
+  char *str_to_write [MAX_LINE_LENGTH] = "";
+  external_symbol_data_t *external_symbol;
+  external_symbol =  GetHead (external_symbol_data_list);
   int i;
-  if (NULL == symbol){
+  if (NULL == external_symbol){
     return SUCCESS; /*no need to make file*/
   }
-  while (NULL != symbol){
-    if (EXTERN == GetSymbolType(symbol) && (NULL != line_number_vector)){/*pseudocode. to change*/
-        extern_file = fopen(output_path, "a");
-        if (NULL == extern_file) {
-            free (extern_file);
-            perror("Couldn't open extern file");
-            return ERROR_OPENING_FILE; 
+  while (NULL != external_symbol){
+        for (i=0; i<GetCapacityVector(external_symbol->occurences);i++){
+            sprintf (str_to_write, "%s %d\n", external_symbol, GetElementVector(external_symbol->occurences,i));
         }
-        break;
-    }
-    symbol = GetNextSymbol (symbol);
-  }
-    while (NULL != symbol){
-    if (EXTERN == GetSymbolType(symbol)){
-        line_numbers = getsymbolLineNumbers (symbol);/*pseudocode, to change*/
-        for (i=0; i<GetSizeVector(line_numbers);i++){
-            sprintf (str_to_write, "%s %d\n", GetSymbolName(symbol),GetElementVector(line_numbers,i));
-            if (EOF == fputs(str_to_write, extern_file)) {
+         if (EOF == fputs(str_to_write, extern_file)) {
                 perror("Error writing to file");
                 return ERROR_WRITING_TO_FILE;
-            }
         }
-    }
-    symbol = GetNextSymbol (symbol);
+    external_symbol = (external_symbol_data_t *) GetNext (external_symbol);
   }
   fclose(extern_file);
   return SUCCESS;
@@ -156,7 +144,7 @@ static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_p
 
 static result_t WriteHeader (char *output_path, int IC, int DC){
     FILE *obj_file;
-    char str_to_write[15];  
+    char str_to_write[MAX_LINE_LENGTH];  
     int total_chars;
 
 
@@ -176,23 +164,4 @@ static result_t WriteHeader (char *output_path, int IC, int DC){
     }
 
     fclose(obj_file);
-}
-
-static int externalSymbolCompare (char *symbol_name, char *key) {
-  return (0 == strcmp (symbol_name, key));
-}
-/*maximum 5 digits*/
-static void IntToConstDigitString(int num, char *output, const int num_of_digits) {
-    char temp [6];  
-    int num_length;
-    int leading_zeros;  
-    
-    sprintf(temp, "%d", num);
-    num_length = strlen(temp);
-    leading_zeros = num_of_digits - num_length;
-
-    for (int i = 0; i < leading_zeros; i++) {
-        output[i] = '0';
-    }
-    strcpy(output + leading_zeros, temp);
 }
