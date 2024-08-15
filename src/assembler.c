@@ -3,13 +3,20 @@
 #include "syntax_errors.h"
 #include "macro_table.h"
 #include "symbol_table.h"
+#include "language_definitions.h"
 #include "generate_opcode.h"
 #include "vector.h"
+#include "list.h"
 #include "string_utils.h"
 #include "generate_output_files.h"
 #include <stdio.h> /* perror */
 #include <string.h> 
 #include <stdlib.h>
+
+typedef struct external_occurunces {
+  const char *symbol_name;
+  vector_t *occurences;
+} external_occurunces_t;
 
 static bool_t FirstWordEndsWithColon(char *line);
 static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
@@ -18,6 +25,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
 static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode);
 static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC);
 static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand );
+static int ExternalSymbolCompare (char *symbol_name, char *key);
 
 result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
   int IC = 0;
@@ -80,7 +88,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   }
 
  
-  while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
+  while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
       error_count_in_line = 0; 
       line_counter++;
       symbol_name = NULL;
@@ -194,18 +202,21 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   int error_count_in_line = 0;
   int total_errors = 0;
   int vector_counter = 0;
+  int bitmap_counter = 0;
   bitmap_t *opcode_bitmap; 
   char *current_word = NULL; 
   char *current_line = NULL;
   char *symbol_name=NULL;
   FILE *input_file = NULL;
   char *entry_parameter = NULL;
+  external_occurunces_t *external_occurunces;
+  list_t *external_occurunces_list = CreateList();
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
     perror("Couldn't open input file");
     return ERROR_OPENING_FILE; 
   }
-  while (NULL != fgets(current_line, MAX_LINE_SIZE, input_file)) {
+  while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     error_count_in_line = 0; 
     line_counter++;
     symbol_name = NULL;
@@ -219,6 +230,11 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
     if (0 == strcmp (current_word, ".extern") || 0 == strcmp (current_word, ".data") || 0 == strcmp (current_word, ".string")){
         /*nothing to do, continue to the next line*/
     }
+     if (0 == strcmp (current_word, ".string")){
+        current_word = strtok (current_line, blank_delimiters);
+        vector_counter += strlen (current_word)-2; /*the length of the string without the quotation marks*/
+        bitmap_counter += strlen (current_word)-2; 
+     }
     if (0 == strcmp (current_word, ".entry")){
        current_line += strlen (current_word) +1; 
        if (isIllegalOrExternOrEntryParameter(current_line)){
@@ -238,7 +254,14 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             opcode_bitmap = GetElementVector (opcode_line,1);
             *opcode_bitmap = GetSymbolAddress (symbol);
             if (EXTERN == GetSymbolType (symbol)){
-              addoccurence (symbol, line_counter);/*pseudocode, to change!*/
+               external_occurunces = Find(external_occurunces_list, ExternalSymbolCompare, GetSymbolName(symbol));
+               if (NULL == external_occurunces){
+                external_occurunces->symbol_name = GetSymbolName(symbol);
+                external_occurunces->occurences = CreateVector (0,sizeof(int));
+                AddNode (external_occurunces_list,external_occurunces);
+               }
+               AppendVector (external_occurunces->occurences,bitmap_counter+INITIAL_IC_VALUE);/*bit_map counts the memory words that been used, so thats give the address*/
+
             }
           } 
         }
@@ -252,6 +275,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             } 
         }
         total_errors += error_count_in_line;
+        bitmap_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
         vector_counter++;
     }
   
@@ -346,6 +370,9 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
     }
     return counter;
   }   
+static int ExternalSymbolCompare (external_occurunces_t *symbol_occurunces_unit, char *key) {
+  return (0 == strcmp (symbol_occurunces_unit->symbol_name, key));
+}
 
 
 

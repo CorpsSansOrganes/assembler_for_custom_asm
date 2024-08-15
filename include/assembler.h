@@ -14,11 +14,12 @@
  *         Otherwise, an error code is returned.
  */
 
-result_t AssembleFile(char *file_path,  macro_table_t *macro_list)/* 
+result_t AssembleFile(char *file_path,  macro_table_t *macro_list);
+/* 
  * For each file in files:
  * 1. first pass
  * 2. second pass
- * 3. create obj file.
+ * 3. create obj, ext and ent file.
  */
 
 #endif /* __ASSEMBLER_SH_ED__ */

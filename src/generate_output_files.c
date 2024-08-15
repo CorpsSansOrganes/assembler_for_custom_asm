@@ -22,15 +22,16 @@ result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, ch
     char *obj_path = StrDup(input_path);
     char *extern_path = StrDup(input_path);
     char *entry_path = StrDup(input_path);
-    strcat (obj_path,".ob");
+    /*replace .am with the correct finish*/
+    strcpy(obj_path + strlen(input_path) - 3, ".ob");
+    strcpy(entry_path + strlen(input_path) - 3, ".ent");
+    strcpy(extern_path + strlen(input_path) - 3, ".ext");
     if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
         return FAILURE;
     }
-    strcat (extern_path,".ext");
     if (SUCCESS != GenerateExternFile(symbol_table, extern_path)){
         return FAILURE;
     }
-    strcat (entry_path,".ent");
     if (SUCCESS != GenerateEntriesFile(symbol_table,entry_path)){
         return FAILURE;
     }
@@ -177,6 +178,9 @@ static result_t WriteHeader (char *output_path, int IC, int DC){
     fclose(obj_file);
 }
 
+static int externalSymbolCompare (char *symbol_name, char *key) {
+  return (0 == strcmp (symbol_name, key));
+}
 /*maximum 5 digits*/
 static void IntToConstDigitString(int num, char *output, const int num_of_digits) {
     char temp [6];  
