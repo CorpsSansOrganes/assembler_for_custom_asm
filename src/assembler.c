@@ -9,14 +9,11 @@
 #include "list.h"
 #include "string_utils.h"
 #include "generate_output_files.h"
-#include <stdio.h> /* perror */
+#include <stdio.h>
 #include <string.h> 
 #include <stdlib.h>
 
-struct external_symbol_data {
-  const char *symbol_name;
-  vector_t *occurences;
-};
+
 
 static bool_t FirstWordEndsWithColon(char *line);
 static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
@@ -34,12 +31,12 @@ result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
   vector_t *opcode;
   symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
-    perror("Memory allocation error: couldn't allocate a symbol table\n");
+     fprintf(stderr,"Memory allocation error: couldn't allocate a symbol table\n");
     return MEM_ALLOCATION_ERROR;
   }  
   opcode = CreateVector(0,sizeof(vector_t *));
   if (NULL == opcode) {
-    perror("Memory allocation error: couldn't allocate a vecotr\n");
+    fprintf(stderr,"Memory allocation error: couldn't allocate a vecotr\n");
     return MEM_ALLOCATION_ERROR;
   }  
   if (SUCCESS != FirstPass (file_path,macro_list,symbol_table, opcode, &IC, &DC)){
@@ -55,7 +52,7 @@ result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
     DestroyVector (opcode);
     return FAILURE;
   }
-  if (SUCCESS != GenerateOutputFiles(opcode, symbol_table,file_path,IC,DC)){
+  if (SUCCESS != GenerateOutputFiles(opcode, symbol_table,file_path,external_symbol_data_list,IC,DC)){
     DestroySymbolTable(symbol_table);
     DestroyVector (opcode);
     return FAILURE;
@@ -74,7 +71,6 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   char *current_line = NULL;
   char *symbol_name=NULL;
   FILE *input_file = NULL;
-  char *entry_parameter = NULL;
   operand_t *first_operand = NULL;
   operand_t *second_operand = NULL;
   int num_of_operands;
@@ -84,15 +80,35 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
                                                  TRUE);
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    perror("Couldn't open input file");
+    fprintf(stderr,"Couldn't open input file");
     return ERROR_OPENING_FILE; 
+  }
+
+  current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == current_line) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
+  }
+  current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == current_word) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
+  }
+
+  char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == symbol_name) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
   }
 
  
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
       error_count_in_line = 0; 
       line_counter++;
-      symbol_name = NULL;
+      symbol_name = '\0';
 
       /* Dealing with symbol definitions */
       if (FirstWordEndsWithColon(current_line)) {
@@ -118,7 +134,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
           error_count_in_line++; 
         }
         else if (error_count_in_line==0) {
-          if (symbol_name!= NULL){
+          if (symbol_name != '\0'){
           AddSymbol (symbol_table,symbol_name,*DC,DATA);
           }
           opcode = StringLineToMachineCode(opcode, current_line); 
@@ -131,7 +147,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
                 error_count_in_line++;
           }
           if (error_count_in_line == 0){
-                if (symbol_name != NULL){
+                if (symbol_name != '\0'){
                   if (SUCCESS != AddSymbol (symbol_table, symbol_name,DC,DATA)){
                     return FAILURE;
                   } 
@@ -163,7 +179,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
       }
       else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
           if (0 == error_count_in_line){
-            if (symbol_name != NULL){
+            if (symbol_name != '\0'){
              if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
                return FAILURE;
              }
@@ -209,13 +225,33 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   char *current_line = NULL;
   char *symbol_name=NULL;
   FILE *input_file = NULL;
-  char *entry_parameter = NULL;
-  list_t *external_symbol_data_list = CreateList();
+  external_symbol_data_t *external_symbol_data;
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    perror("Couldn't open input file");
+     fprintf(stderr,"Couldn't open input file");
     return ERROR_OPENING_FILE; 
   }
+
+  current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == current_line) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
+  }
+  current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == current_word) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
+  }
+
+  char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  if (NULL == symbol_name) {
+    fprintf(stderr,
+            "Memory allocation error: couldn't allocate a buffer\n");
+    return NULL;
+  }
+
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     error_count_in_line = 0; 
     line_counter++;
