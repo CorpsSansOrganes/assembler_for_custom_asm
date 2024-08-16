@@ -1,5 +1,6 @@
 #include <stdio.h> /* fopen, close */
 #include <string.h> /* strcmp */
+#include <unistd.h> /* access */
 #include "preprocessing.h"
 #include "language_definitions.h"
 #include "test_utils.h"
@@ -12,6 +13,8 @@ static const char *ProduceFilePath(const char *dir_path,
                                    const char *file_name,
                                    const char *extension,
                                    char *full_path);
+
+static bool_t FileDoesntExist(const char *path);
 
 const char *expected_dir = "./test/preprocessing_test_files/expected";
 const char *input_dir = "./test/preprocessing_test_files/input";
@@ -38,6 +41,33 @@ test_info_t ValidPreprocessingTest(const char *file_name) {
 
   DestroyMacroTable(table);
   return test_info;
+}
+
+test_info_t InvalidPreprocessingTest(const char *file_name) {
+  test_info_t test_info = InitTestInfo("InvalidPreprocessing");
+  char input_path[256];
+  char output_path[256];
+  macro_table_t *table = NULL;
+
+  ProduceFilePath(input_dir, file_name, ".as", input_path);
+  ProduceFilePath(output_dir, file_name, ".am", output_path);
+
+  table = PreprocessFile(input_path, output_path);
+
+  if (FAILURE != RunComparison(file_name)) {
+    printf("%s failed\n", file_name);
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (NULL != table) {
+    printf("%s failed - table isn't null although preprocessing failed.\n", file_name);
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (FALSE == FileDoesntExist(output_path)) {
+    printf("%s failed - output file was created, although preprocessing failed.\n", file_name);
+    RETURN_ERROR(TEST_FAILED);
+  }
 }
 
 int main(void) {
@@ -129,4 +159,8 @@ static const char *ProduceFilePath(const char *dir_path,
                                    char *full_path) {
     sprintf(full_path, "%s/%s%s", dir_path, file_name, extension);
     return full_path;
+}
+
+static bool_t FileDoesntExist(const char *path) {
+  return (0 != access(path, F_OK));
 }
