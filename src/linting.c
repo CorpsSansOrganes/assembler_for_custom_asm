@@ -8,6 +8,10 @@ char *CleanLine(char *line) {
   char *last_non_blank = NULL;
   bool_t in_whitespace = FALSE;
 
+  if (IsBlankLine(line)) {
+    return src;
+  }
+
   /* Collapse multiple whitespaces between words */
   while ('\n' != *src) {
     /* Copy characters from src to dest if non-blanks */

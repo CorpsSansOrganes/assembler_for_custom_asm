@@ -13,8 +13,6 @@
  *        1. Leading & trailing whitespaces are removed.
  *        2. Any numeruous continuous whitespaces are replaced w/ only one.
  *
- *        We assume that the line isn't blank.
- *
  * @param line - A line of text, terminated by '\n'.
  *
  * @return Pointer to the beginning of the clean line.

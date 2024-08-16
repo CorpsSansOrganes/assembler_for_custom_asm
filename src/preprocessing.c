@@ -361,7 +361,9 @@ static char *ReadMacroDefinition(FILE *file,
   /* Sum up definition size */
   while (fgets(line, MAX_LINE_LENGTH, file) && 
     FALSE == IsPrefix(CleanLine(line), "endmacr")) {
-    definition_size += strlen(line);
+    if (!IsBlankLine(line)) {
+      definition_size += strlen(line);
+    }
   }
 
   /*
@@ -388,11 +390,13 @@ static char *ReadMacroDefinition(FILE *file,
   current_position = definition;
   while (fgets(line, MAX_LINE_LENGTH, file) && 
          FALSE == IsPrefix(CleanLine(line), "endmacr")) {
-    size_t line_length = strlen(line);
+    if (!IsBlankLine(line)) {
+      size_t line_length = strlen(line);
 
-    /* Copy the stripped line into the definition */
-    strncpy(current_position, line, line_length);
-    current_position += line_length;
+      /* Copy the stripped line into the definition */
+      strncpy(current_position, line, line_length);
+      current_position += line_length;
+    }
   }
 
   /* Null-terminate the definition string */
