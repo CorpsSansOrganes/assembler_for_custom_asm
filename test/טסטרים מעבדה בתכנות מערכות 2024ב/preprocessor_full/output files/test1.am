@@ -1,0 +1,13 @@
+
+
+g
+
+
+main: dec x
+inc *r1
+ main: dec x
+inc *r1
+main: dec x
+inc *r1
+main: dec x
+inc *r1
