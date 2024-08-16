@@ -75,14 +75,27 @@ int main(void) {
   int i = 0;
 
   char *valid_names[] = {
-    /*"valid_1_wo_macro",
+    "valid_1_wo_macro",
     "valid_2_w_macro",
-    "valid_3_w_comment",*/
+    "valid_3_w_comment",
     "valid_4_w_blank_line" 
+  };
+
+  char *invalid_names[] = {
+    "invalid_1_extra_characters",
+    /*"invalid_2_macro_is_reserved_name"*/
   };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
     test_info_t test_info = ValidPreprocessingTest(valid_names[i]);
+    if (!WasTestSuccessful(test_info)) {
+      PrintTestInfo(test_info);
+      ++total_failures;
+    }
+  }
+
+  for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
+    test_info_t test_info = InvalidPreprocessingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);
       ++total_failures;
