@@ -239,22 +239,33 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
 bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config);
 
 /*
- * @brief Checks if a immediate operand who is a valid number exceed max size to encode (2^12).
+ * @brief Checks if an operand is an immediate operand who contains a valid number that exceed max size to encode (2^11).
  *
- * @param Immediate_operand - The operand
+ * @param operand - The operand
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *        
  * @return TRUE if its too big. FALSE otherwise.
  */
 
-bool_t ImmediateOperandTooBig (const char *Immediate_operand, syntax_check_config_t *config);
-
+bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config);
 
 /*
 // ~~--~~--~~--~~--~~
 // Directive errors
 // ~~--~~--~~--~~--~~
 */
+
+/*
+ * @brief Checks if a data parameter is too big to encode (2^14).
+ *
+ * @param the parameter - The operand
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *        
+ * @return TRUE if its too big. FALSE otherwise.
+ */
+
+bool_t DataParameterTooBig (char *parameter, syntax_check_config_t *config);
+
 
 /*
  * @brief Check if the directive that has been called does not exist. 

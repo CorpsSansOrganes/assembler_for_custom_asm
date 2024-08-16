@@ -2,6 +2,7 @@
 #include <ctype.h> /* isalpha */
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, free */
+#include <limits.h> /*max_int*/
 #include "syntax_errors.h"
 #include "utils.h"
 #include "symbol_table.h"
@@ -18,6 +19,8 @@ static bool_t IsDataEntryValid(const char *from,
 static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *config);
 static bool_t SymbolExceedCharacterLimit(const char *symbol,
                                   syntax_check_config_t *config);
+static bool_t OneDataParameterTooBig (char *parameter);
+                                  
 
 /* This config is used for calling other syntax checks internally silently */
 syntax_check_config_t silent_syntax_cfg = {NULL, 0, FALSE};
@@ -327,15 +330,44 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
   return TRUE;
 }
 
-bool_t ImmediateOperandTooBig (const char *Immediate_operand, syntax_check_config_t *config){
-  int operand_as_int = atoi(Immediate_operand);
-  if ( operand_as_int < MAX_IMMEDIATE_OPERAND+1 && operand_as_int > (-1)*(MAX_IMMEDIATE_OPERAND)-1){
-    return TRUE;
+bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config){
+  bool_t return_value;
+  long value;
+  const char *name; 
+
+  if (NULL == operand){
+    return FALSE;
   }
-  if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n immediate operand exceed limit \n\n",
+  if (operand ->addressing_method != IMMEDIATE){
+    return FALSE;
+  }
+  value = strtoll(operand, name, 10);
+  if (errno == ERANGE || value > MAX_IMMEDIATE_OPERAND_NUM || value < (-1)*(MAX_IMMEDIATE_OPERAND_NUM)) {
+        if (config->verbose) {
+            printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n immediate operand exceed limit \n\n",
             config->file_name,
             config->line_number);
+        }
+        return TRUE;
+  }
+  return FALSE;
+}
+
+bool_t DataParameterTooBig (char *parameters, syntax_check_config_t *config){
+    char *duplicate_line = StrDup(parameters); 
+    char *ptr = duplicate_line;
+    while (ptr != NULL)
+    {
+      ptr = strtok (duplicate_line," ,/t/n/r");
+          if ( TRUE == OneDataParameterTooBig(ptr)){
+            if (config->verbose) {
+              printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n data parameter is too big \n\n",
+              config->file_name,
+              config->line_number);
+        }
+        return TRUE;
+    }
+    return FALSE;
   }
 }
 
@@ -646,3 +678,14 @@ static bool_t SymbolExceedCharacterLimit(const char *symbol,
 
   return TRUE;
 }
+static bool_t OneDataParameterTooBig (char *parameter){
+  bool_t return_value;
+  long value;
+  const char *name; 
+
+  value = strtoll(parameter, NULL, 10);
+  if (errno == ERANGE || value > INT_MAX || value < INT_MIN) {
+  }
+  return FALSE;
+}
+

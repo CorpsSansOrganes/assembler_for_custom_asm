@@ -26,7 +26,7 @@ typedef enum {
 *@return  vector containing 1-3 bitmap words 
 */
 
- vector_t *InstructionLineToMachineCode(char *parameters, char *instruction_name);
+vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC);
 
 /* 
 *@brief produce the opcode of an string directive line, i.e adds to the opcode vector an opcode line for every char and the terminating char
@@ -46,11 +46,12 @@ typedef enum {
 *@param opcode: the vector that contains the overall opcode 
 *       string: the string that contains the paramaters
 *       DC: address of the data counter.
+*       num_of_parameters: num of data parameters
 *
 *@return  returns the full vector opcode containing the opcode of the data parameters
 */
 
-vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC);
+vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters);
 /* 
 *@brief set the bit of the correct addressing method int the opcode of the instruction word
 *
@@ -59,7 +60,7 @@ vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC);
 *
 *@return the bitmap with the correct bit turned on
 */
- bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t operand);
+ bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
 
 /* 
 *@brief set the bit of the correct encoding type, where A=2, R=1, E=0

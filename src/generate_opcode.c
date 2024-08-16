@@ -4,10 +4,10 @@
 #include "vector.h"
 #include <string.h> 
 
-static instruction_t FindInstruction (char *instruction_name);
+static instruction_t FindInstruction (char *instruction_name, int *instruction_number);
 static int CountParameters(char *line);
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
-static int OperandToOpcode(operand_t operand);
+static int OperandToOpcode(operand_t *operand);
 
 vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC){
     int i;
@@ -37,7 +37,7 @@ vector_t *StringLineToMachineCode(vector_t *full_opcode, char *string){
 }
 
 
-vector_t *InstructionLineToMachineCode(operand_t first_operand, operand_t second_operand, unsigned int num_of_operands, char *instruction_name, int *IC){
+vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC){
 vector_t *line_machine_code = CreateVector (0,sizeof(bitmap_t));
 bitmap_t instruction_opcode = 0;
 bitmap_t operand_opcode = 0;
@@ -63,8 +63,8 @@ if (1 == num_of_operands){
     instruction_opcode = SetBitAddressingMethod (instruction_opcode, first_operand); 
     instruction_opcode = SetBitAddressingMethod (instruction_opcode, second_operand);
     VectorAppend (line_machine_code, instruction_opcode);
-    if ((first_operand.addressing_method == DIRECT_REGISTER || first_operand.addressing_method == INDIRECT_REGISTER) &&
-        (second_operand.addressing_method == DIRECT_REGISTER || second_operand.addressing_method == INDIRECT_REGISTER)){
+    if ((first_operand->addressing_method == DIRECT_REGISTER || first_operand->addressing_method == INDIRECT_REGISTER) &&
+        (second_operand->addressing_method == DIRECT_REGISTER || second_operand->addressing_method == INDIRECT_REGISTER)){
         operand_opcode = UnifyRegisterOpcode (OperandToOpcode (first_operand),OperandToOpcode (second_operand));
         VectorAppend (line_machine_code, operand_opcode);
         L=2;
@@ -81,12 +81,12 @@ IC += L;
 return line_machine_code;
 }  
 
-bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t operand){
-   if (operand.type == SOURCE_OPERAND){
-   bitmap = SetBitOn (bitmap, 3+operand.addressing_method);
+bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
+   if (operand->type == SOURCE_OPERAND){
+   bitmap = SetBitOn (bitmap, 3+operand->addressing_method);
    }
    else {
-    bitmap = SetBitOn (bitmap, 7+operand.addressing_method);
+    bitmap = SetBitOn (bitmap, 7+operand->addressing_method);
    }
    return bitmap;
 }
@@ -111,7 +111,7 @@ static instruction_t FindInstruction (char *instruction_name, int *instruction_n
   while (0 != strcmp(reserved_instructions[i].name, instruction_name)) {
     ++i;
   }
-  instruction_name = i;
+  instruction_number = i;
   return reserved_instructions[i];
 
 }
@@ -127,33 +127,33 @@ static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_
   return (register_opcode_source+register_opcode_destination - 4);
 }             
       
-static int OperandToOpcode(operand_t operand){/* TODO add number too big error */
+static int OperandToOpcode(operand_t *operand){/* TODO add number too big error */
   char *extract_operand;
   int opcode =0;
-  if (operand.addressing_method == IMMEDIATE)
+  if (operand->addressing_method == IMMEDIATE)
   {
-    if (*(operand.name+1) == '-' || *(operand.name+1) == '+'){
-      opcode = atoi (operand.name+2);
+    if (*(operand->name+1) == '-' || *(operand->name+1) == '+'){
+      opcode = atoi (operand->name+2);
     }
     else{
-      opcode = atoi (operand.name+1);
+      opcode = atoi (operand->name+1);
     }
     opcode = opcode << 3;/*make space for ARE*/
     opcode += 4; /*add A=1, R=0, E=0*/
     return opcode;
   }
-  if (operand.addressing_method == DIRECT){
+  if (operand->addressing_method == DIRECT){
     /*depend by the symbol table, to handle in second pass*/
   }
-  if (operand.addressing_method == DIRECT_REGISTER || operand.addressing_method == INDIRECT_REGISTER)
+  if (operand->addressing_method == DIRECT_REGISTER || operand->addressing_method == INDIRECT_REGISTER)
   {
-    if (operand.addressing_method == DIRECT_REGISTER){
-      opcode = atoi (operand.name+1);
+    if (operand->addressing_method == DIRECT_REGISTER){
+      opcode = atoi (operand->name+1);
     } 
     else {
-      opcode = atoi (operand.name+2);
+      opcode = atoi (operand->name+2);
     }
-    if (operand.type == SOURCE_OPERAND){
+    if (operand->type == SOURCE_OPERAND){
       opcode = opcode << 6;
     }
     else {

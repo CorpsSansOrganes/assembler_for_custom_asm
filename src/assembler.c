@@ -16,13 +16,14 @@
 
 
 static bool_t FirstWordEndsWithColon(char *line);
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
 static result_t FirstPass(char *file_path, macro_table_t *macro_list,
                          symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC);
-static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode);
+static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode, list_t *external_symbol_data_list);
 static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC);
 static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand );
-static int ExternalSymbolCompare (char *symbol_name, char *key);
+static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key);
+static int CountParameters(char *line);
 
 result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
   int IC = 0;
@@ -65,7 +66,7 @@ result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
 static result_t FirstPass(char *file_path, macro_table_t *macro_list,
                          symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC) {
   int line_counter = 0;
-  int error_count_in_line = 0;
+  int total_errors = 0;
   int total_errors = 0;
   char *current_word = NULL; 
   char *current_line = NULL;
@@ -74,6 +75,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   operand_t *first_operand = NULL;
   operand_t *second_operand = NULL;
   int num_of_operands;
+  int num_of_parameters;
 
   syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
                                                  0,
@@ -112,7 +114,6 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
 
  
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-      error_count_in_line = 0; 
       line_counter++;
       symbol_name = '\0';
 
@@ -121,10 +122,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
         current_word = strtok(current_line, ": ");
         symbol_name = StrDup (current_word);
         syntax_check_config_print.line_number = line_counter;
-        error_count_in_line += SymbolErrorUnite(symbol_name,
-                                                &syntax_check_config_print,
-                                                macro_list,
-                                                symbol_table);
+        if ( 0< SymbolErrorUnite(symbol_name, &syntax_check_config_print, macro_list, symbol_table)){
+          total_errors++;
+        }
 
         current_line += strlen(current_word) + 2; /*skip the colon and space*/
         current_word = strtok(NULL,blank_delimiters);
@@ -132,62 +132,71 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
       current_word = strtok(current_line, " ");
 
       if (NoDefinitionForSymbol(current_line,&syntax_check_config_print)){
-        error_count_in_line++;
+        total_errors++;
+        continue;
       }
       else if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
         if (IsIllegalString(current_line,&syntax_check_config_print)){ 
-          error_count_in_line++; 
+          total_errors++;
+          continue; 
         }
         if (StringIsNotPrintable(current_line,&syntax_check_config_print)){ 
-          error_count_in_line++; 
+          total_errors++;
+          continue; 
         }
-        else if (error_count_in_line==0) {
-          if (symbol_name != '\0'){
+        if (symbol_name != '\0'){
           AddSymbol (symbol_table,symbol_name,*DC,DATA);
-          }
-          opcode = StringLineToMachineCode(opcode, current_line); 
-          *DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
-        }  
+        }
+        opcode = StringLineToMachineCode(opcode, current_line); 
+        *DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
       }  
       else if (0 == strcmp(current_word,".data")) {
           current_line += strlen(current_word)+1;
           if (IsIllegalDataParameter(current_line,&syntax_check_config_print)){
-                error_count_in_line++;
+                total_errors++;
+                continue;
           }
-          if (error_count_in_line == 0){
-                if (symbol_name != '\0'){
-                  if (SUCCESS != AddSymbol (symbol_table, symbol_name,DC,DATA)){
-                    fclose (input_file);
-                    free (current_line);
-                    free (current_word);
-                    free (symbol_name);
-                    return FAILURE;
-                  } 
-                }
-                opcode = DataLineToMachineCode(opcode, current_line, &DC);
+          num_of_parameters = CountParameters (current_line);
+          if (DataParameterTooBig (current_line,&syntax_check_config_print)){
+            total_errors++;
+            continue;
           }
+          if (symbol_name != '\0'){
+            if (SUCCESS != AddSymbol (symbol_table, symbol_name,DC,DATA)){
+              fclose (input_file);
+              free (current_line);
+              free (current_word);
+              free (symbol_name);
+              return FAILURE;
+            } 
+          }
+          opcode = DataLineToMachineCode(opcode, current_line, &DC,num_of_parameters);
+          *DC += num_of_parameters;
+
       }
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
         if (isIllegalOrExternOrEntryParameter(current_line,symbol_table, &syntax_check_config_print)){
-          error_count_in_line++;
+          total_errors++;
+          continue;
         }
         else {
           symbol_name = strtok (NULL,blank_delimiters);
-          error_count_in_line += SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table);
-          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &syntax_check_config_print)){
-            error_count_in_line++;
+          if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table)){
+            total_errors++;
+            continue;
           }
-          if (error_count_in_line == 0){
-              if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
-                fclose (input_file);
-                free (current_line);
-                free (current_word);
-                free (symbol_name);
-                return FAILURE;
-              }
-              *DC += CountParameters(current_line);
+          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &syntax_check_config_print)){
+            total_errors++;
+            continue;
+          }
+          if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+            fclose (input_file);
+            free (current_line);
+            free (current_word);
+            free (symbol_name);
+            return FAILURE;
           }
         }
       }
@@ -195,7 +204,6 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
         /* Do nothing: will handle in 2nd pass */
       }
       else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
-          if (0 == error_count_in_line){
             if (symbol_name != '\0'){
              if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
               fclose (input_file);
@@ -207,20 +215,31 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
             }
             current_line += strlen (current_word)+1;
             num_of_operands = SplitOperands (current_line, first_operand,second_operand);
+
+            if (ImmediateOperandTooBig(first_operand->name+1,&syntax_check_config_print)){
+              total_errors++;
+              continue;
+            }
+            if (ImmediateOperandTooBig(second_operand->name+1,&syntax_check_config_print)){
+              total_errors++;
+              continue;
+            }
             if (WrongNumberOfOperands(current_word,num_of_operands,&syntax_check_config_print)){
-              error_count_in_line++;
+              total_errors++;
+              continue;
             }
             if (IncorrectAddressingMethod(current_word,first_operand,&syntax_check_config_print)){
-              error_count_in_line++;
+              total_errors++;
+              continue;
             }
             if (IncorrectAddressingMethod(current_word,second_operand,&syntax_check_config_print)){
-              error_count_in_line++;
+              total_errors++;
+              continue;
             }
-            VectorAppend (opcode, InstructionLineToMachineCode (current_line,current_word, &IC));
-         }
+            if (0 == total_errors){
+              VectorAppend (opcode, InstructionLineToMachineCode (first_operand, second_operand,num_of_operands, current_word, &IC));
+            }  
       }
-    total_errors += error_count_in_line;
-  
   }
   if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
     fclose (input_file);
@@ -245,7 +264,6 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
                                                  TRUE);
   int line_counter = 0;
   symbol_t *symbol = NULL;
-  int error_count_in_line = 0;
   int total_errors = 0;
   int vector_counter = 0;
   int instruction_counter = 0;
@@ -288,7 +306,6 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   }
 
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-    error_count_in_line = 0; 
     line_counter++;
     symbol_name = NULL;
     vector_t *opcode_line;
@@ -309,7 +326,8 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
     if (0 == strcmp (current_word, ".entry")){
        current_line += strlen (current_word) +1; 
        if (isIllegalOrExternOrEntryParameter(current_line)){
-          error_count_in_line++;
+          total_errors++;
+          continue;
        }
        if (ChangeSymbolToEntry(symbol_table,current_word) != SUCCESS)
        {
@@ -349,7 +367,6 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
               *opcode_bitmap = GetSymbolAddress (symbol);
             } 
         }
-        total_errors += error_count_in_line;
         instruction_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
         vector_counter++;
     }
@@ -447,10 +464,19 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
     }
     }
     return counter;
-  }   
-static int ExternalSymbolCompare (external_symbol_data_t *symbol_occurunces_unit, char *key) {
-  return (0 == strcmp (symbol_occurunces_unit->symbol_name, key));
+  }  
+static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
+  return (0 == strcmp (external_symbol_data->symbol_name, key));
 }
-
+static int CountParameters(char *line) {
+    int counter = 1;
+    while ('\0' != *line){
+      line++; 
+      if (*line == ','){
+        counter++;
+      }
+    }
+    return counter;
+}
 
 

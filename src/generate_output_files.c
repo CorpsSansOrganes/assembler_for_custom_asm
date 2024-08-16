@@ -13,7 +13,7 @@
 
 
 static result_t WriteHeader (char *output_path, int IC, int DC);
-static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path);
+static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path, list_t *external_symbol_data_list);
 static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
 static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC);
 static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,list_t *external_symbol_data_list);
