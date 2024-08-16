@@ -314,6 +314,16 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
+/*
+ * @brief Checks if a string that begins and ends with '"' contains not-printable chars (not ascii valid)
+ *
+ * @param str - The string to check.
+ *        config - Pointer the configurations about the syntax check.
+ *
+ * @return TRUE if the string is not printable, FALSE otherwise.
+ */
+
+bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config);
 
 /*
  * @brief Checks if a parameter passed to .extern or .entry directive
