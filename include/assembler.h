@@ -2,6 +2,8 @@
 #define __ASSEMBLER_SH_ED__
 
 #include "utils.h"
+#include "vector.h"
+#include "macro_table.h"
 
 #define INITIAL_IC_VALUE 100
 
