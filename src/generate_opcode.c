@@ -5,13 +5,11 @@
 #include <string.h> 
 
 static instruction_t FindInstruction (char *instruction_name, int *instruction_number);
-static int CountParameters(char *line);
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
 static int OperandToOpcode(operand_t *operand);
 
-vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC){
+vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters){
     int i;
-    int num_of_parameters = CountParameters (string);
     bitmap_t parameter = atoi (strtok (string, ", /n/t/r"));
     VectorAppend (full_opcode,parameter);
     for (i=1; i<num_of_parameters;i++){
@@ -95,16 +93,7 @@ bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE){
     bitmap = SetBitOn (bitmap, ARE);
 } 
 
-static int CountParameters(char *line) {
-    int counter = 1;
-    while ('\0' != *line){
-      line++; 
-      if (*line == ','){
-        counter++;
-      }
-    }
-    return counter;
-}
+
 
 static instruction_t FindInstruction (char *instruction_name, int *instruction_number){
  int i =0;

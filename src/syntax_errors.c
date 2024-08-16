@@ -685,7 +685,7 @@ static bool_t OneDataParameterTooBig (char *parameter){
   long value;
   const char *name; 
 
-  value = strtoll(parameter, NULL, 10);
+  value = strtol(parameter, NULL, 10);
   if (errno == ERANGE || value > INT_MAX || value < INT_MIN) {
   }
   return FALSE;

@@ -1,0 +1,8 @@
+symbol1: .data +3,-13,5
+.string "abcd"
+stop
+inc r6
+bne *r4
+symbol2: cmp #4, r3
+mov symbol3, *r2
+.extern symbol3, symbol4
