@@ -454,18 +454,20 @@ bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config){
 
 bool_t IsIllegalExternOrEntryParameter(const char *param,
                                        syntax_check_config_t *config) {
-  if (!SymbolNameIsIllegal(param, &silent_syntax_cfg)) {
-    return FALSE;
-  }
-
-  if (config->verbose) {
-    printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
+  char *duplicate_line = StrDup (param);
+  char *parameter = duplicate_line;
+  while (parameter != NULL){
+    parameter = strtok (duplicate_line, ", /t/r/n");
+    if (SymbolNameIsIllegal(parameter, &silent_syntax_cfg)) {
+        if (config->verbose) {
+          printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
            config->file_name,
            config->line_number,
-           param);
+           parameter);
+        }
+    }
   }
-  
-  return TRUE;
+    return FALSE;
 }
 
 bool_t RegisterNameDoesntExist(const char *register_name, syntax_check_config_t *config){

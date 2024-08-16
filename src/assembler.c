@@ -135,7 +135,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
         total_errors++;
         continue;
       }
-      else if (0 == strcmp(current_word,".string") ){
+      if (0 == strcmp(current_word,".string") ){
         current_line += strlen(current_word) + 1;
         if (IsIllegalString(current_line,&syntax_check_config_print)){ 
           total_errors++;
@@ -177,26 +177,29 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
       }
       else if (0 == strcmp(current_word,".extern")){
         current_line += strlen(current_word) + 1;
-        if (isIllegalOrExternOrEntryParameter(current_line,symbol_table, &syntax_check_config_print)){
+        if (IsIllegalExternOrEntryParameter(current_line, &syntax_check_config_print)){
           total_errors++;
           continue;
         }
         else {
           symbol_name = strtok (NULL,blank_delimiters);
-          if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table)){
-            total_errors++;
-            continue;
-          }
-          if (SymbolAlreadyDefinedAsExtern(symbol_name,symbol_table, &syntax_check_config_print)){
-            total_errors++;
-            continue;
-          }
-          if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
-            fclose (input_file);
-            free (current_line);
-            free (current_word);
-            free (symbol_name);
-            return FAILURE;
+          while ('\0' != symbol_name[0]){
+            if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table)){
+              total_errors++;
+              continue;
+            }
+            if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &syntax_check_config_print)){
+              total_errors++;
+              continue;
+            }
+            if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+              fclose (input_file);
+              free (current_line);
+              free (current_word);
+              free (symbol_name);
+              return FAILURE;
+            }
+            symbol_name = strtok (NULL,blank_delimiters);
           }
         }
       }
@@ -241,18 +244,14 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
             }  
       }
   }
-  if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
-    fclose (input_file);
-    free (current_line);
-    free (current_word);
-    free (symbol_name);
-    return FAILURE;
-  }
   free (current_line);
   free (current_word);
   free (symbol_name);
   fclose (input_file);
   if (0 == total_errors){
+    if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
+      return FAILURE;
+  }
     return SUCCESS;
   }
   return FAILURE;
@@ -329,6 +328,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
           total_errors++;
           continue;
        }
+
        if (ChangeSymbolToEntry(symbol_table,current_word) != SUCCESS)
        {
           fclose (input_file);
