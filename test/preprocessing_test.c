@@ -45,7 +45,8 @@ int main(void) {
   int i = 0;
 
   char *valid_names[] = {
-    "valid_1_wo_macro"
+    /* "valid_1_wo_macro",*/
+    "valid_2_w_macro"
   };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {

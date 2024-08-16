@@ -41,4 +41,3 @@ bool_t IsBlankLine(const char *line) {
 
   return TRUE;
 }
-

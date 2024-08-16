@@ -35,5 +35,15 @@ char *CleanLine(char *line);
 
 bool_t IsBlankLine(const char *line);
 
+/*
+ * @brief Removes a newline (\n) character from the end of a string, if
+ *        there is one.
+ *
+ * @param line - The line to remove a newline character from.
+ *
+ * @return Pointer to the string.
+ */
+char *RemoveNewline(char *line);
+
 #endif /* __SH_ED_LINTING__ */
 

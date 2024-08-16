@@ -203,7 +203,8 @@ static result_t ReadMacrosInFile(FILE *file,
 }
 
 /*
- * @brief Reads a macro definition from a file and adds it to a macro table.
+ * @brief Reads a single macro definition from a file and adds it to a macro 
+ *        table.
  * 
  * This function processes a macro definition starting from the current file 
  * pointer. 
@@ -276,19 +277,17 @@ static result_t ParseMacro(FILE *file,
 
   /* Finding where the name starts & ends */
   line = CleanLine(line); 
+
+  /* Skipping "macr " in the beginning, and "\n\0" in the end. */
   macro_name_start = line + 5; /* strlen("macr "); */
-  macro_name_start = (char *)StripLeadingWhitespaces(macro_name_start);
-  macro_name_end = macro_name_start;
-  while (!IsBlank(*macro_name_end)) {
-    ++macro_name_end;
-  }
+  macro_name_end = (char *)EndOfString(macro_name_start) - 1;
 
   /*
    * SYNTAX CHECK:
    * extra characters after macro's name 
    * e.g.: "macr m_name asd" 
    */
-  if (DetectExtraCharacters(macro_name_end, cfg)) {
+  if (DetectExtraCharacters(macro_name_end + 1, cfg)) {
     return FAILURE;
   }
 
@@ -359,17 +358,17 @@ static char *ReadMacroDefinition(FILE *file,
     return NULL;
   }
 
-  /* Sum up file size */
+  /* Sum up definition size */
   while (fgets(line, MAX_LINE_LENGTH, file) && 
-    FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
-    definition_size += strlen(StripTrailingWhitespaces(line));
+    FALSE == IsPrefix(CleanLine(line), "endmacr")) {
+    definition_size += strlen(line);
   }
 
   /*
    * SYNTAX CHECK: 
    * extra characters after endmacr 
    */
-  if (DetectExtraCharacters(line + strlen("endmacr"), cfg)) {
+  if (DetectExtraCharacters(line + strlen("endmacr") + 1, cfg)) {
     return NULL;
   }
 
@@ -388,12 +387,11 @@ static char *ReadMacroDefinition(FILE *file,
 
   current_position = definition;
   while (fgets(line, MAX_LINE_LENGTH, file) && 
-         FALSE == IsPrefix(StripLeadingWhitespaces(line), "endmacr")) {
-    char *stripped_line = StripTrailingWhitespaces(line);
-    size_t line_length = strlen(stripped_line);
-    
+         FALSE == IsPrefix(CleanLine(line), "endmacr")) {
+    size_t line_length = strlen(line);
+
     /* Copy the stripped line into the definition */
-    strncpy(current_position, stripped_line, line_length);
+    strncpy(current_position, line, line_length);
     current_position += line_length;
   }
 
@@ -424,10 +422,10 @@ static result_t PerformPreprocessing(FILE *input_file,
                                    macro_table_t *table,
                                    char *line) {
 
-  bool_t should_write_line = TRUE;
-
   while (NULL != fgets(line, MAX_LINE_LENGTH, input_file)) {
+    bool_t should_write_line = TRUE;
     const char *str_to_write = NULL;
+
     /* Remove leading and trailing whitespaces & collapse extra whitespaces 
      * into one.
      */
@@ -440,7 +438,7 @@ static result_t PerformPreprocessing(FILE *input_file,
         fgets(line, MAX_LINE_LENGTH, input_file); 
         line = (char *)StripLeadingWhitespaces(line);
       }
-      line = CleanLine(line);
+      should_write_line = FALSE;
     }
 
     else if (IsComment(line) | IsBlankLine(line)) {
@@ -449,11 +447,24 @@ static result_t PerformPreprocessing(FILE *input_file,
 
     /* Either macro usage or a line of code */
     else {
-      macro_t *macro = FindMacro(table, line);
+      macro_t *macro = NULL;
+
+      /* Ignoring newline character when searching */
+      char *end_of_line = (char *)(EndOfString(line) - 1);
+
+      if ('\n' == *end_of_line) {
+        *end_of_line = '\0';
+        macro = FindMacro(table, line);
+        *end_of_line = '\n';
+      }
+      else {
+        macro = FindMacro(table, line);
+      }
 
       if (NULL != macro) { /* Macro usage */
         str_to_write = GetMacroDefinition(macro);
-      } else {
+      } 
+      else {
         str_to_write = line;
       }
     }
