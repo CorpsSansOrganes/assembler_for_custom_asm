@@ -406,6 +406,20 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   return TRUE;
 }
 
+bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config){
+  int i;
+  for (i=1; i<strlen(str)-1; i++){ /*skip the quotaion marks*/
+    if (0 == isprint(str+i)){
+        if (config->verbose) {
+          printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n string is unprintable \n\n",
+            config->file_name,
+            config->line_number);
+        }
+    }
+  } 
+}
+
+
 bool_t IsIllegalExternOrEntryParameter(const char *param,
                                        syntax_check_config_t *config) {
   if (!SymbolNameIsIllegal(param, &silent_syntax_cfg)) {

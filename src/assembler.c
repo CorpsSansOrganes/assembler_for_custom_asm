@@ -75,7 +75,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   operand_t *second_operand = NULL;
   int num_of_operands;
 
-  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig ("file_path",
+  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
                                                  0,
                                                  TRUE);
   input_file = fopen(file_path, "r");
@@ -86,22 +86,28 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
 
   current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_line) {
+    fclose (input_file);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
   current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_word) {
+    fclose (input_file);
+    free (current_line);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
 
   char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == symbol_name) {
+    fclose (input_file);
+    free (current_line);
+    free (current_word);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
 
  
@@ -133,6 +139,9 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
         if (IsIllegalString(current_line,&syntax_check_config_print)){ 
           error_count_in_line++; 
         }
+        if (StringIsNotPrintable(current_line,&syntax_check_config_print)){ 
+          error_count_in_line++; 
+        }
         else if (error_count_in_line==0) {
           if (symbol_name != '\0'){
           AddSymbol (symbol_table,symbol_name,*DC,DATA);
@@ -149,6 +158,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
           if (error_count_in_line == 0){
                 if (symbol_name != '\0'){
                   if (SUCCESS != AddSymbol (symbol_table, symbol_name,DC,DATA)){
+                    fclose (input_file);
+                    free (current_line);
+                    free (current_word);
+                    free (symbol_name);
                     return FAILURE;
                   } 
                 }
@@ -168,6 +181,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
           }
           if (error_count_in_line == 0){
               if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+                fclose (input_file);
+                free (current_line);
+                free (current_word);
+                free (symbol_name);
                 return FAILURE;
               }
               *DC += CountParameters(current_line);
@@ -181,6 +198,10 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
           if (0 == error_count_in_line){
             if (symbol_name != '\0'){
              if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
+              fclose (input_file);
+              free (current_line);
+              free (current_word);
+              free (symbol_name);
                return FAILURE;
              }
             }
@@ -202,8 +223,16 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   
   }
   if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
+    fclose (input_file);
+    free (current_line);
+    free (current_word);
+    free (symbol_name);
     return FAILURE;
   }
+  free (current_line);
+  free (current_word);
+  free (symbol_name);
+  fclose (input_file);
   if (0 == total_errors){
     return SUCCESS;
   }
@@ -227,29 +256,35 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   FILE *input_file = NULL;
   external_symbol_data_t *external_symbol_data;
   input_file = fopen(file_path, "r");
-  if (NULL == input_file) {
-     fprintf(stderr,"Couldn't open input file");
+    if (NULL == input_file) {
+    fprintf(stderr,"Couldn't open input file");
     return ERROR_OPENING_FILE; 
   }
 
   current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_line) {
+    fclose (input_file);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
   current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_word) {
+    fclose (input_file);
+    free (current_line);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
 
   char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == symbol_name) {
+    fclose (input_file);
+    free (current_line);
+    free (current_word);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
-    return NULL;
+    return MEM_ALLOCATION_ERROR;
   }
 
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
@@ -278,6 +313,10 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
        }
        if (ChangeSymbolToEntry(symbol_table,current_word) != SUCCESS)
        {
+          fclose (input_file);
+          free (current_line);
+          free (current_word);
+          free (symbol_name);
           return FAILURE;
        }
     }
@@ -317,6 +356,10 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   
 
   }
+  fclose (input_file);
+  free (current_line);
+  free (current_word);
+  free (symbol_name);
   if (0 == total_errors){
     return SUCCESS;
   }
