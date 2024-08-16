@@ -6,7 +6,6 @@
 #include "symbol_table.h"
 #include "list.h"
 #include "preprocessing.h"
-#define MAX_IMMEDIATE_OPERAND 2048
 
 typedef struct {
   const char *file_name;
@@ -256,15 +255,16 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
 */
 
 /*
- * @brief Checks if a data parameter is too big to encode (2^14).
+ * @brief gets the line of the parameters (assuming valid) 
+ *        and Checks if one of the data parameters is too big to encode (2^14).
  *
  * @param the parameter - The operand
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *        
- * @return TRUE if its too big. FALSE otherwise.
+ * @return TRUE if one of the data parameters is too big. FALSE otherwise.
  */
 
-bool_t DataParameterTooBig (char *parameter, syntax_check_config_t *config);
+bool_t DataParameterTooBig (char *parameters, syntax_check_config_t *config);
 
 
 /*
@@ -337,14 +337,13 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config);
 
 /*
- * @brief Checks if a parameter passed to .extern or .entry directive
- *        is legal:
- *        1. Exactly one parameter was recieved.
- *        2. The parameter recieved is a legal symbol name.
+ * @brief Checks if a parameter line passed to .extern or .entry directive
+ *        is legal, i.e  each parameter recieved is a legal symbol name.
+ *        
  *
  *        Function assumes no leading or trailing whitespaces.
  *
- * @param data - The parameter to check (e.g. "SYMBOL").
+ * @param data - The parameter line to check (e.g. "SYMBOL1, SYMBOL2").
  *        config - Pointer the configurations about the syntax check.
  *        
  * @return TRUE if the parameter is illegal, FALSE otherwise.

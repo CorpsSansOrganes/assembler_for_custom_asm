@@ -13,7 +13,6 @@
 
 
 static result_t WriteHeader (char *output_path, int IC, int DC);
-static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path, list_t *external_symbol_data_list);
 static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
 static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC);
 static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,list_t *external_symbol_data_list);
@@ -170,12 +169,12 @@ static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_p
   extern_file = fopen(output_path, "a");
   if (NULL == extern_file) {
     free (str_to_write);
-    perror("Couldn't open entry file");
+    perror("Couldn't open extern file");
     return ERROR_OPENING_FILE; 
   }
   while (NULL != external_symbol){
         for (i=0; i<GetCapacityVector(external_symbol->occurences);i++){
-            sprintf (str_to_write, "%s %d\n", external_symbol, GetElementVector(external_symbol->occurences,i));
+            sprintf (str_to_write, "%s %04d\n", external_symbol, GetElementVector(external_symbol->occurences,i));
         }
          if (EOF == fputs(str_to_write, extern_file)) {
                 free (str_to_write);

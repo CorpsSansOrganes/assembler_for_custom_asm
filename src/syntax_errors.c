@@ -335,13 +335,13 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
   long value;
   const char *name; 
 
-  if (NULL == operand){
+  if (NULL == operand){/*no operand*/
     return FALSE;
   }
-  if (operand ->addressing_method != IMMEDIATE){
+  if (operand ->addressing_method != IMMEDIATE){/*not immediate*/
     return FALSE;
   }
-  value = strtoll(operand, name, 10);
+  value = strtoll(operand->name+1, name, 10);/*skip the #*/
   if (errno == ERANGE || value > MAX_IMMEDIATE_OPERAND_NUM || value < (-1)*(MAX_IMMEDIATE_OPERAND_NUM)) {
         if (config->verbose) {
             printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n immediate operand exceed limit \n\n",
@@ -457,7 +457,7 @@ bool_t IsIllegalExternOrEntryParameter(const char *param,
   char *duplicate_line = StrDup (param);
   char *parameter = duplicate_line;
   while (parameter != NULL){
-    parameter = strtok (duplicate_line, ", /t/r/n");
+    parameter = strtok (duplicate_line, delimiters);
     if (SymbolNameIsIllegal(parameter, &silent_syntax_cfg)) {
         if (config->verbose) {
           printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
