@@ -22,7 +22,7 @@ SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
 MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
 BITMAP_OBJ := bitmap.o
 SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) $(MACRO_TABLE_OBJ) $(BITMAP_OBJ) syntax_errors.o string_utils.o language_definitions.o
-PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o 
+PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o linting.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 

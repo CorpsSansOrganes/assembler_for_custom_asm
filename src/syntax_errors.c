@@ -536,7 +536,9 @@ static bool_t IsDataEntryValid(const char *from,
                                const char *to) {
   bool_t digits_occurred = FALSE;
 
-  from = StripLeadingWhitespaces(from);
+  /* Skip whitespaces */
+  while (IsBlank(*from)) from++;
+
   if (('-' == *from) || ('+' == *from)) {
     ++from;
   }
@@ -550,7 +552,7 @@ static bool_t IsDataEntryValid(const char *from,
     ++from;
   }
   
-  from = (char *)StripLeadingWhitespaces(from);
+  while (IsBlank(*from)) from++;
 
   if (digits_occurred && 
       ((from == to) || ('\0' == *from))) {
