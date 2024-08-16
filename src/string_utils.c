@@ -7,7 +7,7 @@ bool_t IsPrefix(const char *str, const char *prefix) {
 }
 
 char *StripWhitespaces(char *str) {
-  return StripTrailingWhitespaces((char *)StripLeadingWhitespaces(str));
+  return StripTrailingWhitespaces(StripLeadingWhitespaces(str));
 }
 
 char *StripLeadingWhitespaces(char *str) {
@@ -26,7 +26,7 @@ char *StripLeadingWhitespaces(char *str) {
   length = strlen(str) + 1;
   memmove(to, str, length);
 
-  return str;
+  return to;
 }
 
 char *StripTrailingWhitespaces(char *str) {

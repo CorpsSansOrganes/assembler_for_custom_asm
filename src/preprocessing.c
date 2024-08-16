@@ -88,11 +88,17 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
       error_occurred = TRUE;
   }
 
+  free(line);
+  fclose(input_file);
+  fclose(output_file);
+  return table;
+
   /*
    * Second pass:
    * Since no errors occurred, write to file.
    * Expand macros to their definitions.
    */
+
   if (FALSE == error_occurred) {
     if (fseek(input_file, 0, SEEK_SET)) {
       perror("Error changing file position");
