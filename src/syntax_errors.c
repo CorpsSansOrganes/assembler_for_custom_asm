@@ -327,6 +327,19 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
   return TRUE;
 }
 
+bool_t ImmediateOperandTooBig (const char *Immediate_operand, syntax_check_config_t *config){
+  int operand_as_int = atoi(Immediate_operand);
+  if ( operand_as_int < MAX_IMMEDIATE_OPERAND+1 && operand_as_int > (-1)*(MAX_IMMEDIATE_OPERAND)-1){
+    return TRUE;
+  }
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n immediate operand exceed limit \n\n",
+            config->file_name,
+            config->line_number);
+  }
+}
+
+
 bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config) {
   int i = 0;
   while (i < NUM_OF_DIRECTIVES && strcmp(directive, reserved_directives[i])) {

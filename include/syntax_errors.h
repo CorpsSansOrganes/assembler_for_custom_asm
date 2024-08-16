@@ -6,6 +6,7 @@
 #include "symbol_table.h"
 #include "list.h"
 #include "preprocessing.h"
+#define MAX_IMMEDIATE_OPERAND 2048
 
 typedef struct {
   const char *file_name;
@@ -236,6 +237,17 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
  */
 
 bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config);
+
+/*
+ * @brief Checks if a immediate operand who is a valid number exceed max size to encode (2^12).
+ *
+ * @param Immediate_operand - The operand
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *        
+ * @return TRUE if its too big. FALSE otherwise.
+ */
+
+bool_t ImmediateOperandTooBig (const char *Immediate_operand, syntax_check_config_t *config);
 
 
 /*
