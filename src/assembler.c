@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <string.h> 
+#include <stdlib.h>
 #include "assembler.h"
 #include "utils.h"
 #include "syntax_errors.h"
@@ -9,65 +12,153 @@
 #include "list.h"
 #include "string_utils.h"
 #include "generate_output_files.h"
-#include <stdio.h>
-#include <string.h> 
-#include <stdlib.h>
-
-
 
 static bool_t FirstWordEndsWithColon(char *line);
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table);
-static result_t FirstPass(char *file_path, macro_table_t *macro_list,
-                         symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC);
-static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode, list_t *external_symbol_data_list);
-static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC);
-static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand );
-static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key);
+
+static int SymbolErrorUnite(char *symbol_name,
+                            syntax_check_config_t *syntax_check_config_print,
+                            macro_table_t *macro_table,
+                            symbol_table_t *symbol_table);
+
+static result_t FirstPass(char *file_path,
+                          macro_table_t *macro_table,
+                          symbol_table_t *symbol_table,
+                          vector_t *code_table,
+                          vector_t *data_table);
+
+static result_t SecondPass(char *file_path,
+                           symbol_table_t *symbol_table,
+                          vector_t *code_table,
+                          vector_t *data_table,
+                           list_t *ext_symbol_occurrences);
+
+static result_t UpdateAdresses(symbol_table_t *symbol_table,
+                               int IC);
+
+static int SplitOperands(char *line,
+                         operand_t *first_operand,
+                         operand_t *second_operand );
+
+static int ExternalSymbolCompare(external_symbol_data_t *external_symbol_data,
+                                 char *key);
+
 static int CountParameters(char *line);
 
-result_t AssembleFile(char *file_path,  macro_table_t *macro_list) {
-  int IC = 0;
-  int DC = 0;
+result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
+  bool_t no_errors = TRUE;
+
+  /* Symbol table which will be populated with symbols in first pass */
   symbol_table_t *symbol_table;
-  vector_t *opcode;
+
+  /* Two vectors for holding machine code for code & data segments, respectively. */
+  vector_t *code_table = NULL;
+  vector_t *data_table = NULL;
+
+  /* List which will holds all places where an external symbol is used */
+  list_t *ext_symbol_occurrences = CreateList();
+
+  /*
+   * Acquiring resources 
+   */
+
+  if (NULL == ext_symbol_occurrences) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate ext. symbol usage list\n");
+    return MEM_ALLOCATION_ERROR;
+  }
+
   symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
     fprintf(stderr,"Memory allocation error: couldn't allocate a symbol table\n");
+    DestroyList(ext_symbol_occurrences);
     return MEM_ALLOCATION_ERROR;
   }  
-  opcode = CreateVector(0,sizeof(vector_t *));
-  if (NULL == opcode) {
-    fprintf(stderr,"Memory allocation error: couldn't allocate a vecotr\n");
+
+  code_table = CreateVector(10, sizeof(vector_t *));
+  if (NULL == code_table) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate a code table\n");
+    DestroyList(ext_symbol_occurrences);
+    DestroySymbolTable(symbol_table);
     return MEM_ALLOCATION_ERROR;
   }  
-  if (SUCCESS != FirstPass (file_path,macro_list,symbol_table, opcode, &IC, &DC)){
-    DestroyMacroTable(macro_list);
+
+  data_table = CreateVector(10, sizeof(vector_t *));
+  if (NULL == data_table) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate a data table\n");
+    DestroyList(ext_symbol_occurrences);
     DestroySymbolTable(symbol_table);
-    DestroyVector (opcode);
-    return FAILURE;
+    DestroyVector(code_table);
+    return MEM_ALLOCATION_ERROR;
+  }  
+
+  /*
+   * Assembler performing first & second pass
+   */
+  if (SUCCESS != FirstPass(file_path,
+                           macro_table,
+                           symbol_table,
+                           code_table, 
+                           data_table)) {
+    no_errors = FALSE;
   }
-  DestroyMacroTable(macro_list);
-  list_t *external_symbol_data_list = CreateList ();
-  if (SUCCESS != SecondPass(file_path, symbol_table,opcode,external_symbol_data_list)){
-    DestroySymbolTable(symbol_table);
-    DestroyVector (opcode);
-    DestroyList (external_symbol_data_list);
-    return FAILURE;
+
+  if (no_errors && 
+    SUCCESS != SecondPass(file_path,
+                          symbol_table,
+                          code_table,
+                          data_table,
+                          ext_symbol_occurrences)) {
+    no_errors = FALSE;
+
   }
-  if (SUCCESS != GenerateOutputFiles(opcode, symbol_table,file_path,external_symbol_data_list,IC,DC)){
-    DestroySymbolTable(symbol_table);
-    DestroyVector (opcode);
-    DestroyList (external_symbol_data_list);
-    return FAILURE;
+
+  /*
+   * Generating output files 
+   */
+  if (no_errors &&
+      SUCCESS != GenerateOutputFiles(code_table,
+                                     data_table,
+                                     symbol_table,
+                                     file_path,
+                                     ext_symbol_occurrences)) {
+    no_errors = FALSE;
   }
+
+    DestroyList(ext_symbol_occurrences);
     DestroySymbolTable(symbol_table);
-    DestroyVector (opcode);
-    DestroyList (external_symbol_data_list);
-    return SUCCESS;
+    DestroyVector(code_table);
+    DestroyVector(data_table);
+    return no_errors ? SUCCESS : FAILURE;
+
 }
 
-static result_t FirstPass(char *file_path, macro_table_t *macro_list,
-                         symbol_table_t *symbol_table, vector_t *opcode, int *IC, int *DC) {
+/*
+ * @brief Performs a first pass on the code:
+ *        1. Creating symbol table from symbol declarations.
+ *        2. Creating initial memory mapping, which will be completed in the
+ *           second pass.
+ *
+ * @param file_path - The file to read & perform first pass on.
+ *
+ *        macro_table - Table of all macros identified in the preprocessing.
+ *
+ *        symbol_table - A valid empty symbol table object, which will be populated
+ *                       during first pass.
+ *
+ *        code_table - A valid empty vector which will contain the machine code
+ *                     words corresponding to the assembly instruction statements.
+ *        
+ *        data_table - A valid empty vector which will contain the machine code
+ *                     encoding of directive statements.
+ *
+ * @return SUCCESS if no syntax error or other fault occurred.
+ *         FAILURE if one or more syntax errors occurred.
+ */
+
+static result_t FirstPass(char *file_path,
+                          macro_table_t *macro_table,
+                          symbol_table_t *symbol_table,
+                          vector_t *code_table,
+                          vector_t *data_table) {
   int line_counter = 0;
   int total_errors = 0;
   char *current_word = NULL; 
@@ -125,7 +216,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
       if (FirstWordEndsWithColon(current_line)) {
         current_word = strtok(current_line, ": \t\n\r");/*extract the symbol*/
         symbol_name = StrDup (current_word);
-        if ( 0 < SymbolErrorUnite(symbol_name, &syntax_check_config_print, macro_list, symbol_table)){
+        if ( 0 < SymbolErrorUnite(symbol_name, &syntax_check_config_print, macro_table, symbol_table)){
           total_errors++;
           continue;
         }
@@ -192,7 +283,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
         }
         symbol_name = strtok (NULL,delimiters);
         while (NULL != symbol_name){/*for every symbol in the line*/
-          if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_list,symbol_table)){
+          if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_table,symbol_table)){
             total_errors++;
              continue;
           }
@@ -269,7 +360,7 @@ static result_t FirstPass(char *file_path, macro_table_t *macro_list,
   return FAILURE;
 }
 
-static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode, list_t *external_symbol_data_list){
+static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode, list_t *ext_symbol_occurrences){
   syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
                                                  0,
                                                  TRUE);
@@ -373,11 +464,11 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             opcode_bitmap = GetElementVector (opcode_line,1);/*find his bitmap*/
             *opcode_bitmap = GetSymbolAddress (symbol);/*put the address*/
             if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
-               external_symbol_data = Find(external_symbol_data_list, ExternalSymbolCompare, GetSymbolName(symbol));
+               external_symbol_data = Find(ext_symbol_occurrences, ExternalSymbolCompare, GetSymbolName(symbol));
                if (NULL == external_symbol_data){/*if thats the first occurence*/
                 external_symbol_data->symbol_name = GetSymbolName(symbol);
                 external_symbol_data->occurences = CreateVector (0,sizeof(int));
-                AddNode (external_symbol_data_list,external_symbol_data);
+                AddNode (ext_symbol_occurrences,external_symbol_data);
                }
                AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+1);/*bit_map counts the memory words that been used, so thats give the address*/
 
@@ -393,11 +484,11 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
               *opcode_bitmap = GetSymbolAddress (symbol);
             } 
             if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
-               external_symbol_data = Find(external_symbol_data_list, ExternalSymbolCompare, GetSymbolName(symbol));
+               external_symbol_data = Find(ext_symbol_occurrences, ExternalSymbolCompare, GetSymbolName(symbol));
                if (NULL == external_symbol_data){/*if thats the first occurence*/
                 external_symbol_data->symbol_name = GetSymbolName(symbol);
                 external_symbol_data->occurences = CreateVector (0,sizeof(int));
-                AddNode (external_symbol_data_list,external_symbol_data);
+                AddNode (ext_symbol_occurrences,external_symbol_data);
                }
                AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+2);/*bit_map counts the memory words that been used, so thats give the address*/
             }
@@ -437,12 +528,12 @@ static bool_t FirstWordEndsWithColon(char *line) {
 *  @return - the number of parameters detected
 */
 
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_check_config_print, macro_table_t *macro_list, symbol_table_t *symbol_table){
+static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_check_config_print, macro_table_t *macro_table, symbol_table_t *symbol_table){
       int internal_counter =0;
       if (SymbolNameIsIllegal (symbol_name,syntax_check_config_print)){
           internal_counter++;
       }
-      if (SymbolUsedAsAMacro (symbol_name, macro_list, syntax_check_config_print)){
+      if (SymbolUsedAsAMacro (symbol_name, macro_table, syntax_check_config_print)){
           internal_counter++;
       }
       if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, syntax_check_config_print)){
@@ -491,7 +582,7 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
       second_operand->type = DESTINATION_OPERAND;
       first_operand->type = SOURCE_OPERAND;
       counter++;
-      while ('/0' != *current_word){
+      while ('\0' != *current_word) {
       if (*line == ','){
         counter++;
       }

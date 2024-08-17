@@ -17,6 +17,9 @@ struct vector {
 
 vector_t *CreateVector(size_t initial_capacity, size_t element_size) {
   vector_t *vector = (vector_t *)malloc(sizeof(vector_t));
+  assert(initial_capacity >= 1);
+  assert(element_size >= 1);
+
   if (NULL == vector) {
     perror("Couldn't allocate memory for vector");
     return NULL;
