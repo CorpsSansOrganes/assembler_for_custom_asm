@@ -143,7 +143,7 @@ bool_t IncorrectAddressingMethod(const char *instruction,
  * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
  */
 
-bool_t SymbolWasntDefined(char *symbol,
+bool_t SymbolWasntDefined(const char *symbol,
                           symbol_table_t *table,
                           syntax_check_config_t *config);
 
@@ -176,7 +176,7 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
  *
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
-bool_t SymbolDefinedMoreThanOnce(char *symbol,
+bool_t SymbolDefinedMoreThanOnce(const char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config);
 
@@ -239,7 +239,7 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config);
  * @return TRUE if symbol was already used as a macro. FALSE otherwise.
  */
 
-bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
+bool_t SymbolUsedAsAMacro(const char *symbol, macro_table_t *macros,
                           syntax_check_config_t *config);
 /*
  * @brief Checks if a symbol definition was called without any definition.

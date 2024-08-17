@@ -210,7 +210,7 @@ bool_t IncorrectAddressingMethod(const char *instruction,
   return TRUE;
 }
 
-bool_t SymbolDefinedMoreThanOnce(char *symbol,
+bool_t SymbolDefinedMoreThanOnce(const char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config) {
 
@@ -226,7 +226,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol,
   return TRUE;
 }
 
-bool_t SymbolWasntDefined(char *symbol,
+bool_t SymbolWasntDefined(const char *symbol,
                           symbol_table_t *table,
                           syntax_check_config_t *config){
   if (NULL != FindSymbol (table, symbol)) {
@@ -312,7 +312,7 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
 }
 
 
-bool_t SymbolUsedAsAMacro(char *symbol,
+bool_t SymbolUsedAsAMacro(const char *symbol,
                           macro_table_t *macros,
                           syntax_check_config_t *config) {
 

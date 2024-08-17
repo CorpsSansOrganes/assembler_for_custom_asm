@@ -32,6 +32,4 @@ result_t GenerateOutputFiles (vector_t *code_table,
                               char *input_path,
                               list_t* ext_symbol_occurrences);
 
-result_t GenerateOutputFiles (vector_t *code_opcode, vector_t *data_opcode, symbol_table_t *symbol_table, char *input_path, list_t *external_symbol_data_list, int IC, int DC);
-
-#endif __GENERATE_OUTPUT_FILES__
+#endif /* __GENERATE_OUTPUT_FILES__ */

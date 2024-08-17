@@ -49,13 +49,12 @@ static int CountParameters(char *line);
 
 static result_t HandleDirectiveStatement();
 
-static result_t HandleStringOrData(bool_t is_string,
+static result_t HandleStringOrData(directive_t directive,
                                    char *param,
                                    symbol_table_t *symbol_table,
                                    char *symbol_name,
                                    vector_t *data_table,
                                    syntax_check_config_t *cfg);
-
 
 result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   bool_t no_errors = TRUE;
@@ -552,99 +551,73 @@ static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, 
   return (0 == strcmp (external_symbol_data->symbol_name, key));
 }
 
-static result_t HandleDirectiveStatement(char *current_word, syntax_check_config_t *cfg) {
+static result_t HandleDirectiveStatement(char *current_word,
+                                         char *current_line,
+                                         symbol_table_t *symbol_table,
+                                         vector_t *data_table,
+                                         char *symbol_name,
+                                         syntax_check_config_t *cfg) {
+
   /*
    * First, check if that directive even exists
    */
-  if (DirectiveDoesntExist(current_word, cfg)) {
+  directive_t directive = DirectiveDoesntExist(current_word, cfg);
+  if (INVALID_DIRECTIVE == directive) {
     return FAILURE;
   }
   
   /*
-   * Is it a .string directive?
+   * Is it a .string or .data directive?
    * e.g. "SYMBOL: .string ..."
    *      ".string ..."
+   *      "SYMBOL: .data ..."
+   *      ".data ..."
    */
-  else if (0 == strcmp(current_word,".string")) {
-      result_t res = HandleStringOrData(
-        ".string", current_line, 
-        IsIllegalString, symbol_table,
-        symbol_name, StringDirectiveToMachinecode,
-        data_table, &cfg
-      );
+  else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
+      return HandleStringOrData(
+        directive,
+        current_line,
+        symbol_table,
+        symbol_name,
+        data_table,
+        cfg
+    );
+  }  
 
-      if (MEM_ALLOCATION_ERROR == res) {
-        fclose(input_file);
-        free(current_line);
-        if (symbol_name) {
-          free(symbol_name);
-        }
-        return MEM_ALLOCATION_ERROR;
+  /*
+   * Is it a .extern or .entry directive?
+   * e.g. "SYMBOL: .extern..."
+   *      ".entry..."
+   */
+  else {
+    /* If symbol was defined, it warrants a warning. */
+    if (NULL != symbol_name) {
+      printf(BOLD_YELLOW "WARNING: " COLOR_RESET "(file %s, line %u):\n label before .extern or .entry is invalid\n\n",
+             cfg->file_name,
+             cfg->line_number);
+
+      free(symbol_name);
+    }
+
+    if (EXTERN_DIRECTIVE == directive) {
+      char *param = NULL;
+
+      current_line += strlen(".extern") + 1;
+
+      /* Check syntax errors */
+      if (IsIllegalExternOrEntryParameter(current_line, cfg)) {
+        return FAILURE;
       }
 
-      else if (FAILURE == res) {
-        total_errors++;
-        continue; 
-      }
-    }  
-
-    /*
-     * Is it a .data directive?
-     * e.g. "SYMBOL: .data ..."
-     *      ".data ..."
-     */
-    else if (0 == strcmp(current_word,".data")) {
-      result_t res = HandleStringOrData(
-        ".data", current_line, 
-        IsIllegalDataParameter, symbol_table,
-        symbol_name, StringDirectiveToMachinecode,
-        data_table, &cfg
-      );
-
-      if (MEM_ALLOCATION_ERROR == res) {
-        fclose(input_file);
-        free(current_line);
-        if (symbol_name) {
-          free(symbol_name);
-        }
-        return MEM_ALLOCATION_ERROR;
-      }
-
-      else if (FAILURE == res) {
-        total_errors++;
-        continue; 
-      }
-    }  
-
-     /*
-     * Is it a .extern directive?
-     * e.g. "SYMBOL: .extern..."
-     *      ".data ..."
-     */
-    else if (0 == strcmp(current_word,".extern")) {
-      current_line += strlen(current_word) + 1;
-      if (IsIllegalExternOrEntryParameter(current_line, &cfg)){
-        total_errors++;
-        continue;
-      }
-
-      /* Label before .extern warns warning */
-      if (NULL != symbol_name) {
-        // TODO warning
-        free(symbol_name);
-      }
-
-      symbol_name = strtok (NULL,DELIMITERS);
-      while (NULL != symbol_name){/*for every symbol in the line*/
+      /* Adding each symbol passed as a parameter to .extern to the symbol
+       * table as an external table.
+       */
+      param = strtok(NULL, DELIMITERS);
+      while (NULL != param){
         if (0 < SymbolNameErrorOccurred(symbol_name,&cfg,macro_table,symbol_table)){
-          total_errors++;
-           continue;
+          return FAILURE;
         }
-        if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &cfg)){
-          total_errors++;
-           continue;
-        }
-        if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+              if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
           fclose (input_file);
           free (current_line);
           free (current_word);
@@ -654,12 +627,21 @@ static result_t HandleDirectiveStatement(char *current_word, syntax_check_config
         symbol_name = strtok (NULL,DELIMITERS);
       }
     }
+
+    else if (ENTRY_DIRECTIVE == directive) {
+      /* Do nothing. Entries will be handled in 2nd pass */
+    }
+  }
+
+    else if (0 == strcmp(current_word,".extern")) {
+      
+    }
     else if (0 == strcmp(current_word,".entry")) {
       /* Do nothing: will handle in 2nd pass */
     }
 }
 
-static result_t HandleStringOrData(bool_t is_string,
+static result_t HandleStringOrData(directive_t directive,
                                    char *param,
                                    symbol_table_t *symbol_table,
                                    char *symbol_name,
@@ -669,23 +651,23 @@ static result_t HandleStringOrData(bool_t is_string,
   typedef bool_t (*syntax_check_func_t)(const char *, syntax_check_config_t *);
   typedef result_t (*machine_code_generation_func_t)(vector_t *, char *);
 
-  const char *directive = NULL;
+  size_t to_skip = 0;
   syntax_check_func_t syntax_check_func = NULL;
   machine_code_generation_func_t generate_machine_code = NULL;
 
-  if (is_string) {
-    directive = ".string";
+  if (STRING_DIRECTIVE == directive) {
+    to_skip = strlen(".string") + 1;
     syntax_check_func = IsIllegalString;
     generate_machine_code = StringDirectiveToMachinecode;
   }
-  else { /* .data */
-    directive = ".data";
+  else if (DATA_DIRECTIVE == directive) { 
+    to_skip = strlen(".data") + 1;
     syntax_check_func = IsIllegalDataParameter;
     generate_machine_code = DataDirectiveToMachinecode;
   }
 
   /* Skip to directive's parameter */
-  param += strlen(directive) + 1;
+  param += to_skip;
   
   /* Check syntax errors in parameters */
   if (syntax_check_func(param, cfg)) {
