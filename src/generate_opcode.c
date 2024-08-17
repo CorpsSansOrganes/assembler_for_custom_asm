@@ -61,9 +61,9 @@ result_t InstructionStatementToMachinecode(vector_t *code_table,
   bitmap_t src_operand_opcode = 0;
   bitmap_t dest_operand_opcode = 0;
   int instruction_number = 0;
-  instruction_t current_instruction = FindInstruction(instruction, &instruction_number);
 
   /* Set up the first word (instruction word) */
+  FindInstruction(instruction, &instruction_number);
   instruction_opcode += instruction_number;
 
   /* Put the instruction number in place */
@@ -78,8 +78,8 @@ result_t InstructionStatementToMachinecode(vector_t *code_table,
 
   /* Handling coding when we have two operands */
   if (NULL != source_operand && NULL != dest_operand) {
-    bitmap_t src_operand_opcode = OperandToOpcode(source_operand);
-    bitmap_t dest_operand_opcode = OperandToOpcode(dest_operand);
+    src_operand_opcode = OperandToOpcode(source_operand);
+    dest_operand_opcode = OperandToOpcode(dest_operand);
 
     /* If we have two registers as operands, they are encoded in a single block */
     if (AreTwoRegitserOperands(source_operand, dest_operand)) {
@@ -221,17 +221,6 @@ static bitmap_t OperandToOpcode(operand_t *operand){
   }
 
   return opcode;
-}
-
-static int CountParameters(char *line) {
-    int counter = 1;
-    while ('\0' != *line){
-      line++; 
-      if (*line == ','){
-        counter++;
-      }
-    }
-    return counter;
 }
 
 static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand) {

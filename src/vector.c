@@ -39,7 +39,7 @@ vector_t *CreateVector(size_t initial_capacity, size_t element_size) {
   return vector;
 }
 
-void DestoryVector(vector_t *vector) {
+void DestroyVector(vector_t *vector) {
   assert(vector);
   free(vector->array); vector->array = NULL;
   free(vector); vector = NULL;

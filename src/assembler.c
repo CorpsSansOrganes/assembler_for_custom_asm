@@ -710,9 +710,9 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
     no_errors = FALSE;
   }
 
-    DestroyExternSymbolList(ext_list);
-    DestroySymbolTable(symbol_table);
-    DestroyVector(code_table);
-    DestroyVector(data_table);
-    return no_errors ? SUCCESS : FAILURE;
+  DestroyExternSymbolList(ext_list);
+  DestroySymbolTable(symbol_table);
+  DestroyVector(code_table);
+  DestroyVector(data_table);
+  return no_errors ? SUCCESS : FAILURE;
 }
