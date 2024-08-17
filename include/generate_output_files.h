@@ -34,7 +34,7 @@ result_t GenerateOutputFiles(vector_t *code_table,
                              vector_t *data_table,
                              symbol_table_t *symbol_table,
                              char *input_path,
-                             list_t* ext_symbol_occurrences);
+                             ext_symbol_occurences_t* ext_symbol_occurrences);
 
 ext_symbol_occurences_t *CreateExternalSymbolList();
 void DestroyExternSymbolList(ext_symbol_occurences_t *list);
