@@ -10,18 +10,23 @@ static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_
 static int OperandToOpcode(operand_t *operand);
 static bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE);
 static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
+static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand);
 
 
 result_t DataDirectiveToMachinecode(vector_t *data_table, char *params){
     char *current_word = strtok (params, delimiters);
     bitmap_t parameter = atoi (current_word);/* parameter into number*/
-    VectorAppend (data_table,parameter);
+    if (AppendVector (data_table,parameter)){
+       return FAILURE;
+    }
     while (NULL != current_word) {
       current_word =strtok (NULL, ", /n/t/r");  
       parameter = atoi (current_word);
-      VectorAppend (data_table,parameter);
+      if (AppendVector (data_table,parameter)){
+       return FAILURE;
+      }
     }
-    return data_table;
+    return SUCCESS;
 }
 
 result_t StringDirectiveToMachinecode(vector_t *data_table, char *string){
@@ -31,11 +36,15 @@ result_t StringDirectiveToMachinecode(vector_t *data_table, char *string){
     {
         char_opcode = *string;
         string++;
-        VectorAppend (data_table, char_opcode); 
+        if (AppendVector (data_table, char_opcode)){
+          return FAILURE;
+        } 
     }
     char_opcode = 0;
-    VectorAppend (data_table, char_opcode); 
-    return data_table;
+    if (AppendVector (data_table, char_opcode)){
+      return FAILURE;
+    } 
+    return SUCCESS;
 }
 
 
@@ -186,7 +195,7 @@ static int CountParameters(char *line) {
     }
     return counter;
 }
-static bool_t IsTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand){
+static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand){
    if ((src_operand->addressing_method == DIRECT_REGISTER || src_operand->addressing_method == INDIRECT_REGISTER) &&
         (dest_operand->addressing_method == DIRECT_REGISTER || dest_operand->addressing_method == INDIRECT_REGISTER)){
           return TRUE;
