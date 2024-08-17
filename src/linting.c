@@ -7,6 +7,7 @@ char *CleanLine(char *line) {
   char *dest = src;
   char *last_non_blank = NULL;
   bool_t in_whitespace = FALSE;
+  bool_t inside_string = FALSE;
 
   if (IsBlankLine(line)) {
     return src;
@@ -14,6 +15,11 @@ char *CleanLine(char *line) {
 
   /* Collapse multiple whitespaces between words */
   while ('\n' != *src) {
+    if (*src == '"'){
+      if (TRUE == inside_string){
+        inside_string == TRUE;
+      }
+    }
     /* Copy characters from src to dest if non-blanks */
     if (!IsBlank(*src)) {
       *dest = *src;
@@ -23,7 +29,7 @@ char *CleanLine(char *line) {
     }
 
     /* Copy just one space when in a sequence of whitespaces */
-    else if (FALSE == in_whitespace) {
+    else if (FALSE == in_whitespace && FALSE == inside_string) {
       *dest = ' ';
       ++dest;
       in_whitespace = TRUE;

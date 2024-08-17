@@ -32,6 +32,7 @@ TEST_SYNTAX_ERRORS := $(SYNTAX_ERROR_OBJ) $(MACRO_TABLE) syntax_errors_test.o te
 TEST_BITMAP_OBJ := $(BITMAP_OBJ)  bitmap_test.o test_utils.o
 TEST_PREPROCESSING_OBJ := $(PREPROCESSING_OBJ) preprocessing_test.o test_utils.o
 TEST_STRING_UTILS_OBJ := string_utils.o test_utils.o string_utils_test.o
+TEST_ASSEMBLER_OBJ := $(ASSEMBLER_obj) assembler_test.o test_utils.o
 
 # ----------
 # Executables
@@ -66,6 +67,10 @@ test_preprocessor: $(addprefix $(OBJ_DEBUG)/, $(TEST_PREPROCESSING_OBJ))
 
 # Test string utils
 test_string_utils: $(addprefix $(OBJ_DEBUG)/, $(TEST_STRING_UTILS_OBJ))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
+# Test assembler
+test_assembler: $(addprefix $(OBJ_DEBUG)/, $(TEST_ASSEMBLER_OBJ))
 	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
 
 # ----------

@@ -14,11 +14,11 @@
 
 static result_t WriteHeader (char *output_path, int IC, int DC);
 static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
-static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC);
+static result_t GenerateOBJFile (vector_t *code_opcode, vector_t *data_opcode, char *output_path, int IC, int DC);
 static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,list_t *external_symbol_data_list);
 
 
-result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, char *input_path, list_t *external_symbol_data_list, int IC, int DC){
+result_t GenerateOutputFiles (vector_t *code_opcode, vector_t *data_opcode, symbol_table_t *symbol_table, char *input_path, list_t *external_symbol_data_list, int IC, int DC){
     char *obj_path = StrDup(input_path);
     char *extern_path = StrDup(input_path);
     char *entry_path = StrDup(input_path);
@@ -26,7 +26,7 @@ result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, ch
     strcpy(obj_path + strlen(input_path), ".ob");
     strcpy(entry_path + strlen(input_path), ".ent");
     strcpy(extern_path + strlen(input_path), ".ext");
-    if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
+    if (SUCCESS != GenerateOBJFile(code_opcode,data_opcode, obj_path,IC,DC)){
         free (obj_path);
         free (extern_path);
         free (entry_path);
@@ -50,7 +50,7 @@ result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, ch
     return SUCCESS;
 }
 
-static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, int DC){
+static result_t GenerateOBJFile (vector_t *code_opcode, vector_t *data_opcode, char *output_path, int IC, int DC){
     int counter = 100;
     vector_t *opcode_line;
     bitmap_t single_opcode;
@@ -74,9 +74,9 @@ static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, in
         perror("Couldn't open obj file");
         return ERROR_OPENING_FILE; 
     }
-    for (i=0; i<GetSizeVector(opcode);i++)
+    for (i=0; i<GetSizeVector(code_opcode);i++)
     {
-        opcode_line = GetElementVector(opcode,i);
+        opcode_line = GetElementVector(code_opcode,i);
         for (j=0; j<GetSizeVector(opcode_line); j++)
         {
             str_to_write[0] = "\0";
@@ -93,10 +93,31 @@ static result_t GenerateOBJFile (vector_t *opcode, char *output_path, int IC, in
                 return ERROR_WRITING_TO_FILE;
             }
             counter++;
-
         }
         
     }
+    for (i=0; i<GetSizeVector(data_opcode);i++)
+    {
+        opcode_line = GetElementVector(data_opcode,i);
+        for (j=0; j<GetSizeVector(opcode_line); j++)
+        {
+            str_to_write[0] = "\0";
+            sprintf(address, "%04d", counter);
+            single_opcode = GetElementVector (opcode_line,j);
+            sprintf(bitmap, "%05o", single_opcode);
+            sprintf(str_to_write, "%s %s\n", address, bitmap);
+            if (EOF == fputs(str_to_write, obj_file)) {
+                perror("Error writing to file");
+                fclose (obj_file);
+                free (address);
+                free (bitmap);
+                free (str_to_write);
+                return ERROR_WRITING_TO_FILE;
+            }
+            counter++;
+        }
+        
+    }    
     free (address);
     free (bitmap);
     free (str_to_write);
