@@ -20,9 +20,9 @@ static result_t RunComparisonOb(const char *file_name);
 static result_t RunComparisonExt(const char *file_name);
 static result_t RunComparisonEnt(const char *file_name);
 
-const char *expected_dir = "./test/assemble_test_files/expected";
-const char *input_dir = "./test/assemble_test_files/input";
-const char *output_dir = "./test/assemble_test_files/output";
+const char *expected_dir = "./test/assembler_test_files/expected";
+const char *input_dir = "./test/assembler_test_files/input";
+const char *output_dir = "./test/assembler_test_files/output";
 
 
 /*
@@ -41,23 +41,26 @@ test_info_t ValidAssemblingingTest(const char *file_name) {
   ProduceFilePath(output_dir, file_name, ".ent", ent_output_path);
   ProduceFilePath(output_dir, file_name, ".ext", ext_output_path);
 
-  if (SUCCESS != AssembleFile (input_path,default_macro_table)){
-        printf("%s failed to assemble \n", file_name);
-        RETURN_ERROR (TEST_FAILED);
+  if (SUCCESS != AssembleFile(input_path, default_macro_table)){
+    printf("%s failed to assemble \n", file_name);
+    RETURN_ERROR (TEST_FAILED);
   }
 
   if (SUCCESS != RunComparisonOb(file_name)) {
     printf("%s failed in ob\n", file_name);
     RETURN_ERROR(TEST_FAILED);
   }
+
   if (SUCCESS != RunComparisonExt(file_name)) {
     printf("%s failed in ext\n", file_name);
     RETURN_ERROR(TEST_FAILED);
   }  
+
   if (SUCCESS != RunComparisonEnt(file_name)) {
     printf("%s failed in ent\n", file_name);
     RETURN_ERROR(TEST_FAILED);
   }
+
   return test_info;
 }
 

@@ -20,15 +20,20 @@ static int ExternalSymbolCompare (void *value, void *key);
 
 
 ext_symbol_occurrences_t *CreateExternalSymbolList() {
-  ext_symbol_occurrences_t *ext_list = NULL;
-  list_t *list = CreateList ();
+  ext_symbol_occurrences_t *ext_list = malloc(sizeof(ext_symbol_occurrences_t));
 
-  if (NULL == list){
+  if (NULL == ext_list){
     perror ("Error: Couldn't allocate memory for external symbols lists\n");
     return NULL;
   }
 
-  ext_list->external_symbols = list;
+  ext_list->external_symbols = CreateList();
+  if (NULL == ext_list->external_symbols) {
+    perror ("Error: Couldn't allocate memory for external symbols lists\n");
+    free(ext_list);
+    return NULL;
+  }
+
   return ext_list;
 }
 
