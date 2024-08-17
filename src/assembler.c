@@ -47,6 +47,16 @@ static int ExternalSymbolCompare(external_symbol_data_t *external_symbol_data,
 
 static int CountParameters(char *line);
 
+static result_t HandleDirectiveStatement();
+
+static result_t HandleStringOrData(bool_t is_string,
+                                   char *param,
+                                   symbol_table_t *symbol_table,
+                                   char *symbol_name,
+                                   vector_t *data_table,
+                                   syntax_check_config_t *cfg);
+
+
 result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   bool_t no_errors = TRUE;
 
@@ -235,111 +245,14 @@ static result_t FirstPass(char *file_path,
       current_word = strtok(current_line,DELIMITERS);
     }
 
-    /*
-     * Is it a .string directive?
-     * e.g. "SYMBOL: .string ..."
-     *      ".string ..."
-     */
-    if (0 == strcmp(current_word,".string")) {
-      /* Skip to .string parameter */
-      current_line += strlen(current_word) + 1;
-      if (IsIllegalString(current_line, &cfg)) { 
-        total_errors++;
-        continue; 
-      }
+    if ('.' == current_word[0]) {
+      // Handle directives
+      if (MEM_ALLOCATION_ERROR == HandleDirectiveStatement(current_word)) {
 
-      if (StringIsNotPrintable(current_line,&cfg)) { 
-        total_errors++;
-        continue; 
-      }
-
-      /* There was a symbol definition */
-      if (NULL != symbol_name){
-        if (SUCCESS != AddSymbol(symbol_table, symbol_name, DC, DATA)) {
-          fclose(input_file);
-          free(current_line);
-          free(symbol_name);
-          return MEM_ALLOCATION_ERROR;
-        } 
-      }
-
-      /* Computes machine code for the directive */
-      if (SUCCESS != StringDirectiveToMachinecode(data_table, current_line)) {
-        fclose(input_file);
-        free(current_line);
-        return MEM_ALLOCATION_ERROR;
-      }
-
-      DC = GetSizeVector(data_table);
-    }  
-
-    /*
-     * Is it a .string directive?
-     * e.g. "SYMBOL: .data ..."
-     *      ".data ..."
-     */
-    else if (0 == strcmp(current_word,".data")) {
-      /* Skip to .data parameters */
-      current_line += strlen(current_word) + 1;
-
-      if (IsIllegalDataParameter(current_line, &cfg)) {
-        total_errors++;
-        continue;
-      }
-
-      if (DataParametersTooBig(current_line, &cfg)) {
-        total_errors++;
-        continue;
-      }
-
-      /* There was a symbol definition */
-      if (NULL != symbol_name){
-        if (SUCCESS != AddSymbol(symbol_table, symbol_name, DC, DATA)) {
-          fclose(input_file);
-          free(current_line);
-          free(symbol_name);
-          return MEM_ALLOCATION_ERROR;
-        } 
-      }
-
-      /* Computes machine code for the directive */
-      if (SUCCESS != DataDirectiveToMachinecode(data_table, current_line)) {
-        fclose(input_file);
-        free(current_line);
-        return MEM_ALLOCATION_ERROR;
-      }
-
-      DC = GetSizeVector(data_table);
-    }
-    else if (0 == strcmp(current_word,".extern")){
-      current_line += strlen(current_word) + 1;
-      if (IsIllegalExternOrEntryParameter(current_line, &cfg)){
-        total_errors++;
-        continue;
-      }
-      symbol_name = strtok (NULL,DELIMITERS);
-      while (NULL != symbol_name){/*for every symbol in the line*/
-        if (0 < SymbolNameErrorOccurred(symbol_name,&cfg,macro_table,symbol_table)){
-          total_errors++;
-           continue;
-        }
-        if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &cfg)){
-          total_errors++;
-           continue;
-        }
-        if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
-          fclose (input_file);
-          free (current_line);
-          free (current_word);
-          free (symbol_name);
-          return FAILURE;
-        }
-        symbol_name = strtok (NULL,DELIMITERS);
       }
     }
-    else if (0 == strcmp(current_word,".entry")) {
-      /* Do nothing: will handle in 2nd pass */
-    }
+
+
     /*instruction exist*/
     else if (FALSE == InstructionDoesntExist(current_word,&cfg)){
           if (symbol_name[0] != '\0'){
@@ -637,4 +550,163 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
   }  
 static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
   return (0 == strcmp (external_symbol_data->symbol_name, key));
+}
+
+static result_t HandleDirectiveStatement(char *current_word, syntax_check_config_t *cfg) {
+  /*
+   * First, check if that directive even exists
+   */
+  if (DirectiveDoesntExist(current_word, cfg)) {
+    return FAILURE;
+  }
+  
+  /*
+   * Is it a .string directive?
+   * e.g. "SYMBOL: .string ..."
+   *      ".string ..."
+   */
+  else if (0 == strcmp(current_word,".string")) {
+      result_t res = HandleStringOrData(
+        ".string", current_line, 
+        IsIllegalString, symbol_table,
+        symbol_name, StringDirectiveToMachinecode,
+        data_table, &cfg
+      );
+
+      if (MEM_ALLOCATION_ERROR == res) {
+        fclose(input_file);
+        free(current_line);
+        if (symbol_name) {
+          free(symbol_name);
+        }
+        return MEM_ALLOCATION_ERROR;
+      }
+
+      else if (FAILURE == res) {
+        total_errors++;
+        continue; 
+      }
+    }  
+
+    /*
+     * Is it a .data directive?
+     * e.g. "SYMBOL: .data ..."
+     *      ".data ..."
+     */
+    else if (0 == strcmp(current_word,".data")) {
+      result_t res = HandleStringOrData(
+        ".data", current_line, 
+        IsIllegalDataParameter, symbol_table,
+        symbol_name, StringDirectiveToMachinecode,
+        data_table, &cfg
+      );
+
+      if (MEM_ALLOCATION_ERROR == res) {
+        fclose(input_file);
+        free(current_line);
+        if (symbol_name) {
+          free(symbol_name);
+        }
+        return MEM_ALLOCATION_ERROR;
+      }
+
+      else if (FAILURE == res) {
+        total_errors++;
+        continue; 
+      }
+    }  
+
+     /*
+     * Is it a .extern directive?
+     * e.g. "SYMBOL: .extern..."
+     *      ".data ..."
+     */
+    else if (0 == strcmp(current_word,".extern")) {
+      current_line += strlen(current_word) + 1;
+      if (IsIllegalExternOrEntryParameter(current_line, &cfg)){
+        total_errors++;
+        continue;
+      }
+
+      /* Label before .extern warns warning */
+      if (NULL != symbol_name) {
+        // TODO warning
+        free(symbol_name);
+      }
+
+      symbol_name = strtok (NULL,DELIMITERS);
+      while (NULL != symbol_name){/*for every symbol in the line*/
+        if (0 < SymbolNameErrorOccurred(symbol_name,&cfg,macro_table,symbol_table)){
+          total_errors++;
+           continue;
+        }
+        if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &cfg)){
+          total_errors++;
+           continue;
+        }
+        if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+          fclose (input_file);
+          free (current_line);
+          free (current_word);
+          free (symbol_name);
+          return FAILURE;
+        }
+        symbol_name = strtok (NULL,DELIMITERS);
+      }
+    }
+    else if (0 == strcmp(current_word,".entry")) {
+      /* Do nothing: will handle in 2nd pass */
+    }
+}
+
+static result_t HandleStringOrData(bool_t is_string,
+                                   char *param,
+                                   symbol_table_t *symbol_table,
+                                   char *symbol_name,
+                                   vector_t *data_table,
+                                   syntax_check_config_t *cfg) {
+
+  typedef bool_t (*syntax_check_func_t)(const char *, syntax_check_config_t *);
+  typedef result_t (*machine_code_generation_func_t)(vector_t *, char *);
+
+  const char *directive = NULL;
+  syntax_check_func_t syntax_check_func = NULL;
+  machine_code_generation_func_t generate_machine_code = NULL;
+
+  if (is_string) {
+    directive = ".string";
+    syntax_check_func = IsIllegalString;
+    generate_machine_code = StringDirectiveToMachinecode;
+  }
+  else { /* .data */
+    directive = ".data";
+    syntax_check_func = IsIllegalDataParameter;
+    generate_machine_code = DataDirectiveToMachinecode;
+  }
+
+  /* Skip to directive's parameter */
+  param += strlen(directive) + 1;
+  
+  /* Check syntax errors in parameters */
+  if (syntax_check_func(param, cfg)) {
+    return FAILURE; 
+  }
+
+  /* Create symbol, if one was defined */
+  if (NULL != symbol_name) {
+    if (SUCCESS != AddSymbol(symbol_table,
+                             symbol_name,
+                             GetSizeVector(data_table),
+                             DATA)) {
+
+      return MEM_ALLOCATION_ERROR;
+    }
+  }
+
+  /* Generate machine code in the data segment */
+  if (SUCCESS != generate_machine_code(data_table, param)) {
+    return MEM_ALLOCATION_ERROR;
+  }
+
+  return SUCCESS;
 }

@@ -18,11 +18,19 @@ static bool_t AddressingMethodIsLegal(instruction_t instruction,
 static bool_t IsDataEntryValid(const char *from,
                                const char *to);
 
-static bool_t SymbolPrefixIllegal(const char *symbol, syntax_check_config_t *config);
+static bool_t SymbolPrefixIllegal(const char *symbol,
+                                  syntax_check_config_t *config);
+
 static bool_t SymbolExceedCharacterLimit(const char *symbol,
                                   syntax_check_config_t *config);
+
+static bool_t DataParametersTooBig(const char *params,
+                                   syntax_check_config_t *config);
+
 static bool_t IsDataParameterTooBig(const char *parameter);
                                   
+static bool_t StringIsNotPrintable (const char *str,
+                                    syntax_check_config_t *config);
 
 /* This config is used for calling other syntax checks internally silently */
 syntax_check_config_t silent_syntax_cfg = {NULL, 0, FALSE};
@@ -59,7 +67,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
     return TRUE;
   }
 
-  if (FALSE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
+  if (INVALID_DIRECTIVE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
     if (config->verbose) {
       printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to make use of a reserved directive name '%s' \n\n",
               config->file_name,
@@ -273,8 +281,11 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config) {
   char *ptr = (char *)symbol;
   bool_t result = FALSE;
 
-  if (SymbolPrefixIllegal(ptr, config) 
-    || SymbolExceedCharacterLimit(symbol, config)) {
+  if (SymbolPrefixIllegal(ptr, config)) {
+    result = TRUE;
+  }
+
+  if (SymbolExceedCharacterLimit(symbol, config)) {
     result = TRUE;
   }
 
@@ -351,35 +362,39 @@ bool_t ImmediateOperandTooBig (operand_t *operand,
   return FALSE;
 }
 
-bool_t DataParametersTooBig (const char *params, syntax_check_config_t *config){
+static bool_t DataParametersTooBig(const char *params,
+                                   syntax_check_config_t *config) {
     char *duplicate_line = StrDup(params); 
-    char *ptr = duplicate_line;
+    char *ptr = strtok(duplicate_line, " ,/t/n/r");
 
     while (ptr != NULL) {
-      ptr = strtok (duplicate_line," ,/t/n/r");
-          if (TRUE == IsDataParameterTooBig(ptr)) {
-            if (config->verbose) {
-              printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n data parameter '%s' is exceeds limit \n\n",
-              config->file_name,
-              config->line_number,
-              ptr);
-        }
-        return TRUE;
+    if (TRUE == IsDataParameterTooBig(ptr)) {
+      if (config->verbose) {
+        printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n data parameter '%s' is exceeds limit \n\n",
+        config->file_name,
+          config->line_number,
+          ptr);
+      }
+      free(duplicate_line);
+      return TRUE;
     }
+
+    ptr = strtok(NULL, " ,/t/n/r");
   }
 
+  free(duplicate_line);
   return FALSE;
 }
 
 
-bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config) {
-  int i = 0;
-  while (i < NUM_OF_DIRECTIVES && strcmp(directive, reserved_directives[i])) {
-    ++i;
+directive_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config) {
+  directive_t d = 0;
+  while (d < NUM_OF_DIRECTIVES && strcmp(directive, reserved_directives[d])) {
+    ++d;
   }
   
-  if (i < NUM_OF_DIRECTIVES) {
-    return FALSE;
+  if (d != INVALID_DIRECTIVE) {
+    return d;
   }
   
   if (config->verbose) {
@@ -388,12 +403,17 @@ bool_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config
             config->line_number,
             directive);
   }
-  return TRUE;
+  return INVALID_DIRECTIVE;
 }
 
 bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
   char *start = (char *)data;
   char *end = strstr(start, ",");
+  bool_t result = FALSE;
+
+  if (DataParametersTooBig(data, config)) {
+    result = TRUE;
+  }
 
   while (NULL != end && IsDataEntryValid(start, end)) {
     start = end + 1;
@@ -401,7 +421,7 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
   }
 
   if (NULL == end && IsDataEntryValid(start, end)) {
-    return FALSE;
+    return result;
   }
 
   if (config->verbose) {
@@ -416,6 +436,11 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config) {
 
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   const char *start = str;
+  bool_t res = FALSE;
+
+  if (StringIsNotPrintable(str, config)) {
+    res = TRUE;
+  }
 
   if ('\"' == *str) {
     str = EndOfString(str) - 1;
@@ -424,7 +449,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
     }
     
     if ('\"' == *str) {
-      return FALSE;
+      return res;
     }
   }
 
@@ -438,9 +463,9 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   return TRUE;
 }
 
-bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config){
+static bool_t StringIsNotPrintable (const char *str,
+                                    syntax_check_config_t *config) {
   const char *ptr = str;
-  ++ptr; /* skip starting quotation marks */
 
   while ('\0' != *ptr && isprint(*ptr)) {
     ++ptr;
@@ -464,20 +489,26 @@ bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config){
 
 bool_t IsIllegalExternOrEntryParameter(const char *param,
                                        syntax_check_config_t *config) {
-  char *duplicate_line = StrDup (param);
+  char *duplicate_line = StrDup(param);
   char *parameter = duplicate_line;
-  while (parameter != NULL){
-    parameter = strtok (duplicate_line, delimiters);
+
+  while (parameter != NULL) {
+    parameter = strtok (duplicate_line, ", \t\n\r");
     if (SymbolNameIsIllegal(parameter, &silent_syntax_cfg)) {
-        if (config->verbose) {
-          printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
-           config->file_name,
-           config->line_number,
-           parameter);
-        }
+      if (config->verbose) {
+        printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
+          config->file_name,
+          config->line_number,
+          parameter);
+      }
+
+      free(duplicate_line);
+      return TRUE;
     }
   }
-    return FALSE;
+
+  free(duplicate_line);
+  return FALSE;
 }
 
 bool_t RegisterNameDoesntExist(const char *register_name, syntax_check_config_t *config){
