@@ -67,7 +67,7 @@ test_info_t InvalidAssemblingTest(const char *file_name) {
   macro_table_t *macro_table = NULL;
 
   ProduceFilePath(input_dir, file_name, ".as", preprocessing_path);
-  ProduceFilePath(input_dir, file_name, ".am", assembler_input_path);
+  ProduceFilePath(input_dir, file_name, ".am", assembler_input_path);/*TO check input dir*/
   ProduceFilePath(output_dir, file_name, ".ob", output_path);
   macro_table = PreprocessFile (preprocessing_path, assembler_input_path);
 
