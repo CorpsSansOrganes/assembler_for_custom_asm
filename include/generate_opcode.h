@@ -1,15 +1,5 @@
-#include "bitmap.h"
 #include "vector.h"
-#include "assembler.h"
-#include "utils.h"
-#include "syntax_errors.h"
-#include "macro_table.h"
-#include "symbol_table.h"
-#include <stdio.h> /* perror */
-#include <string.h> 
-#include <stdlib.h>
-
-
+#include "language_definitions.h"
 
 typedef enum {
   E,
@@ -26,29 +16,37 @@ typedef enum {
 *@return  vector containing 1-3 bitmap words 
 */
 
-vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC);
+vector_t *InstructionLineToMachinecode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC);
 
 /* 
-*@brief produce the opcode of an string directive line, i.e adds to the opcode vector an opcode line for every char and the terminating char
-*
-*@param opcode: the vector that contains the overall opcode 
-*       string: the string to convert to opcode 
-*
-*@return  returns the full vector opcode containing the opcode of the string
-*/
+ * @brief Produce the memory encoding of an .string directive statement and add 
+ *        them to the data segment.
+ *
+ * @param data_table - The vector that contains the data segment.
+ *        string - The string to convert to machine code, with quotations marks.
+ *                 e.g. "\"hello world!\"". 
+ *
+ *        NOTE: The function assumes that the string passed is legal.
+ *
+ * @return SUCCESS if the memory machine were added to the data segment, 
+ *         or MEM_ALLOCATION_ERROR upon a failure.
+ */
 
- vector_t *StringLineToMachineCode(vector_t *opcode, char *string);
+result_t StringDirectiveToMachinecode(vector_t *data_table, char *string);
 
 /* 
-*@brief produce the opcode of an data directive line, i.e adds to the opcode vector an opcode line for every int. 
-*       in addition update the data counter according to number of opcodes added 
-*
-*@param opcode: the vector that contains the overall opcode 
-*       string: the string that contains the paramaters
-*       DC: address of the data counter.
-*       num_of_parameters: num of data parameters
-*
-*@return  returns the full vector opcode containing the opcode of the data parameters
-*/
+ * @brief Produce the memory encoding of an .data directive statement and add
+ *        them to the data segment.
+ *
+ * @param data_table - The vector that contains the data segment.
+ *        params - A string containing the parameters passed to the .data directive.
+ *                 e.g. "+13, 18, 0,-1,+333"
+ *
+ *        NOTE: The function assumes that the params string passed is legal.
+ *
+ * @return SUCCESS if the memory machine were added to the data segment, 
+ *         or MEM_ALLOCATION_ERROR upon a failure.
+ *
+ */
 
-vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters);
+result_t DataDirectiveToMachinecode(vector_t *data_table, char *params);

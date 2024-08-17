@@ -1,5 +1,5 @@
-#ifndef __ASSEMBLER_SH_ED__
-#define __ASSEMBLER_SH_ED__
+#ifndef __SH_ED_ASSEMBLER__
+#define __SH_ED_ASSEMBLER__
 
 #include "utils.h"
 #include "vector.h"
@@ -7,11 +7,6 @@
 
 /* Starting from the following address the program will be mapped. */
 #define INITIAL_IC_VALUE 100
-
-typedef struct external_symbol_data {
-  const char *symbol_name;
-  vector_t *occurences;
-} external_symbol_data_t;
 
 /*
  * @brief Assembler which takes a .am file and its correspoding macro table 
@@ -21,11 +16,13 @@ typedef struct external_symbol_data {
  *        3. (Optionally) entries file (.ent)
  *
  * @param file_path - Path to the .am file to assemble.
- *        macro_list - The macro table 
+ *        macro_list - The macro table produced by preprocessing stage for
+ *                     the given file.
+ *
  * @return Upon success, creates a .ob file and returns SUCCESS.
  *         Otherwise, an error code is returned.
  */
 
 result_t AssembleFile(char *file_path,  macro_table_t *macro_list);
 
-#endif /* __ASSEMBLER_SH_ED__ */
+#endif /* __SH_ED_ASSEMBLER__ */

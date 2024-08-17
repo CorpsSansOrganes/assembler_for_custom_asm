@@ -65,15 +65,6 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
     return NULL;
   }
 
-  output_file = fopen(output_path, "w");
-  if (NULL == output_file) {
-    perror("Couldn't open output file");
-    free(line);
-    fclose(input_file);
-    DestroyMacroTable(table);
-    return NULL;
-  }
-
   /*
    * First pass:
    * Parse macros, populating the macro table.
@@ -86,11 +77,28 @@ macro_table_t *PreprocessFile(char *input_path, char *output_path) {
       error_occurred = TRUE;
   }
 
+  /* Syntax error reading macros or file handling error */
+  if (TRUE == error_occurred) {
+    DestroyMacroTable(table); 
+    free(line);
+    fclose(input_file);
+    return NULL;
+  }
+
   /*
    * Second pass:
    * Since no errors occurred, write to file.
    * Expand macros to their definitions.
    */
+
+  output_file = fopen(output_path, "w");
+  if (NULL == output_file) {
+    perror("Couldn't open output file");
+    free(line);
+    fclose(input_file);
+    DestroyMacroTable(table);
+    return NULL;
+  }
 
   if (FALSE == error_occurred) {
     if (fseek(input_file, 0, SEEK_SET)) {

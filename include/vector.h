@@ -18,6 +18,8 @@ typedef struct vector vector_t;
  * @param initial_capcity - How many elements the vector can initial have.
  *        element_size - The size (in bytes) of each element.
  *
+ * NOTE: We assume initial capacity >= 1, and element_size >= 1.
+ *
  * @return Upon success, returns a pointer to the newly created vector.
  *         Upon failure, return NULL.
  */

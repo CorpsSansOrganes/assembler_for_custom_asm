@@ -1,10 +1,18 @@
-#ifndef __GENERATE_OUTPUT_FILES__
-#define __GENERATE_OUTPUT_FILES__
+#ifndef __SH_ED_GENERATE_OUTPUT_FILES__
+#define __SH_ED_GENERATE_OUTPUT_FILES__
 
 #include "utils.h"
 #include "vector.h"
 #include "symbol_table.h"
 #include "list.h"
+
+/*
+ * @brief All occurrence where an external symbol was used.
+ */
+typedef struct external_symbol_data {
+  const char *symbol_name;
+  vector_t *occurences;
+} external_symbol_data_t;
 
 /* 
 *@brief creating the obj file, entry file and extern file after the assembling process.
@@ -18,6 +26,11 @@
 *@return SUCCESS if the function finished the job successfullly. Otherwise, FAILURE;
 */
 
+result_t GenerateOutputFiles (vector_t *code_table,
+                              vector_t *data_table,
+                              symbol_table_t *symbol_table,
+                              char *input_path,
+                              list_t* ext_symbol_occurrences);
 
 result_t GenerateOutputFiles (vector_t *code_opcode, vector_t *data_opcode, symbol_table_t *symbol_table, char *input_path, list_t *external_symbol_data_list, int IC, int DC);
 
