@@ -17,6 +17,7 @@ INCLUDE := ./include
 # Dependencies
 MAIN_OBJ := macro_table.o utils.o assembler.o preprocessing.o
 LIST_OBJ := list.o
+VECTOR_OBJ := vector.o
 FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 LINTING_OBJ := linting.o file_handling.o
 SYMBOL_TABLE_OBJ := $(LIST_OBJ) symbol_table.o
@@ -24,7 +25,7 @@ MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
 BITMAP_OBJ := bitmap.o
 SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) $(MACRO_TABLE_OBJ) $(BITMAP_OBJ) syntax_errors.o string_utils.o language_definitions.o
 PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o linting.o
-ASSEMBLER_OBJ := $(SYNTAX_ERROR_OBJ) assembler.o
+ASSEMBLER_OBJ := $(SYNTAX_ERROR_OBJ) $(VECTOR_OBJ) assembler.o generate_opcode.o generate_output_files.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
