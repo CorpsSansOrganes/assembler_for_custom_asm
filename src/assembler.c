@@ -15,133 +15,307 @@
 
 const char *DELIMITERS = ", \t\n\r";
 
+/* @brief Checks if the first word in a string ends with ':'.
+ * @param Line - Line of text to check.
+ * @return TRUE if ends with colon, otherwise FALSE.
+ */
+static bool_t IsSymbolDefinition(char *line) {
+    while (!IsBlank(*(line + 1))) {
+       line++;
+    }
+    if (*line == ':'){
+	      return TRUE;
+    }
+    return FALSE;
+}
 
-static bool_t IsSymbolDefinition(char *line);
+/*
+ * @brief Checks all possible syntax errors of symbols.
+ *
+ * @param symbol_name - The name of the symbol, e.g. "SYMBOL".
+ *        macro_table - Macro table of the file.
+ *        symbol_table - Symbol table of the file.
+ *        cfg - Syntax error configurations, see in syntax_errors.h.
+*/
 
 static bool_t SymbolNameErrorOccurred(const char *symbol_name,
                                   macro_table_t *macro_table,
                                   symbol_table_t *symbol_table,
-                                  syntax_check_config_t *cfg);
+                                  syntax_check_config_t *cfg) {
+  int internal_counter = 0;
+  if (SymbolNameIsIllegal(symbol_name,cfg)) {
+    internal_counter++;
+  }
+  if (SymbolUsedAsAMacro(symbol_name, macro_table, cfg)) {
+    internal_counter++;
+  }
+  if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, cfg)) {
+    internal_counter++;
+  }
 
-static result_t FirstPass(char *file_path,
-                          macro_table_t *macro_table,
-                          symbol_table_t *symbol_table,
-                          vector_t *code_table,
-                          vector_t *data_table);
+  return internal_counter ? TRUE : FALSE;
+}
 
-static result_t SecondPass(char *file_path,
-                           symbol_table_t *symbol_table,
-                          vector_t *code_table,
-                          vector_t *data_table,
-                           list_t *ext_symbol_occurrences);
 
-static result_t UpdateAdresses(symbol_table_t *symbol_table,
-                               int IC);
+/*
+ * @brief Increments the addresses associated with all data symbols with 100 + IC
+ */
 
-static int SplitOperands(char *line,
-                         operand_t *first_operand,
-                         operand_t *second_operand );
+static void UpdateDataSymbolsAddresses(symbol_table_t *symbol_table, unsigned int IC) {
+  list_t *symbol_list = AsList(symbol_table);
+  node_t *iter = GetHead(symbol_list);
 
-static int ExternalSymbolCompare(external_symbol_data_t *external_symbol_data,
-                                 char *key);
+  while (NULL != iter) {
+    symbol_t *symbol = (symbol_t *)GetValue(iter);
+    if (DATA == GetSymbolMemoryArea(symbol)) {
+      UpdateSymbolAddress(symbol,
+                          GetSymbolAddress(symbol) + IC + INITIAL_IC_VALUE);
+    }
 
-static int CountParameters(char *line);
+    iter = GetNext(iter);
+  }
+}
 
-static result_t HandleDirectiveStatement();
+static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
+  int counter = 0;
+  char *current_word = strtok(line, DELIMITERS);
+
+  if (NULL != current_word) {
+    operand1->name = StrDup(current_word);
+    // TODO handle bad duplication
+    operand1->addressing_method = DetectAddressingMethod(operand1->name);
+    operand1->type = DESTINATION_OPERAND;
+    counter++;
+  }
+
+  current_word = strtok(NULL, DELIMITERS);
+  if (NULL != current_word) {
+    operand2->name = StrDup (current_word);
+    // TODO handle bad duplication
+    operand2->addressing_method = DetectAddressingMethod(operand2->name);
+    operand2->type = DESTINATION_OPERAND;
+    operand1->type = SOURCE_OPERAND;
+    counter++;
+
+    /* Count extra parameters */
+    current_word = strtok(NULL, DELIMITERS);
+    while (NULL != current_word) {
+      counter++;
+      current_word = strtok(NULL, DELIMITERS);
+    }
+  }
+  return counter;
+}  
+
+static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
+  return (0 == strcmp (external_symbol_data->symbol_name, key));
+}
+
+static result_t HandleInstructionStatement(char *instruction,
+                                           char *params,
+                                           symbol_table_t *symbol_table,
+                                           char *symbol_name,
+                                           vector_t *code_table,
+                                           syntax_check_config_t *cfg) {
+  size_t operand_num = 0;
+  operand_t operands[2];
+  bool_t invalid_operands = FALSE;
+  operand_t *src_operand = NULL;
+  operand_t *dest_operand = NULL;
+  int i = 0;
+
+  if (InstructionDoesntExist(instruction, cfg)) {
+    return FAILURE;
+  }
+
+  /* Skip to operands */
+  params += strlen(instruction) + 1;
+  operand_num = SplitOperands(params, &operands[0], &operands[1]);
+
+  /* Syntax errors for operands */
+  if (WrongNumberOfOperands(instruction, operand_num, cfg)) {
+    return FAILURE;
+  }
+
+  for (i = 0; i < operand_num; ++i) {
+    if (IsOperandInvalid(&operands[i], cfg)) {
+      invalid_operands = TRUE;
+    }
+
+    else if (IncorrectAddressingMethod(instruction, &operands[0], cfg)) {
+      invalid_operands = TRUE;
+    }
+
+    else if (IMMEDIATE == operands[i].type &&
+        ImmediateOperandTooBig(&operands[i], cfg)) {
+      invalid_operands = TRUE;
+    }
+  }
+
+  if (invalid_operands) {
+    return FAILURE;
+  }
+
+  /* Create symbol, if one was defined */
+  if (NULL != symbol_name) {
+    if (SUCCESS != AddSymbol(symbol_table,
+                             symbol_name,
+                             GetSizeVector(code_table) + INITIAL_IC_VALUE,
+                             CODE)) {
+      return MEM_ALLOCATION_ERROR;
+    }
+  }
+
+  /* Generate machine code in the code segment */
+  if (1 == operand_num) {
+    dest_operand = &operands[0];
+  }
+  if (2 == operand_num) {
+    src_operand = &operands[0];
+    dest_operand = &operands[1];
+  }
+
+  if (SUCCESS != InstructionStatementToMachinecode(code_table,
+                                                   instruction,
+                                                   src_operand,
+                                                   dest_operand)) {
+    return MEM_ALLOCATION_ERROR;
+  }
+
+  return SUCCESS;
+}
 
 static result_t HandleStringOrData(directive_t directive,
                                    char *param,
                                    symbol_table_t *symbol_table,
                                    char *symbol_name,
                                    vector_t *data_table,
-                                   syntax_check_config_t *cfg);
+                                   syntax_check_config_t *cfg) {
 
-result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
-  bool_t no_errors = TRUE;
+  typedef bool_t (*syntax_check_func_t)(const char *, syntax_check_config_t *);
+  typedef result_t (*machine_code_generation_func_t)(vector_t *, char *);
 
-  /* Symbol table which will be populated with symbols in first pass */
-  symbol_table_t *symbol_table;
+  size_t to_skip = 0;
+  syntax_check_func_t syntax_check_func = NULL;
+  machine_code_generation_func_t generate_machine_code = NULL;
 
-  /* Two vectors for holding machine code for code & data segments, respectively. */
-  vector_t *code_table = NULL;
-  vector_t *data_table = NULL;
+  if (STRING_DIRECTIVE == directive) {
+    to_skip = strlen(".string") + 1;
+    syntax_check_func = IsIllegalString;
+    generate_machine_code = StringDirectiveToMachinecode;
+  }
+  else if (DATA_DIRECTIVE == directive) { 
+    to_skip = strlen(".data") + 1;
+    syntax_check_func = IsIllegalDataParameter;
+    generate_machine_code = DataDirectiveToMachinecode;
+  }
 
-  /* List which will holds all places where an external symbol is used */
-  list_t *ext_symbol_occurrences = CreateList();
+  /* Skip to directive's parameter */
+  param += to_skip;
+  
+  /* Check syntax errors in parameters */
+  if (syntax_check_func(param, cfg)) {
+    return FAILURE; 
+  }
 
-  /*
-   * Acquiring resources 
-   */
+  /* Create symbol, if one was defined */
+  if (NULL != symbol_name) {
+    if (SUCCESS != AddSymbol(symbol_table,
+                             symbol_name,
+                             GetSizeVector(data_table),
+                             DATA)) {
 
-  if (NULL == ext_symbol_occurrences) {
-    fprintf(stderr,"Memory allocation error: couldn't allocate ext. symbol usage list\n");
+      return MEM_ALLOCATION_ERROR;
+    }
+  }
+
+  /* Generate machine code in the data segment */
+  if (SUCCESS != generate_machine_code(data_table, param)) {
     return MEM_ALLOCATION_ERROR;
   }
 
-  symbol_table = CreateSymbolTable();
-  if (NULL == symbol_table) {
-    fprintf(stderr,"Memory allocation error: couldn't allocate a symbol table\n");
-    DestroyList(ext_symbol_occurrences);
-    return MEM_ALLOCATION_ERROR;
-  }  
-
-  code_table = CreateVector(10, sizeof(vector_t *));
-  if (NULL == code_table) {
-    fprintf(stderr,"Memory allocation error: couldn't allocate a code table\n");
-    DestroyList(ext_symbol_occurrences);
-    DestroySymbolTable(symbol_table);
-    return MEM_ALLOCATION_ERROR;
-  }  
-
-  data_table = CreateVector(10, sizeof(vector_t *));
-  if (NULL == data_table) {
-    fprintf(stderr,"Memory allocation error: couldn't allocate a data table\n");
-    DestroyList(ext_symbol_occurrences);
-    DestroySymbolTable(symbol_table);
-    DestroyVector(code_table);
-    return MEM_ALLOCATION_ERROR;
-  }  
-
-  /*
-   * Assembler performing first & second pass
-   */
-  if (SUCCESS != FirstPass(file_path,
-                           macro_table,
-                           symbol_table,
-                           code_table, 
-                           data_table)) {
-    no_errors = FALSE;
-  }
-
-  if (no_errors && 
-    SUCCESS != SecondPass(file_path,
-                          symbol_table,
-                          code_table,
-                          data_table,
-                          ext_symbol_occurrences)) {
-    no_errors = FALSE;
-
-  }
-
-  /*
-   * Generating output files 
-   */
-  if (no_errors &&
-      SUCCESS != GenerateOutputFiles(code_table,
-                                     data_table,
-                                     symbol_table,
-                                     file_path,
-                                     ext_symbol_occurrences)) {
-    no_errors = FALSE;
-  }
-
-    DestroyList(ext_symbol_occurrences);
-    DestroySymbolTable(symbol_table);
-    DestroyVector(code_table);
-    DestroyVector(data_table);
-    return no_errors ? SUCCESS : FAILURE;
-
+  return SUCCESS;
 }
+
+static result_t HandleDirectiveStatement(char *current_word,
+                                         char *current_line,
+                                         macro_table_t *macro_table,
+                                         symbol_table_t *symbol_table,
+                                         vector_t *data_table,
+                                         char *symbol_name,
+                                         syntax_check_config_t *cfg) {
+
+  /*
+   * First, check if that directive even exists
+   */
+  directive_t directive = DirectiveDoesntExist(current_word, cfg);
+  if (INVALID_DIRECTIVE == directive) {
+    return FAILURE;
+  }
+  
+  /*
+   * Is it a .string or .data directive?
+   * e.g. "SYMBOL: .string ...", ".data ..."
+   */
+  else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
+      return HandleStringOrData(
+        directive,
+        current_line,
+        symbol_table,
+        symbol_name,
+        data_table,
+        cfg
+    );
+  }  
+
+  /*
+   * Is it a .extern or .entry directive?
+   * e.g. "SYMBOL: .extern...", ".entry..."
+   */
+  else {
+    /* If symbol was defined, it warrants a warning. */
+    if (NULL != symbol_name) {
+      printf(BOLD_YELLOW "WARNING: " COLOR_RESET "(file %s, line %u):\n label before .extern or .entry is invalid\n\n",
+             cfg->file_name,
+             cfg->line_number);
+
+      free(symbol_name);
+    }
+
+    if (EXTERN_DIRECTIVE == directive) {
+      char *param = NULL;
+
+      current_line += strlen(".extern") + 1;
+
+      /* Adding each symbol passed as a parameter to .extern to the symbol
+       * table as an external table.
+       */
+      param = strtok(NULL, DELIMITERS);
+      while (NULL != param) {
+        /* Check syntax errors for each symbol name */
+        if (TRUE == SymbolNameErrorOccurred(symbol_name,
+                                            macro_table,
+                                            symbol_table,
+                                            cfg)) {
+          return FAILURE;
+        }
+
+        if (SUCCESS != AddExternalSymbol(symbol_table, param)) {
+          return MEM_ALLOCATION_ERROR;
+        }
+
+        param = strtok (NULL,DELIMITERS);
+      }
+    }
+
+    else if (ENTRY_DIRECTIVE == directive) {
+      /* Do nothing. Entries will be handled in 2nd pass */
+    }
+  }
+  
+  return SUCCESS;
+}
+
 
 /*
  * @brief Performs a first pass on the code:
@@ -177,10 +351,6 @@ static result_t FirstPass(char *file_path,
   char *current_line = NULL;
   char *symbol_name = NULL;
   FILE *input_file = NULL;
-  operand_t *first_operand = NULL;
-  operand_t *second_operand = NULL;
-  int num_of_operands;
-  int num_of_parameters;
   syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
 
   /* Acquire resources */
@@ -225,6 +395,7 @@ static result_t FirstPass(char *file_path,
                                   symbol_table,
                                   &cfg)) {
         total_errors++;
+        free(symbol_name); symbol_name = NULL;
         continue;
       }
 
@@ -232,6 +403,7 @@ static result_t FirstPass(char *file_path,
       current_line += strlen(current_word) + 2; 
       if (NoDefinitionForSymbol(current_line, &cfg)){
         total_errors++;
+        free(symbol_name); symbol_name = NULL;
         continue;
       }
 
@@ -244,54 +416,47 @@ static result_t FirstPass(char *file_path,
       current_word = strtok(current_line,DELIMITERS);
     }
 
-    if ('.' == current_word[0]) {
-      // Handle directives
-      if (MEM_ALLOCATION_ERROR == HandleDirectiveStatement(current_word)) {
-
+    /* 
+     * Handle directives
+     * e.g. "SYMBOL: .string ..."
+     *      ".extern ..."
+     */
+    if ('.' == *current_word) {
+      result_t res = HandleDirectiveStatement(current_word,
+                                              current_line,
+                                              macro_table,
+                                              symbol_table,
+                                              data_table,
+                                              symbol_name,
+                                              &cfg);
+      if (MEM_ALLOCATION_ERROR == res) {
+        perror("Error: memory allocation error\n");
+        // TODO: Handle memory allocation error.
+      }
+      else if (FAILURE == res) {
+        ++total_errors;
       }
     }
 
-
-    /*instruction exist*/
-    else if (FALSE == InstructionDoesntExist(current_word,&cfg)){
-          if (symbol_name[0] != '\0'){
-           if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
-            fclose (input_file);
-            free (current_line);
-            free (current_word);
-            free (symbol_name);
-             return FAILURE;
-           }
-          }
-          current_line += strlen (current_word)+1;
-          num_of_operands = SplitOperands (current_line, first_operand,second_operand);
-
-          if (ImmediateOperandTooBig(first_operand,&cfg)){
-            total_errors++;
-            continue;
-          }
-          if (ImmediateOperandTooBig(second_operand,&cfg)){
-            total_errors++;
-            continue;
-          }
-          if (WrongNumberOfOperands(current_word,num_of_operands,&cfg)){
-            total_errors++;
-            continue;
-          }
-          if (IncorrectAddressingMethod(current_word,first_operand,&cfg)){
-            total_errors++;
-            continue;
-          }
-          if (IncorrectAddressingMethod(current_word,second_operand,&cfg)){
-            total_errors++;
-            continue;
-          }
-            VectorAppend (opcode, InstructionLineToMachineCode (first_operand, second_operand, num_of_operands, current_word, IC));
-    }
-    /*instruction doesnt exist*/
+    /*
+     * Handle instruction statements.
+     * e.g. "SYMBOL: mov ... "
+     *      "mov ..." 
+     */
     else {
-      total_errors++;
-      continue;
+        result_t res = HandleInstructionStatement(current_word,
+                                               current_line,
+                                               symbol_table,
+                                               symbol_name,
+                                               code_table,
+                                               &cfg);
+      if (MEM_ALLOCATION_ERROR == res) {
+        perror("Error: memory allocation error\n");
+        // TODO: Handle memory allocation error.
+      }
+      else if (FAILURE == res) {
+        ++total_errors;
+      }
     }
   }
 
@@ -299,32 +464,34 @@ static result_t FirstPass(char *file_path,
   free(current_word);
   fclose(input_file);
 
-  if (0 == total_errors){
-    if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
-      return FAILURE;
+  if (total_errors) {
+    return FAILURE;
   }
-    return SUCCESS;
-  }
-  return FAILURE;
+
+  UpdateDataSymbolsAddresses(symbol_table, GetSizeVector(code_table));
+  return SUCCESS;
 }
 
-static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector_t *opcode, list_t *ext_symbol_occurrences){
-  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
-                                                 0,
-                                                 TRUE);
+static result_t SecondPass(char *file_path,
+                           symbol_table_t *symbol_table,
+                           vector_t *opcode,
+                           list_t *ext_symbol_occurrences) {
+
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
   int line_counter = 0;
   symbol_t *symbol = NULL;
   int total_errors = 0;
   int vector_counter = 0;
   int bitmap_counter = 0;/*counts the overall number of bitmaps*/
-  bitmap_t *opcode_bitmap; 
+  bitmap_t *opcode_bitmap = NULL;
   char *current_word = NULL; 
   char *current_line = NULL;
-  char *symbol_name=NULL;
+  char *symbol_name = NULL;
   FILE *input_file = NULL;
   external_symbol_data_t *external_symbol_data;
   
-  /*allocate resources*/
+  /* Acquire resources */
+
   input_file = fopen(file_path, "r");
     if (NULL == input_file) {
     fprintf(stderr,"Couldn't open input file");
@@ -333,7 +500,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
 
   current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_line) {
-    fclose (input_file);
+    fclose(input_file);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;
@@ -347,7 +514,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
     return MEM_ALLOCATION_ERROR;
   }
 
-  char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
+  symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == symbol_name) {
     fclose (input_file);
     free (current_line);
@@ -358,8 +525,9 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   }
   /*for each line in the input*/
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-    line_counter++;
-    symbol_name = '/0';
+    symbol_name = NULL; 
+
+
     vector_t *opcode_line;
     if (IsSymbolDefinition(current_line)) {
         current_word = strtok (current_line, DELIMITERS);
@@ -457,238 +625,91 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   return FAILURE;
 }
 
-/* @brief - if the first word in a string ends with ':'
-*  @param - line: the line
-   @return - true if ends with colon, otherwise, false.
-*/
-static bool_t IsSymbolDefinition(char *line) {
-    while (!IsBlank(*(line + 1))) {
-       line++;
-    }
-    if (*line == ':'){
-	      return TRUE;
-    }
-    return FALSE;
-}
 
-/*
- * @brief Checks all possible syntax errors of symbols.
- *
- * @param symbol_name - The name of the symbol, e.g. "SYMBOL".
- *        macro_table - Macro table of the file.
- *        symbol_table - Symbol table of the file.
- *        cfg - Syntax error configurations, see in syntax_errors.h.
-*/
+result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
+  bool_t no_errors = TRUE;
 
-static bool_t SymbolNameErrorOccurred(const char *symbol_name,
-                                  macro_table_t *macro_table,
-                                  symbol_table_t *symbol_table,
-                                  syntax_check_config_t *cfg) {
-  int internal_counter = 0;
-  if (SymbolNameIsIllegal(symbol_name,cfg)) {
-    internal_counter++;
-  }
-  if (SymbolUsedAsAMacro(symbol_name, macro_table, cfg)) {
-    internal_counter++;
-  }
-  if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, cfg)) {
-    internal_counter++;
-  }
+  /* Symbol table which will be populated with symbols in first pass */
+  symbol_table_t *symbol_table = NULL;
 
-  return internal_counter ? TRUE : FALSE;
-}
+  /* Two vectors for holding machine code for code & data segments, respectively. */
+  vector_t *code_table = NULL;
+  vector_t *data_table = NULL;
 
-/* @brief - generating the opcode of an operand, according to its adressing method.
-*           if its addressing is Direct (which means it is a symbol) 
-*           nothing it will return 0, and it will be computed in the second pass
-*  @param - operand: the operand
-*  @return - the opcode of the operand
-*/
-
-
-static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC){
-  list_t *symbol_list =  AsList(symbol_table);
-  symbol_t *symbol = (symbol_t *) GetHead (symbol_list);
-  int address;
-  if (NULL != symbol){
-    address = GetSymbolAddress (symbol);
-  }
-  while (NULL != symbol){
-    if (DATA == GetSymbolAddress(symbol)){
-      UpdateSymbolAddress (symbol,address+IC+INITIAL_IC_VALUE);/* maybe its possible like that? symbol->address += IC+INITIAL_IC_VALUE;*/
-    }
-    symbol = (symbol_t *) GetNext (symbol);
-  }
-  return SUCCESS;
-}
-
-static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand) {
-    int counter = 0;
-    char *current_word = strtok (line,DELIMITERS);
-    if (current_word != NULL){
-      first_operand->name = StrDup (current_word);
-      first_operand->addressing_method =DetectAddressingMethod(first_operand->name);
-      first_operand->type = DESTINATION_OPERAND;
-      counter++;
-    }
-    current_word = strtok (NULL, DELIMITERS);
-    if (current_word != NULL){
-      second_operand->name =StrDup (current_word);
-      second_operand->addressing_method =DetectAddressingMethod(second_operand->name);
-      second_operand->type = DESTINATION_OPERAND;
-      first_operand->type = SOURCE_OPERAND;
-      counter++;
-      while ('\0' != *current_word) {
-      if (*line == ','){
-        counter++;
-      }
-      current_word++;
-    }
-    }
-    return counter;
-  }  
-static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
-  return (0 == strcmp (external_symbol_data->symbol_name, key));
-}
-
-static result_t HandleDirectiveStatement(char *current_word,
-                                         char *current_line,
-                                         symbol_table_t *symbol_table,
-                                         vector_t *data_table,
-                                         char *symbol_name,
-                                         syntax_check_config_t *cfg) {
+  /* List which will holds all places where an external symbol is used */
+  list_t *ext_symbol_occurrences = CreateList();
 
   /*
-   * First, check if that directive even exists
+   * Acquiring resources 
    */
-  directive_t directive = DirectiveDoesntExist(current_word, cfg);
-  if (INVALID_DIRECTIVE == directive) {
-    return FAILURE;
-  }
-  
-  /*
-   * Is it a .string or .data directive?
-   * e.g. "SYMBOL: .string ..."
-   *      ".string ..."
-   *      "SYMBOL: .data ..."
-   *      ".data ..."
-   */
-  else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
-      return HandleStringOrData(
-        directive,
-        current_line,
-        symbol_table,
-        symbol_name,
-        data_table,
-        cfg
-    );
-  }  
 
-  /*
-   * Is it a .extern or .entry directive?
-   * e.g. "SYMBOL: .extern..."
-   *      ".entry..."
-   */
-  else {
-    /* If symbol was defined, it warrants a warning. */
-    if (NULL != symbol_name) {
-      printf(BOLD_YELLOW "WARNING: " COLOR_RESET "(file %s, line %u):\n label before .extern or .entry is invalid\n\n",
-             cfg->file_name,
-             cfg->line_number);
-
-      free(symbol_name);
-    }
-
-    if (EXTERN_DIRECTIVE == directive) {
-      char *param = NULL;
-
-      current_line += strlen(".extern") + 1;
-
-      /* Check syntax errors */
-      if (IsIllegalExternOrEntryParameter(current_line, cfg)) {
-        return FAILURE;
-      }
-
-      /* Adding each symbol passed as a parameter to .extern to the symbol
-       * table as an external table.
-       */
-      param = strtok(NULL, DELIMITERS);
-      while (NULL != param){
-        if (0 < SymbolNameErrorOccurred(symbol_name,&cfg,macro_table,symbol_table)){
-          return FAILURE;
-        }
-              if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
-          fclose (input_file);
-          free (current_line);
-          free (current_word);
-          free (symbol_name);
-          return FAILURE;
-        }
-        symbol_name = strtok (NULL,DELIMITERS);
-      }
-    }
-
-    else if (ENTRY_DIRECTIVE == directive) {
-      /* Do nothing. Entries will be handled in 2nd pass */
-    }
-  }
-
-    else if (0 == strcmp(current_word,".extern")) {
-      
-    }
-    else if (0 == strcmp(current_word,".entry")) {
-      /* Do nothing: will handle in 2nd pass */
-    }
-}
-
-static result_t HandleStringOrData(directive_t directive,
-                                   char *param,
-                                   symbol_table_t *symbol_table,
-                                   char *symbol_name,
-                                   vector_t *data_table,
-                                   syntax_check_config_t *cfg) {
-
-  typedef bool_t (*syntax_check_func_t)(const char *, syntax_check_config_t *);
-  typedef result_t (*machine_code_generation_func_t)(vector_t *, char *);
-
-  size_t to_skip = 0;
-  syntax_check_func_t syntax_check_func = NULL;
-  machine_code_generation_func_t generate_machine_code = NULL;
-
-  if (STRING_DIRECTIVE == directive) {
-    to_skip = strlen(".string") + 1;
-    syntax_check_func = IsIllegalString;
-    generate_machine_code = StringDirectiveToMachinecode;
-  }
-  else if (DATA_DIRECTIVE == directive) { 
-    to_skip = strlen(".data") + 1;
-    syntax_check_func = IsIllegalDataParameter;
-    generate_machine_code = DataDirectiveToMachinecode;
-  }
-
-  /* Skip to directive's parameter */
-  param += to_skip;
-  
-  /* Check syntax errors in parameters */
-  if (syntax_check_func(param, cfg)) {
-    return FAILURE; 
-  }
-
-  /* Create symbol, if one was defined */
-  if (NULL != symbol_name) {
-    if (SUCCESS != AddSymbol(symbol_table,
-                             symbol_name,
-                             GetSizeVector(data_table),
-                             DATA)) {
-
-      return MEM_ALLOCATION_ERROR;
-    }
-  }
-
-  /* Generate machine code in the data segment */
-  if (SUCCESS != generate_machine_code(data_table, param)) {
+  if (NULL == ext_symbol_occurrences) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate ext. symbol usage list\n");
     return MEM_ALLOCATION_ERROR;
   }
 
-  return SUCCESS;
+  symbol_table = CreateSymbolTable();
+  if (NULL == symbol_table) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate a symbol table\n");
+    DestroyList(ext_symbol_occurrences);
+    return MEM_ALLOCATION_ERROR;
+  }  
+
+  code_table = CreateVector(10, sizeof(vector_t *));
+  if (NULL == code_table) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate a code table\n");
+    DestroyList(ext_symbol_occurrences);
+    DestroySymbolTable(symbol_table);
+    return MEM_ALLOCATION_ERROR;
+  }  
+
+  data_table = CreateVector(10, sizeof(vector_t *));
+  if (NULL == data_table) {
+    fprintf(stderr,"Memory allocation error: couldn't allocate a data table\n");
+    DestroyList(ext_symbol_occurrences);
+    DestroySymbolTable(symbol_table);
+    DestroyVector(code_table);
+    return MEM_ALLOCATION_ERROR;
+  }  
+
+  /*
+   * Assembler performing first & second pass
+   */
+  if (SUCCESS != FirstPass(file_path,
+                           macro_table,
+                           symbol_table,
+                           code_table, 
+                           data_table)) {
+    no_errors = FALSE;
+  }
+
+  if (no_errors && 
+    SUCCESS != SecondPass(file_path,
+                          symbol_table,
+                          code_table,
+                          data_table,
+                          ext_symbol_occurrences)) {
+    no_errors = FALSE;
+
+  }
+
+  /*
+   * Generating output files 
+   */
+  if (no_errors &&
+      SUCCESS != GenerateOutputFiles(code_table,
+                                     data_table,
+                                     symbol_table,
+                                     file_path,
+                                     ext_symbol_occurrences)) {
+    no_errors = FALSE;
+  }
+
+    DestroyList(ext_symbol_occurrences);
+    DestroySymbolTable(symbol_table);
+    DestroyVector(code_table);
+    DestroyVector(data_table);
+    return no_errors ? SUCCESS : FAILURE;
+
 }
+

@@ -155,6 +155,23 @@ bool_t WrongNumberOfOperands(const char *instruction,
   return TRUE;
 }
 
+bool_t IsOperandInvalid(const operand_t *operand,
+                        syntax_check_config_t *config) {
+  if (INVALID != operand->addressing_method) {
+    return FALSE;
+  }
+
+  if (config->verbose) {
+    printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n invalid operand '%s'.",
+           config->file_name,
+           config->line_number,
+           operand->name
+      );
+  }
+
+  return TRUE;
+}
+
 bool_t IncorrectAddressingMethod(const char *instruction,
                                  const operand_t *operand,
                                  syntax_check_config_t *config) {

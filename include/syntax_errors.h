@@ -103,6 +103,18 @@ bool_t WrongNumberOfOperands(const char *instruction,
                           int num_of_operands,
                           syntax_check_config_t *config);
 
+
+/*
+ * @brief Checks if an operand is invalid.
+ *
+ * @param operand - The operand to check.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *  
+ * @return TRUE if the operand is invalid, FALSE otherwise.
+ */
+
+bool_t IsOperandInvalid(const operand_t *operand,
+                        syntax_check_config_t *config);
 /*
  * @brief Tell if an operand addressing method is viable for a given instruction.
  *
@@ -326,7 +338,6 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 /*
  * @brief Checks if a parameter line passed to .extern or .entry directive
  *        is legal, i.e  each parameter recieved is a legal symbol name.
- *        
  *
  *        Function assumes no leading or trailing whitespaces.
  *
