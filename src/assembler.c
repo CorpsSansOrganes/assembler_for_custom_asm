@@ -153,7 +153,7 @@ static result_t HandleInstructionStatement(char *instruction,
       invalid_operands = TRUE;
     }
 
-    else if (IMMEDIATE == operands[i].type &&
+    else if (IMMEDIATE == operands[i].addressing_method &&
         ImmediateOperandTooBig(&operands[i], cfg)) {
       invalid_operands = TRUE;
     }
@@ -321,13 +321,6 @@ static result_t HandleDirectiveStatement(char *current_word,
   }
   
   return SUCCESS;
-}
-
-static int ExternalSymbolCompare (void *value, void *key) {
-  char *symbol_name = (char *)key;
-  external_symbol_data_t *external_symbol_data = (external_symbol_data_t *)value;
-
-  return (0 == strcmp(external_symbol_data->symbol_name, key));
 }
 
 /*
@@ -534,9 +527,6 @@ static result_t SecondPass(char *file_path,
    * ~ * ~ ------------------------------ ~ * ~
    */
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-    char *symbol_name = NULL; 
-    vector_t *opcode_line;
-
     ++cfg.line_number;
 
     /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
