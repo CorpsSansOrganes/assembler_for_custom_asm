@@ -477,7 +477,7 @@ static result_t FirstPass(char *file_path,
 static result_t SecondPass(char *file_path,
                            symbol_table_t *symbol_table,
                            vector_t *code_table,
-                           list_t *ext_symbol_occurrences) {
+                           ext_symbol_occurences_t *ext_list) {
 
   syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
   unsigned int IC = 0;
@@ -516,6 +516,8 @@ static result_t SecondPass(char *file_path,
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     char *symbol_name = NULL; 
     vector_t *opcode_line;
+
+    ++cfg.line_number;
 
     /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
     if (IsSymbolDefinition(current_line)) {
@@ -583,28 +585,20 @@ static result_t SecondPass(char *file_path,
 
           /* If its extern add the occurence to the list for the .ext file */
           if (EXTERN == GetSymbolType (symbol)) {
-            node_t *node = Find(ext_symbol_occurrences,
-                                ExternalSymbolCompare,
-                                (void *)GetSymbolName(symbol));
+            AddExternalSymbolOccurence(ext_list, GetSymbolName(symbol), cfg.line_number);
+          }
 
-            /* if thats the first occurence */
-            if (NULL == node) {
-                external_symbol_data->symbol_name = GetSymbolName(symbol);
-                external_symbol_data->occurences = CreateVector (0,sizeof(int));
-                AddNode (ext_symbol_occurrences,external_symbol_data);
-               }
-               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+1);/*bit_map counts the memory words that been used, so thats give the address*/
-
-            }
+          /* If its a non-extern symbol we update the missing addresses in the code segment */
           else {
             bitmap_t *opcode_block_2 = (bitmap_t *)GetElementVector(code_table, IC);
             *opcode_block_2 = GetSymbolAddress(symbol);
           }
-          } 
+        } 
+
         else if (DIRECT_REGISTER == method || INDIRECT_REGISTER == method) {
           ++register_operands_num;
         }
-        }
+      }
         current_word = strtok (NULL,DELIMITERS);
           if (NULL != current_word){
             symbol = FindSymbol (symbol_table,current_word);
