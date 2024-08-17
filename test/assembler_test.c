@@ -9,8 +9,6 @@
 
 result_t static CompareFiles(const char *file1_path, const char *file2_path);
 
-static result_t RunComparison(const char *file_name);
-
 static const char *ProduceFilePath(const char *dir_path,
                                    const char *file_name,
                                    const char *extension,
@@ -40,8 +38,8 @@ test_info_t ValidAssemblingingTest(const char *file_name) {
 
   ProduceFilePath(input_dir, file_name, ".am", input_path);
   ProduceFilePath(output_dir, file_name, ".ob", ob_output_path);
-  ProduceFilePath(output_dir, file_name, ".ent", ob_output_path);
-  ProduceFilePath(output_dir, file_name, ".ext", ob_output_path);
+  ProduceFilePath(output_dir, file_name, ".ent", ent_output_path);
+  ProduceFilePath(output_dir, file_name, ".ext", ext_output_path);
 
   if (SUCCESS != AssembleFile (input_path,default_macro_table)){
         printf("%s failed to assemble \n", file_name);
@@ -65,16 +63,20 @@ test_info_t ValidAssemblingingTest(const char *file_name) {
 
 test_info_t InvalidAssemblingTest(const char *file_name) {
   test_info_t test_info = InitTestInfo("InvalidAssembling");
+  char preprocessing_path[256];
   char assembler_input_path[256];
   char output_path[256];
-  char preprocessing_path[256];
   macro_table_t *macro_table = NULL;
 
   ProduceFilePath(input_dir, file_name, ".as", preprocessing_path);
   ProduceFilePath(input_dir, file_name, ".am", assembler_input_path);/*TO check input dir*/
   ProduceFilePath(output_dir, file_name, ".ob", output_path);
-  macro_table = PreprocessFile (preprocessing_path, assembler_input_path);
+  macro_table = PreprocessFile(preprocessing_path, assembler_input_path);
 
+  if (NULL == macro_table) {
+    printf("Preprocessing failed for '%s'\n", preprocessing_path);
+    RETURN_ERROR(TECHNICAL_ERROR);
+  }
 
   if (FALSE == FileDoesntExist(output_path)) {
     printf("%s failed - output file was created, although preprocessing failed.\n", file_name);
@@ -103,13 +105,13 @@ int main(void) {
     */
   };
 
-  char *invalid_names[] = {
     /*
+  char *invalid_names[] = {
     "invalid_1_instruction_errors",
     "invalid_2_symbol_errors",
     "invalid_3_instruction_errors"
-    */
   };
+    */
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
     test_info_t test_info = ValidAssemblingingTest(valid_names[i]);
@@ -119,6 +121,7 @@ int main(void) {
     }
   }
 
+  /*
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidAssemblingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
@@ -126,6 +129,7 @@ int main(void) {
       ++total_failures;
     }
   }
+  */
 
   if (0 == total_failures) {
     printf(BOLD_GREEN "Test successful: " COLOR_RESET "assembling\n");
@@ -189,7 +193,7 @@ result_t static CompareFiles(const char *output_file_path, const char *expected_
 static result_t RunComparisonOb(const char *file_name) {
   char output_file_path_ob[256];
   char expected_file_path_ob[256];
-  result_t ob_result;
+
   ProduceFilePath(output_dir, file_name, ".ob", output_file_path_ob);
   ProduceFilePath(expected_dir, file_name, ".ob", expected_file_path_ob); 
   return CompareFiles(output_file_path_ob, output_file_path_ob);
@@ -198,6 +202,7 @@ static result_t RunComparisonOb(const char *file_name) {
 static result_t RunComparisonExt (const char *file_name) {
   char output_file_path[256];
   char expected_file_path[256];
+
   ProduceFilePath(output_dir, file_name, ".ext", output_file_path);
   ProduceFilePath(expected_dir, file_name, ".ext", expected_file_path);
   return CompareFiles(output_file_path, expected_file_path);
@@ -206,6 +211,7 @@ static result_t RunComparisonExt (const char *file_name) {
 static result_t RunComparisonEnt(const char *file_name) {
   char output_file_path[256];
   char expected_file_path[256];
+
   ProduceFilePath(output_dir, file_name, ".ent", output_file_path);
   ProduceFilePath(expected_dir, file_name, ".ent", expected_file_path);
   return CompareFiles(output_file_path, expected_file_path);

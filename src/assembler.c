@@ -596,8 +596,8 @@ static result_t SecondPass(char *file_path,
 
           /* If its a non-extern symbol we update the missing addresses in the code segment */
           else {
-            bitmap_t *opcode_block_2 = (bitmap_t *)GetElementVector(code_table, IC);
-            *opcode_block_2 = GetSymbolAddress(symbol);
+            bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
+            *opcode_block = GetSymbolAddress(symbol);
           }
         } 
 

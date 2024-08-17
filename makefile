@@ -24,6 +24,7 @@ MACRO_TABLE_OBJ := $(LIST_OBJ) macro_table.o
 BITMAP_OBJ := bitmap.o
 SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) $(MACRO_TABLE_OBJ) $(BITMAP_OBJ) syntax_errors.o string_utils.o language_definitions.o
 PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o linting.o
+ASSEMBLER_OBJ := $(SYNTAX_ERROR_OBJ) assembler.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
@@ -33,7 +34,7 @@ TEST_SYNTAX_ERRORS := $(SYNTAX_ERROR_OBJ) $(MACRO_TABLE) syntax_errors_test.o te
 TEST_BITMAP_OBJ := $(BITMAP_OBJ)  bitmap_test.o test_utils.o
 TEST_PREPROCESSING_OBJ := $(PREPROCESSING_OBJ) preprocessing_test.o test_utils.o
 TEST_STRING_UTILS_OBJ := string_utils.o test_utils.o string_utils_test.o
-TEST_ASSEMBLER_OBJ := $(ASSEMBLER_obj) assembler_test.o test_utils.o
+TEST_ASSEMBLER_OBJ := $(PREPROCESSING_OBJ) $(ASSEMBLER_OBJ) assembler_test.o test_utils.o
 
 # ----------
 # Executables
