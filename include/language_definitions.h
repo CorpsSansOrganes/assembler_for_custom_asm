@@ -10,6 +10,22 @@
 
 #define SYMBOL_CHARACTER_LIMIT 31
 
+/*
+ * The value of an immediate operand are stored in bits 3 - 15 of the word.
+ * Since 2's complement is employed, the maximum value which can be represented
+ * is:
+ *   2^11-1 = 0111 1111 1111 = 2047.
+ *
+ * and the minimal value is:
+ *   -2^11 = 1000 0000 0000 = -2048.
+ */
+
+#define MAX_IMMEDIATE_OPERAND_NUM (2047) 
+#define MIN_IMMEDIATE_OPERAND_NUM (-2048) 
+
+#define MAX_DATA_PARAMETER 16384 /*2^14: 15 -1 for negative number*/
+
+
 /* Line length in the source code cannot be more than 80 characters + \n */
 #define MAX_LINE_LENGTH 81
 

@@ -9,6 +9,8 @@
 #include "language_definitions.h"
 #include "string_utils.h"
 
+#define BASE_10 (10)
+
 static bool_t TakesOperand(instruction_t instruction, operand_type_t type);
 static bool_t AddressingMethodIsLegal(instruction_t instruction,
                                       operand_type_t type,
@@ -330,19 +332,12 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
   return TRUE;
 }
 
-bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config){
-  bool_t return_value;
-  long value;
-  const char *name; 
+bool_t ImmediateOperandTooBig (operand_t *operand,
+                               syntax_check_config_t *config) {
+  long value = 0;
 
-  if (NULL == operand){/*no operand*/
-    return FALSE;
-  }
-  if (operand ->addressing_method != IMMEDIATE){/*not immediate*/
-    return FALSE;
-  }
-  value = strtoll(operand->name+1, name, 10);/*skip the #*/
-  if (errno == ERANGE || value > MAX_IMMEDIATE_OPERAND_NUM || value < (-1)*(MAX_IMMEDIATE_OPERAND_NUM)) {
+  value = strtol(operand->name + 1, NULL, BASE_10); /* skip the # */
+  if (value > MAX_IMMEDIATE_OPERAND_NUM || value < (-1)*(MAX_IMMEDIATE_OPERAND_NUM)) {
         if (config->verbose) {
             printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n immediate operand exceed limit \n\n",
             config->file_name,

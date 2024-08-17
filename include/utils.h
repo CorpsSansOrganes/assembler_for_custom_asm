@@ -2,8 +2,6 @@
 #define __UTILS__
 
 #define  blank_delimiters ", \t\n\r"
-#define MAX_IMMEDIATE_OPERAND_NUM 2048 /*2^12: (15 - 3 bits for ARE) -1 for negative number*/
-#define MAX_DATA_PARAMETER 16384 /*2^14: 15 -1 for negative number*/
 
 typedef enum {
   FALSE,
