@@ -1,3 +1,4 @@
+; should print 6 errors
 ; symbol already defined
 SYMBOL1: .data 3, 4
 SYMBOL1: .string "asf"

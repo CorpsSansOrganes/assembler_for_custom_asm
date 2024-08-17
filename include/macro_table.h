@@ -46,7 +46,7 @@ macro_table_t *CreateMacroTable(void);
  *         Else, if the macro has been written to the table successfully, 
  *         SUCCESS is returned.
  *
- * NOTE: the function performs a shallow copy of macro_name & macro_definition.
+ * NOTE: the function performs a deep copy of macro_name & macro_definition.
  */
 
 result_t AddMacroIfUnique(macro_table_t *table,

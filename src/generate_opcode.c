@@ -2,7 +2,8 @@
 #include "macro_table.h"
 #include "generate_opcode.h"
 #include "vector.h"
-#include <string.h> 
+#include <string.h>
+#define delimiters ", /n/t/r" 
 
 static instruction_t FindInstruction (char *instruction_name, int *instruction_number);
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
@@ -11,75 +12,78 @@ static bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE);
 static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
 
 
-vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters){
-    int i;
-    bitmap_t parameter = atoi (strtok (string, ", /n/t/r"));/* parameter into number*/
-    VectorAppend (full_opcode,parameter);
-    for (i=1; i<num_of_parameters;i++){
-        parameter = atoi (strtok (NULL, ", /n/t/r"));
-        VectorAppend (full_opcode,parameter);
+result_t DataDirectiveToMachinecode(vector_t *data_table, char *params){
+    char *current_word = strtok (params, delimiters);
+    bitmap_t parameter = atoi (current_word);/* parameter into number*/
+    VectorAppend (data_table,parameter);
+    while (NULL != current_word) {
+      current_word =strtok (NULL, ", /n/t/r");  
+      parameter = atoi (current_word);
+      VectorAppend (data_table,parameter);
     }
-    DC += num_of_parameters;
-    return full_opcode;
+    return data_table;
 }
 
-vector_t *StringLineToMachineCode(vector_t *full_opcode, char *string){
+result_t StringDirectiveToMachinecode(vector_t *data_table, char *string){
     bitmap_t char_opcode;
     string++; /*skip the begining quoation marks*/
     while ('\0' != *string+1)/*skip the end quoation marks*/
     {
         char_opcode = *string;
         string++;
-        VectorAppend (full_opcode, char_opcode); 
+        VectorAppend (data_table, char_opcode); 
     }
     char_opcode = 0;
-    VectorAppend (full_opcode, char_opcode); 
-    return full_opcode;
+    VectorAppend (data_table, char_opcode); 
+    return data_table;
 }
 
 
-vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC){
+result_t InstructionStatementToMachinecode(vector_t *code_table,
+                                           const char *instruction,
+                                           operand_t *source_operand,
+                                           operand_t *dest_operand){
 vector_t *line_machine_code = CreateVector (0,sizeof(bitmap_t));
 bitmap_t instruction_opcode = 0;
-bitmap_t operand_opcode = 0;
-int L; /*number of memory words needed*/
+bitmap_t src_operand_opcode = 0;
+bitmap_t dest_operand_opcode = 0;
 int instruction_number;
-instruction_t current_instruction;
-current_instruction = FindInstruction (instruction_name, &instruction_number); 
+instruction_t current_instruction = FindInstruction (instruction, &instruction_number);
+
 instruction_opcode += instruction_number;
-instruction_opcode = instruction_opcode <<11;/*put the instruction numer in place*/
+instruction_opcode = instruction_opcode <<11;/*put the instruction number in place*/
 instruction_opcode = SetBitOfARE (instruction_opcode,A);
-if (0 == num_of_operands){
-      VectorAppend (line_machine_code, instruction_opcode);
-      L=1;
+instruction_opcode = SetBitAddressingMethod (instruction_opcode, source_operand); 
+instruction_opcode = SetBitAddressingMethod (instruction_opcode, dest_operand);
+if (AppendVector (line_machine_code, instruction_opcode)){
+  return FAILURE;
 }
-if (1 == num_of_operands){
-    L=2;
-    instruction_opcode =SetBitAddressingMethod (instruction_opcode, first_operand); 
-    operand_opcode = OperandToOpcode (first_operand);
-    VectorAppend (line_machine_code, instruction_opcode);
-    VectorAppend (line_machine_code, operand_opcode);
+
+
+if (source_operand != NULL && dest_operand != NULL){
+    src_operand_opcode = OperandToOpcode (source_operand);
+    dest_operand_opcode = OperandToOpcode (dest_operand);
+  if (IsTwoRegitserOperands(source_operand, dest_operand)){
+    if (AppendVector (code_table, UnifyRegisterOpcode (src_operand_opcode,dest_operand_opcode))){
+      return FAILURE;
+    }
+  }
+  else {
+    if (AppendVector (code_table,src_operand_opcode)){
+      return FAILURE;
+    }
+    if (AppendVector (code_table,dest_operand_opcode)){
+      return FAILURE;
+    }
+  }
 }
-  if (2 == num_of_operands){
-    instruction_opcode = SetBitAddressingMethod (instruction_opcode, first_operand); 
-    instruction_opcode = SetBitAddressingMethod (instruction_opcode, second_operand);
-    VectorAppend (line_machine_code, instruction_opcode);
-    if ((first_operand->addressing_method == DIRECT_REGISTER || first_operand->addressing_method == INDIRECT_REGISTER) &&
-        (second_operand->addressing_method == DIRECT_REGISTER || second_operand->addressing_method == INDIRECT_REGISTER)){
-        operand_opcode = UnifyRegisterOpcode (OperandToOpcode (first_operand),OperandToOpcode (second_operand));
-        VectorAppend (line_machine_code, operand_opcode);
-        L=2;
-    }
-    else {
-        operand_opcode = OperandToOpcode (first_operand);
-        VectorAppend (line_machine_code, operand_opcode);
-        operand_opcode = OperandToOpcode (second_operand);
-        VectorAppend (line_machine_code, operand_opcode);
-        L=3;
-    }
-   } 
-IC += L; 
-return line_machine_code;
+else if (dest_operand != NULL){
+  dest_operand_opcode = OperandToOpcode (dest_operand);
+  if (AppendVector (line_machine_code, dest_operand_opcode)){
+      return FAILURE;
+  }
+}
+return SUCCESS;
 }  
 
 /* 
@@ -92,13 +96,15 @@ return line_machine_code;
 */
 
 static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
-   if (operand->type == SOURCE_OPERAND){
-   bitmap = SetBitOn (bitmap, 3+operand->addressing_method);
+   if (operand != NULL){
+      if (operand->type == SOURCE_OPERAND){
+      bitmap = SetBitOn (bitmap, 3+operand->addressing_method);
+      }
+      else {
+        bitmap = SetBitOn (bitmap, 7+operand->addressing_method);
+      }
+      return bitmap;
    }
-   else {
-    bitmap = SetBitOn (bitmap, 7+operand->addressing_method);
-   }
-   return bitmap;
 }
 
 /* 
@@ -179,5 +185,12 @@ static int CountParameters(char *line) {
       }
     }
     return counter;
+}
+static bool_t IsTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand){
+   if ((src_operand->addressing_method == DIRECT_REGISTER || src_operand->addressing_method == INDIRECT_REGISTER) &&
+        (dest_operand->addressing_method == DIRECT_REGISTER || dest_operand->addressing_method == INDIRECT_REGISTER)){
+          return TRUE;
+    return FALSE;
+  }
 }
 
