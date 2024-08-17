@@ -4,7 +4,7 @@
 typedef enum {
   E,
   R,
-  A,
+  A
 } encoding_type_t;
 
 /* 

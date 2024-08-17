@@ -16,6 +16,7 @@ const char *DELIMITERS = ", \t\n\r";
  * @param Line - Line of text to check.
  * @return TRUE if ends with colon, otherwise FALSE.
  */
+
 static bool_t IsSymbolDefinition(char *line) {
     while (!IsBlank(*(line + 1))) {
        line++;
@@ -82,7 +83,10 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
 
   if (NULL != current_word) {
     operand1->name = StrDup(current_word);
-    // TODO handle bad duplication
+    if (NULL == operand1->name) {
+      return -1;
+
+    }
     operand1->addressing_method = DetectAddressingMethod(operand1->name);
     operand1->type = DESTINATION_OPERAND;
     counter++;
@@ -91,7 +95,10 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
   current_word = strtok(NULL, DELIMITERS);
   if (NULL != current_word) {
     operand2->name = StrDup (current_word);
-    // TODO handle bad duplication
+    if (NULL == operand2->name) {
+      free((void *)operand1->name);
+      return -1;
+    }
     operand2->addressing_method = DetectAddressingMethod(operand2->name);
     operand2->type = DESTINATION_OPERAND;
     operand1->type = SOURCE_OPERAND;
@@ -127,6 +134,10 @@ static result_t HandleInstructionStatement(char *instruction,
   /* Skip to operands */
   params += strlen(instruction) + 1;
   operand_num = SplitOperands(params, &operands[0], &operands[1]);
+
+  if (-1 == operand_num) {
+    return MEM_ALLOCATION_ERROR;
+  }
 
   /* Syntax errors for operands */
   if (WrongNumberOfOperands(instruction, operand_num, cfg)) {
@@ -353,7 +364,7 @@ static result_t FirstPass(char *file_path,
   char *current_line = NULL;
   char *symbol_name = NULL;
   FILE *input_file = NULL;
-  syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig(file_path, 0, TRUE);
 
   /* Acquire resources */
   input_file = fopen(file_path, "r");
@@ -369,7 +380,6 @@ static result_t FirstPass(char *file_path,
             "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;
   }
-
 
   /* ~ * ~ ------------------------------ ~ * ~
    * Performing syntax analysis for each line.
@@ -389,7 +399,11 @@ static result_t FirstPass(char *file_path,
       symbol_name = StrDup(current_word);
 
       if (NULL == symbol_name) {
-        // TODO - handle mem error.
+        perror("Error: memory allocation error\n");
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       
       if (SymbolNameErrorOccurred(symbol_name,
@@ -433,7 +447,10 @@ static result_t FirstPass(char *file_path,
                                               &cfg);
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
-        // TODO: Handle memory allocation error.
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       else if (FAILURE == res) {
         ++total_errors;
@@ -454,7 +471,10 @@ static result_t FirstPass(char *file_path,
                                                &cfg);
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
-        // TODO: Handle memory allocation error.
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       else if (FAILURE == res) {
         ++total_errors;
@@ -563,16 +583,21 @@ static result_t SecondPass(char *file_path,
      * Guaranteed to be an instruction statement.
      */
     else {
+      unsigned int register_operands_num = 0;
+      int i = 0;
       ++IC;
 
       /* Skip the instruction to its operands */
       current_word = strtok(NULL, DELIMITERS);
 
-      /* Read first operand (if it exists) */
-      if (NULL != current_word) {
+      while (NULL != current_word && i < 2) {
+        /* Read the operand */
         addressing_method_t method = DetectAddressingMethod(current_word);
-        symbol_t *symbol = FindSymbol(symbol_table, current_word);
-        unsigned register_operands_num = 0;
+        symbol_t *symbol = NULL;
+
+        if (DIRECT == method) {
+          symbol = FindSymbol(symbol_table, current_word);
+        }
         
         /* Symbol used but wasn't defined */
         if (DIRECT == method && SymbolWasntDefined(current_word, symbol_table, &cfg)) {
@@ -590,43 +615,25 @@ static result_t SecondPass(char *file_path,
 
           /* If its a non-extern symbol we update the missing addresses in the code segment */
           else {
-            bitmap_t *opcode_block_2 = (bitmap_t *)GetElementVector(code_table, IC);
-            *opcode_block_2 = GetSymbolAddress(symbol);
+            bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
+            *opcode_block = GetSymbolAddress(symbol);
           }
         } 
 
         else if (DIRECT_REGISTER == method || INDIRECT_REGISTER == method) {
           ++register_operands_num;
         }
-      }
-        current_word = strtok (NULL,DELIMITERS);
-          if (NULL != current_word){
-            symbol = FindSymbol (symbol_table,current_word);
-            if (NULL != symbol){
-              opcode_line = GetElementVector (opcode, vector_counter);
-              opcode_bitmap = GetElementVector (opcode_line,2);
-              *opcode_bitmap = GetSymbolAddress (symbol);
-            } 
-            if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
-               external_symbol_data = Find(ext_symbol_occurrences, ExternalSymbolCompare, GetSymbolName(symbol));
-               if (NULL == external_symbol_data){/*if thats the first occurence*/
-                external_symbol_data->symbol_name = GetSymbolName(symbol);
-                external_symbol_data->occurences = CreateVector (0,sizeof(int));
-                AddNode (ext_symbol_occurrences,external_symbol_data);
-               }
-               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+2);/*bit_map counts the memory words that been used, so thats give the address*/
-            }
-        }
-        bitmap_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
-        vector_counter++;
-    }
-  
 
+        /* Skip to next operand */
+        current_word = strtok (NULL,DELIMITERS);
+        ++i;
+      }
+    }
   }
+
   fclose (input_file);
   free (current_line);
   free (current_word);
-  free (symbol_name);
   if (0 == total_errors){
     return SUCCESS;
   }
@@ -645,13 +652,14 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   vector_t *data_table = NULL;
 
   /* List which will holds all places where an external symbol is used */
-  list_t *ext_symbol_occurrences = CreateList();
+  ext_symbol_occurences_t *ext_list = NULL;
 
   /*
    * Acquiring resources 
    */
 
-  if (NULL == ext_symbol_occurrences) {
+  ext_list = CreateExternalSymbolList();
+  if (NULL == ext_list) {
     fprintf(stderr,"Memory allocation error: couldn't allocate ext. symbol usage list\n");
     return MEM_ALLOCATION_ERROR;
   }
@@ -659,14 +667,14 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   symbol_table = CreateSymbolTable();
   if (NULL == symbol_table) {
     fprintf(stderr,"Memory allocation error: couldn't allocate a symbol table\n");
-    DestroyList(ext_symbol_occurrences);
+    DestroyExternSymbolList(ext_list);
     return MEM_ALLOCATION_ERROR;
   }  
 
   code_table = CreateVector(10, sizeof(vector_t *));
   if (NULL == code_table) {
     fprintf(stderr,"Memory allocation error: couldn't allocate a code table\n");
-    DestroyList(ext_symbol_occurrences);
+    DestroyExternSymbolList(ext_list);
     DestroySymbolTable(symbol_table);
     return MEM_ALLOCATION_ERROR;
   }  
@@ -674,7 +682,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   data_table = CreateVector(10, sizeof(vector_t *));
   if (NULL == data_table) {
     fprintf(stderr,"Memory allocation error: couldn't allocate a data table\n");
-    DestroyList(ext_symbol_occurrences);
+    DestroyExternSymbolList(ext_list);
     DestroySymbolTable(symbol_table);
     DestroyVector(code_table);
     return MEM_ALLOCATION_ERROR;
@@ -695,8 +703,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
     SUCCESS != SecondPass(file_path,
                           symbol_table,
                           code_table,
-                          data_table,
-                          ext_symbol_occurrences)) {
+                          ext_list)) {
     no_errors = FALSE;
 
   }
@@ -709,15 +716,13 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
                                      data_table,
                                      symbol_table,
                                      file_path,
-                                     ext_symbol_occurrences)) {
+                                     ext_list)) {
     no_errors = FALSE;
   }
 
-    DestroyList(ext_symbol_occurrences);
+    DestroyExternSymbolList(ext_list);
     DestroySymbolTable(symbol_table);
     DestroyVector(code_table);
     DestroyVector(data_table);
     return no_errors ? SUCCESS : FAILURE;
-
 }
-
