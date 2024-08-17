@@ -56,7 +56,7 @@ result_t AddExternalSymbolOccurence(ext_symbol_occurences_t *ext_symbol_occurenc
     else {
         external_symbol_data = GetValue(node);
     }
-    if (NULL == AppendVector (external_symbol_data->occurences,line)){
+    if (SUCCESS != AppendVector (external_symbol_data->occurences,line)){
         perror ("error appending vector");
         return FAILURE;
     }
