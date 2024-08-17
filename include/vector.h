@@ -61,6 +61,7 @@ void RemoveLastVector(vector_t *vector);
  * @brief Returns element index from vector (like vector[index]).
  *
  * @param vector - The vector whose element we wish to get.
+ *
  *        NOTE: If index > vector's size, behaviour is undefined!
  *
  * @return The element in vector at index.

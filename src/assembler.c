@@ -1,14 +1,11 @@
 #include <stdio.h> /* fopen, fclose */
-#include <string.h> 
-#include <stdlib.h>
+#include <string.h> /* strlen */
+#include <stdlib.h> /* malloc, free */
 #include "assembler.h"
-#include "utils.h"
 #include "syntax_errors.h"
-#include "macro_table.h"
 #include "symbol_table.h"
 #include "language_definitions.h"
 #include "generate_opcode.h"
-#include "vector.h"
 #include "list.h"
 #include "string_utils.h"
 #include "generate_output_files.h"
@@ -76,6 +73,9 @@ static void UpdateDataSymbolsAddresses(symbol_table_t *symbol_table, unsigned in
   }
 }
 
+/*
+ * @brief Read operands passed to an instruction, count them & return the first two.
+ */
 static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
   int counter = 0;
   char *current_word = strtok(line, DELIMITERS);
@@ -248,7 +248,7 @@ static result_t HandleDirectiveStatement(char *current_word,
   /*
    * First, check if that directive even exists
    */
-  directive_t directive = DirectiveDoesntExist(current_word, cfg);
+  directive_t directive = IdentifyDirective(current_word, cfg);
   if (INVALID_DIRECTIVE == directive) {
     return FAILURE;
   }
@@ -290,7 +290,7 @@ static result_t HandleDirectiveStatement(char *current_word,
       /* Adding each symbol passed as a parameter to .extern to the symbol
        * table as an external table.
        */
-      param = strtok(NULL, DELIMITERS);
+      param = strtok(current_line, DELIMITERS);
       while (NULL != param) {
         /* Check syntax errors for each symbol name */
         if (TRUE == SymbolNameErrorOccurred(symbol_name,
@@ -304,7 +304,7 @@ static result_t HandleDirectiveStatement(char *current_word,
           return MEM_ALLOCATION_ERROR;
         }
 
-        param = strtok (NULL,DELIMITERS);
+        param = strtok(NULL,DELIMITERS);
       }
     }
 
@@ -474,24 +474,17 @@ static result_t FirstPass(char *file_path,
 
 static result_t SecondPass(char *file_path,
                            symbol_table_t *symbol_table,
-                           vector_t *opcode,
+                           vector_t *code_table,
                            list_t *ext_symbol_occurrences) {
 
   syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
-  int line_counter = 0;
-  symbol_t *symbol = NULL;
+  unsigned int IC = 0;
   int total_errors = 0;
-  int vector_counter = 0;
-  int bitmap_counter = 0;/*counts the overall number of bitmaps*/
-  bitmap_t *opcode_bitmap = NULL;
   char *current_word = NULL; 
   char *current_line = NULL;
-  char *symbol_name = NULL;
   FILE *input_file = NULL;
-  external_symbol_data_t *external_symbol_data;
   
   /* Acquire resources */
-
   input_file = fopen(file_path, "r");
     if (NULL == input_file) {
     fprintf(stderr,"Couldn't open input file");
@@ -514,69 +507,72 @@ static result_t SecondPass(char *file_path,
     return MEM_ALLOCATION_ERROR;
   }
 
-  symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
-  if (NULL == symbol_name) {
-    fclose (input_file);
-    free (current_line);
-    free (current_word);
-    fprintf(stderr,
-            "Memory allocation error: couldn't allocate a buffer\n");
-    return MEM_ALLOCATION_ERROR;
-  }
-  /*for each line in the input*/
+  /* ~ * ~ ------------------------------ ~ * ~
+   * Performing syntax analysis for each line.
+   * ~ * ~ ------------------------------ ~ * ~
+   */
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-    symbol_name = NULL; 
-
-
+    char *symbol_name = NULL; 
     vector_t *opcode_line;
+
+    /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
     if (IsSymbolDefinition(current_line)) {
-        current_word = strtok (current_line, DELIMITERS);
-        current_line += strlen (current_word) +1;               
+      current_word = strtok(current_line, DELIMITERS);
+      current_line += strlen(current_word) + 1;               
     }
-    current_word = strtok (current_line, DELIMITERS);
-    current_line += strlen (current_word) +1;      
-    if (0 == strcmp (current_word, ".extern") || 0 == strcmp (current_word, ".data")){
-        /*nothing to do, continue to the next line*/
+
+    /* Read first word (after symbol definition, if one exists) */
+    current_word = strtok(current_line, DELIMITERS);
+    current_line += strlen(current_word) + 1;      
+
+    if ('.' == *current_word && ENTRY_DIRECTIVE == IdentifyDirective(current_word, &cfg)) {
+      char *param = NULL;
+
+      current_line += strlen(".entry") + 1;
+
+      /* Update each symbol passed as a parameter to .entry as an .entry symbol.
+       * Check syntax errors for each symbol.
+       */
+
+      param = strtok(current_line, DELIMITERS);
+      while (NULL != current_line) {
+        if (SymbolWasntDefined(param, symbol_table, &cfg)) {
+          total_errors++;
+        }
+
+        else if (SymbolAlreadyDefinedAsExtern(param, symbol_table, &cfg)) {
+          total_errors++;
+        }
+        else {
+          ChangeSymbolToEntry(symbol_table, param);
+        }
+        current_word = strtok (NULL,DELIMITERS);
+      }
     }
-     if (0 == strcmp (current_word, ".string")){
-        vector_counter += strlen (current_line)-2; /*the length of the string without the quotation marks pl*/
-        bitmap_counter += strlen (current_line)-2; 
-     }
-    if (0 == strcmp (current_word, ".entry")){
-       current_line += strlen (current_word) +1; 
-       if (IsIllegalExternOrEntryParameter(current_line,&syntax_check_config_print)){
+
+    /* 
+     * Guaranteed to be an instruction statement.
+     */
+    else {
+      ++IC;
+
+      /* Skip the instruction to its operands */
+      current_word = strtok(NULL, DELIMITERS);
+
+      /* Read first operand (if it exists) */
+      if (NULL != current_word) {
+        addressing_method_t method = DetectAddressingMethod(current_word);
+        symbol_t *symbol = FindSymbol(symbol_table, current_word);
+        
+        /* Symbol used but wasn't defined */
+        if (DIRECT == method && SymbolWasntDefined(current_word, symbol_table, &cfg)) {
           total_errors++;
           continue;
-       }
-       current_word = strtok (current_line,DELIMITERS);
-       while (NULL != current_line){
-          if (SymbolWasntDefined(current_word, symbol_table, &syntax_check_config_print)){
-            total_errors++;
-            continue;
-          }
-          if (SymbolAlreadyDefinedAsExtern(current_word,symbol_table,&syntax_check_config_print)){
-            total_errors++;
-            continue;
-          }
-          if (ChangeSymbolToEntry(symbol_table,current_word) != SUCCESS){
-            fclose (input_file);
-            free (current_line);
-            free (current_word);
-            free (symbol_name);
-            return FAILURE;
-         }
-          current_word = strtok (NULL,DELIMITERS);
+        }
 
-       }
-
-
-    }
-    else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){/* silent config?*/
-        current_word = strtok (NULL,DELIMITERS);
-        if (NULL != current_word){
-          symbol = FindSymbol (symbol_table,current_word);
-          if (NULL != symbol){/*first operand is a symbol*/
-            opcode_line = GetElementVector (opcode, vector_counter);
+        /* Check if first operand is a symbol, if so update accordingly */
+        if (NULL != symbol) {
+          opcode_line = GetElementVector (opcode, vector_counter);
             opcode_bitmap = GetElementVector (opcode_line,1);/*find his bitmap*/
             *opcode_bitmap = GetSymbolAddress (symbol);/*put the address*/
             if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/

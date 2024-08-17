@@ -192,23 +192,6 @@ bool_t SymbolDefinedMoreThanOnce(const char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config);
 
-
-
-/*
- * @brief Check if a symbol that has been declared as .extern was previously 
- *        declared as .entry.
- *
- * @param symbol - The name of the symbol to check.
- *         table - The symbol table.
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- * @return TRUE if the symbol was already defined as .entry, or FALSE otherwise.
- */
-
-bool_t SymbolAlreadyDefinedAsEntry(char *symbol,
-                                   symbol_table_t *table,
-                                   syntax_check_config_t* config);
-
 /*
  * @brief Check if a symbol that has been declared as .entry was previously 
  *        declared as .extern.
@@ -274,7 +257,7 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
 
 /*
  * @brief Check if the directive that has been called does not exist. 
- * the existing directive are : .data , .string , .entry , .extern
+ *        the existing directive are : .data , .string , .entry , .extern
  *
  * @param directive - Null-terminated string, which we want to check if its
  *                    a directive.
@@ -284,7 +267,7 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
  * @return INVALID_DIRECTIVE if the directive doesn't exists, or the directive type.
  */
 
-directive_t DirectiveDoesntExist(const char *directive,
+directive_t IdentifyDirective(const char *directive,
                                 syntax_check_config_t *config);
 
 /**
@@ -334,21 +317,6 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
  */
 
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
-
-/*
- * @brief Checks if a parameter line passed to .extern or .entry directive
- *        is legal, i.e  each parameter recieved is a legal symbol name.
- *
- *        Function assumes no leading or trailing whitespaces.
- *
- * @param data - The parameter line to check (e.g. "SYMBOL1, SYMBOL2").
- *        config - Pointer the configurations about the syntax check.
- *        
- * @return TRUE if the parameter is illegal, FALSE otherwise.
- */
-
-bool_t IsIllegalExternOrEntryParameter(const char *param,
-                                       syntax_check_config_t *config);
 
 /*
 // ~~--~~--~~--~~--~~

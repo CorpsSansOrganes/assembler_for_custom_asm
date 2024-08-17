@@ -67,7 +67,7 @@ bool_t IsReservedName(const char *name, syntax_check_config_t *config) {
     return TRUE;
   }
 
-  if (INVALID_DIRECTIVE == DirectiveDoesntExist(name, &silent_syntax_cfg)) {
+  if (INVALID_DIRECTIVE != IdentifyDirective(name, &silent_syntax_cfg)) {
     if (config->verbose) {
       printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to make use of a reserved directive name '%s' \n\n",
               config->file_name,
@@ -258,24 +258,6 @@ bool_t SymbolWasntDefined(const char *symbol,
   return TRUE;
 }
 
-
-bool_t SymbolAlreadyDefinedAsEntry(char *symbol_name,
-                                   symbol_table_t *table,
-                                   syntax_check_config_t *config) {
-  symbol_t *extern_symbol = FindSymbol(table,symbol_name);
-  if (ENTRY != GetSymbolType(extern_symbol)) {
-    return FALSE;
-  }
-
-  if (config->verbose) { 
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempt to define '%s' as extern, but it was already defined as entry\n\n",
-            config->file_name,
-            config->line_number,
-            symbol_name);
-  }
-  return TRUE;
-}
-
 bool_t SymbolAlreadyDefinedAsExtern(char *symbol_name,
                                     symbol_table_t *table,
                                     syntax_check_config_t *config) {
@@ -404,7 +386,7 @@ static bool_t DataParametersTooBig(const char *params,
 }
 
 
-directive_t DirectiveDoesntExist(const char *directive, syntax_check_config_t *config) {
+directive_t IdentifyDirective(const char *directive, syntax_check_config_t *config) {
   directive_t d = 0;
   while (d < NUM_OF_DIRECTIVES && strcmp(directive, reserved_directives[d])) {
     ++d;
@@ -500,31 +482,6 @@ static bool_t StringIsNotPrintable (const char *str,
     return TRUE;
   }
 
-  return FALSE;
-}
-
-
-bool_t IsIllegalExternOrEntryParameter(const char *param,
-                                       syntax_check_config_t *config) {
-  char *duplicate_line = StrDup(param);
-  char *parameter = duplicate_line;
-
-  while (parameter != NULL) {
-    parameter = strtok (duplicate_line, ", \t\n\r");
-    if (SymbolNameIsIllegal(parameter, &silent_syntax_cfg)) {
-      if (config->verbose) {
-        printf(BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n '%s' isn't a legal .extern or .entry parameter \n\n",
-          config->file_name,
-          config->line_number,
-          parameter);
-      }
-
-      free(duplicate_line);
-      return TRUE;
-    }
-  }
-
-  free(duplicate_line);
   return FALSE;
 }
 
