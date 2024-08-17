@@ -52,5 +52,3 @@ vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *seco
 */
 
 vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters);
-
-

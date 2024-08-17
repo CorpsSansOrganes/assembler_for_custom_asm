@@ -54,13 +54,9 @@ test_info_t InvalidPreprocessingTest(const char *file_name) {
 
   table = PreprocessFile(input_path, output_path);
 
-  if (FAILURE != RunComparison(file_name)) {
-    printf("%s failed\n", file_name);
-    RETURN_ERROR(TEST_FAILED);
-  }
-
   if (NULL != table) {
     printf("%s failed - table isn't null although preprocessing failed.\n", file_name);
+    DestroyMacroTable(table);
     RETURN_ERROR(TEST_FAILED);
   }
 
@@ -68,6 +64,8 @@ test_info_t InvalidPreprocessingTest(const char *file_name) {
     printf("%s failed - output file was created, although preprocessing failed.\n", file_name);
     RETURN_ERROR(TEST_FAILED);
   }
+
+  return test_info;
 }
 
 int main(void) {

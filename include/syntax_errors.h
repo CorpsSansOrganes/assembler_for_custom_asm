@@ -258,16 +258,15 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
 */
 
 /*
- * @brief gets the line of the parameters (assuming valid) 
- *        and Checks if one of the data parameters is too big to encode (2^14).
+ * @brief Checks if one of the data parameters is too big to encode (2^14).
  *
- * @param the parameter - The operand
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ * @param params - The parameters passed to a .data directive (e.g. "+34, 18,-7").
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig).
  *        
  * @return TRUE if one of the data parameters is too big. FALSE otherwise.
  */
 
-bool_t DataParameterTooBig (char *parameters, syntax_check_config_t *config);
+bool_t DataParametersTooBig (const char *params, syntax_check_config_t *config);
 
 
 /*
@@ -331,7 +330,7 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 /*
  * @brief Checks if a string that begins and ends with '"' contains not-printable chars (not ascii valid)
  *
- * @param str - The string to check.
+ * @param str - The string to check, including quotation marks. (e.g. "\"abcd\"")
  *        config - Pointer the configurations about the syntax check.
  *
  * @return TRUE if the string is not printable, FALSE otherwise.

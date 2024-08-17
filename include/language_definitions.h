@@ -20,10 +20,16 @@
  *   -2^11 = 1000 0000 0000 = -2048.
  */
 
-#define MAX_IMMEDIATE_OPERAND_NUM (2047) 
-#define MIN_IMMEDIATE_OPERAND_NUM (-2048) 
+#define MAX_IMMEDIATE_OPERAND (2047) 
+#define MIN_IMMEDIATE_OPERAND (-2048) 
 
-#define MAX_DATA_PARAMETER 16384 /*2^14: 15 -1 for negative number*/
+/*
+ * Similarly, a data operand is stored in a single word, which is defined in the
+ * architecture as 15 bits.
+ */
+
+#define MAX_DATA_PARAMETER (16383)  /* 2^14 - 1 */
+#define MIN_DATA_PARAMETER (-16384) /* -2^14    */
 
 
 /* Line length in the source code cannot be more than 80 characters + \n */
