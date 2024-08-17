@@ -364,22 +364,22 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
 
 
     }
-    else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
+    else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){/* silent config?*/
         current_word = strtok (NULL,delimiters);
         if (NULL != current_word){
           symbol = FindSymbol (symbol_table,current_word);
-          if (NULL != symbol){
+          if (NULL != symbol){/*first operand is a symbol*/
             opcode_line = GetElementVector (opcode, vector_counter);
-            opcode_bitmap = GetElementVector (opcode_line,1);
-            *opcode_bitmap = GetSymbolAddress (symbol);
-            if (EXTERN == GetSymbolType (symbol)){
+            opcode_bitmap = GetElementVector (opcode_line,1);/*find his bitmap*/
+            *opcode_bitmap = GetSymbolAddress (symbol);/*put the address*/
+            if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
                external_symbol_data = Find(external_symbol_data_list, ExternalSymbolCompare, GetSymbolName(symbol));
-               if (NULL == external_symbol_data){
+               if (NULL == external_symbol_data){/*if thats the first occurence*/
                 external_symbol_data->symbol_name = GetSymbolName(symbol);
                 external_symbol_data->occurences = CreateVector (0,sizeof(int));
                 AddNode (external_symbol_data_list,external_symbol_data);
                }
-               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE);/*bit_map counts the memory words that been used, so thats give the address*/
+               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+1);/*bit_map counts the memory words that been used, so thats give the address*/
 
             }
           } 
@@ -392,6 +392,15 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
               opcode_bitmap = GetElementVector (opcode_line,2);
               *opcode_bitmap = GetSymbolAddress (symbol);
             } 
+            if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
+               external_symbol_data = Find(external_symbol_data_list, ExternalSymbolCompare, GetSymbolName(symbol));
+               if (NULL == external_symbol_data){/*if thats the first occurence*/
+                external_symbol_data->symbol_name = GetSymbolName(symbol);
+                external_symbol_data->occurences = CreateVector (0,sizeof(int));
+                AddNode (external_symbol_data_list,external_symbol_data);
+               }
+               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+2);/*bit_map counts the memory words that been used, so thats give the address*/
+            }
         }
         bitmap_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
         vector_counter++;

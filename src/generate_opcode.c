@@ -7,10 +7,13 @@
 static instruction_t FindInstruction (char *instruction_name, int *instruction_number);
 static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_destination);
 static int OperandToOpcode(operand_t *operand);
+static bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE);
+static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
+
 
 vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters){
     int i;
-    bitmap_t parameter = atoi (strtok (string, ", /n/t/r"));
+    bitmap_t parameter = atoi (strtok (string, ", /n/t/r"));/* parameter into number*/
     VectorAppend (full_opcode,parameter);
     for (i=1; i<num_of_parameters;i++){
         parameter = atoi (strtok (NULL, ", /n/t/r"));
@@ -22,8 +25,8 @@ vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, in
 
 vector_t *StringLineToMachineCode(vector_t *full_opcode, char *string){
     bitmap_t char_opcode;
-    string++; /*skip the begining quation marks*/
-    while ('\0' != *string+1)/*skip the end quation marks*/
+    string++; /*skip the begining quoation marks*/
+    while ('\0' != *string+1)/*skip the end quoation marks*/
     {
         char_opcode = *string;
         string++;
@@ -44,7 +47,7 @@ int instruction_number;
 instruction_t current_instruction;
 current_instruction = FindInstruction (instruction_name, &instruction_number); 
 instruction_opcode += instruction_number;
-instruction_opcode = instruction_opcode <<11;
+instruction_opcode = instruction_opcode <<11;/*put the instruction numer in place*/
 instruction_opcode = SetBitOfARE (instruction_opcode,A);
 if (0 == num_of_operands){
       VectorAppend (line_machine_code, instruction_opcode);
@@ -79,7 +82,16 @@ IC += L;
 return line_machine_code;
 }  
 
-bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
+/* 
+*@brief set the bit of the correct addressing method int the opcode of the instruction word
+*
+*@param bitmap: the bitmap of the onstruction 
+*       operand: the operand of the instruction
+*
+*@return the bitmap with the correct bit turned on
+*/
+
+static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
    if (operand->type == SOURCE_OPERAND){
    bitmap = SetBitOn (bitmap, 3+operand->addressing_method);
    }
@@ -89,8 +101,18 @@ bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
    return bitmap;
 }
 
-bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE){
+/* 
+*@brief set the bit of the correct encoding type, where A=2, R=1, E=0
+*
+*@param bitmap: the bitmap of the onstruction 
+*       ARE: the encoding type.
+*
+*@return the bitmap with the correct bit turned on
+*/
+
+static bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE){
     bitmap = SetBitOn (bitmap, ARE);
+    return bitmap;
 } 
 
 
@@ -100,7 +122,7 @@ static instruction_t FindInstruction (char *instruction_name, int *instruction_n
   while (0 != strcmp(reserved_instructions[i].name, instruction_name)) {
     ++i;
   }
-  instruction_number = i;
+  *instruction_number = i;
   return reserved_instructions[i];
 
 }
@@ -116,23 +138,18 @@ static int UnifyRegisterOpcode (int register_opcode_source, int register_opcode_
   return (register_opcode_source+register_opcode_destination - 4);
 }             
       
-static int OperandToOpcode(operand_t *operand){/* TODO add number too big error */
-  char *extract_operand;
+static int OperandToOpcode(operand_t *operand){
   int opcode =0;
   if (operand->addressing_method == IMMEDIATE)
   {
-    if (*(operand->name+1) == '-' || *(operand->name+1) == '+'){
-      opcode = atoi (operand->name+2);
-    }
-    else{
-      opcode = atoi (operand->name+1);
-    }
+    
+    opcode = atoi (operand->name+1);
     opcode = opcode << 3;/*make space for ARE*/
-    opcode += 4; /*add A=1, R=0, E=0*/
+    opcode = SetBitOfARE(opcode,A); /*A=1, R=0, E=0*/
     return opcode;
   }
   if (operand->addressing_method == DIRECT){
-    /*depend by the symbol table, to handle in second pass*/
+    /*depend by the symbol table, to handle in second pass and not in here*/
   }
   if (operand->addressing_method == DIRECT_REGISTER || operand->addressing_method == INDIRECT_REGISTER)
   {
@@ -148,7 +165,7 @@ static int OperandToOpcode(operand_t *operand){/* TODO add number too big error 
     else {
       opcode = opcode << 3;
     }
-    opcode += 4; /*add A=1, R=0, E=0( add macro A)*/
+    opcode = SetBitOfARE(opcode,A); /*A=1, R=0, E=0*/
   }
 return opcode;
 }

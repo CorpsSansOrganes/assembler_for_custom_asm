@@ -22,10 +22,10 @@ result_t GenerateOutputFiles (vector_t *opcode, symbol_table_t *symbol_table, ch
     char *obj_path = StrDup(input_path);
     char *extern_path = StrDup(input_path);
     char *entry_path = StrDup(input_path);
-    /*replace .am with the correct finish*/
-    strcpy(obj_path + strlen(input_path) - 3, ".ob");
-    strcpy(entry_path + strlen(input_path) - 3, ".ent");
-    strcpy(extern_path + strlen(input_path) - 3, ".ext");
+    /*add the correct finish*/
+    strcpy(obj_path + strlen(input_path), ".ob");
+    strcpy(entry_path + strlen(input_path), ".ent");
+    strcpy(extern_path + strlen(input_path), ".ext");
     if (SUCCESS != GenerateOBJFile(opcode,obj_path,IC,DC)){
         free (obj_path);
         free (extern_path);

@@ -52,23 +52,5 @@ vector_t *InstructionLineToMachineCode(operand_t *first_operand, operand_t *seco
 */
 
 vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, int num_of_parameters);
-/* 
-*@brief set the bit of the correct addressing method int the opcode of the instruction word
-*
-*@param bitmap: the bitmap of the onstruction 
-*       operand: the operand of the instruction
-*
-*@return the bitmap with the correct bit turned on
-*/
- bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
 
-/* 
-*@brief set the bit of the correct encoding type, where A=2, R=1, E=0
-*
-*@param bitmap: the bitmap of the onstruction 
-*       ARE: the encoding type.
-*
-*@return the bitmap with the correct bit turned on
-*/
 
-bitmap_t SetBitOfARE (bitmap_t bitmap, encoding_type_t ARE);
