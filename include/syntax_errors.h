@@ -133,6 +133,35 @@ bool_t IncorrectAddressingMethod(const char *instruction,
                                  syntax_check_config_t *config);
 
 /*
+ * @brief Indicates if a symbol that has been encountered has been defined before.
+ *        Used to check if there's an attempt to use a symbol that wasn't defined.
+ *
+  * @param symbol - The symbol which now been called
+ *         table - The symbol table.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
+ */
+
+bool_t SymbolWasntDefined(char *symbol,
+                          symbol_table_t *table,
+                          syntax_check_config_t *config);
+
+/*
+ * @brief Checks if an an immediate operand contains a valid number that exceed
+ *        maximum size to encode (2^11).
+ *
+ * @param operand - The operand
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ *        NOTE: if the operand isn't immediate behaviour is undefined.
+ *        
+ * @return TRUE if its too big. FALSE otherwise.
+ */
+
+bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config);
+
+/*
 // ~~--~~--~~--~~--~~
 // Symbol (label) errors
 // ~~--~~--~~--~~--~~
@@ -151,20 +180,7 @@ bool_t SymbolDefinedMoreThanOnce(char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config);
 
-/*
- * @brief Indicates if a symbol that has been encountered has been defined before.
- *        Used to check if there's an attempt to use a symbol that wasn't defined.
- *
-  * @param symbol - The symbol which now been called
- *         table - The symbol table.
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
- */
 
-bool_t SymbolWasntDefined(char *symbol,
-                          symbol_table_t *table,
-                          syntax_check_config_t *config);
 
 /*
  * @brief Check if a symbol that has been declared as .extern was previously 
@@ -237,19 +253,6 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
 
 bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config);
 
-/*
- * @brief Checks if an an immediate operand contains a valid number that exceed
- *        maximum size to encode (2^11).
- *
- * @param operand - The operand
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
- *
- *        NOTE: if the operand isn't immediate behaviour is undefined.
- *        
- * @return TRUE if its too big. FALSE otherwise.
- */
-
-bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config);
 
 /*
 // ~~--~~--~~--~~--~~
