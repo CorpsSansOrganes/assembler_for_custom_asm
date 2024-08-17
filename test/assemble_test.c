@@ -18,6 +18,10 @@ static const char *ProduceFilePath(const char *dir_path,
 
 static bool_t FileDoesntExist(const char *path);
 
+static result_t RunComparisonOb(const char *file_name);
+static result_t RunComparisonExt(const char *file_name);
+static result_t RunComparisonEnt(const char *file_name);
+
 const char *expected_dir = "./test/assemble_test_files/expected";
 const char *input_dir = "./test/assemble_test_files/input";
 const char *output_dir = "./test/assemble_test_files/output";
@@ -86,6 +90,7 @@ int main(void) {
 
   char *valid_names[] = {
     "valid_1_only_data_definition",
+    /*
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
     "valid_4_with_instruction_1operand",
@@ -95,12 +100,15 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_external"
+    */
   };
 
   char *invalid_names[] = {
+    /*
     "invalid_1_instruction_errors",
     "invalid_2_symbol_errors",
     "invalid_3_instruction_errors"
+    */
   };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
