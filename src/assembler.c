@@ -83,7 +83,10 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
 
   if (NULL != current_word) {
     operand1->name = StrDup(current_word);
-    // TODO handle bad duplication
+    if (NULL == operand1->name) {
+      return -1;
+
+    }
     operand1->addressing_method = DetectAddressingMethod(operand1->name);
     operand1->type = DESTINATION_OPERAND;
     counter++;
@@ -92,7 +95,10 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
   current_word = strtok(NULL, DELIMITERS);
   if (NULL != current_word) {
     operand2->name = StrDup (current_word);
-    // TODO handle bad duplication
+    if (NULL == operand2->name) {
+      free((void *)operand1->name);
+      return -1;
+    }
     operand2->addressing_method = DetectAddressingMethod(operand2->name);
     operand2->type = DESTINATION_OPERAND;
     operand1->type = SOURCE_OPERAND;
@@ -128,6 +134,10 @@ static result_t HandleInstructionStatement(char *instruction,
   /* Skip to operands */
   params += strlen(instruction) + 1;
   operand_num = SplitOperands(params, &operands[0], &operands[1]);
+
+  if (-1 == operand_num) {
+    return MEM_ALLOCATION_ERROR;
+  }
 
   /* Syntax errors for operands */
   if (WrongNumberOfOperands(instruction, operand_num, cfg)) {
@@ -354,7 +364,7 @@ static result_t FirstPass(char *file_path,
   char *current_line = NULL;
   char *symbol_name = NULL;
   FILE *input_file = NULL;
-  syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig(file_path, 0, TRUE);
 
   /* Acquire resources */
   input_file = fopen(file_path, "r");
@@ -370,7 +380,6 @@ static result_t FirstPass(char *file_path,
             "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;
   }
-
 
   /* ~ * ~ ------------------------------ ~ * ~
    * Performing syntax analysis for each line.
@@ -390,7 +399,11 @@ static result_t FirstPass(char *file_path,
       symbol_name = StrDup(current_word);
 
       if (NULL == symbol_name) {
-        // TODO - handle mem error.
+        perror("Error: memory allocation error\n");
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       
       if (SymbolNameErrorOccurred(symbol_name,
@@ -434,7 +447,10 @@ static result_t FirstPass(char *file_path,
                                               &cfg);
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
-        // TODO: Handle memory allocation error.
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       else if (FAILURE == res) {
         ++total_errors;
@@ -455,7 +471,10 @@ static result_t FirstPass(char *file_path,
                                                &cfg);
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
-        // TODO: Handle memory allocation error.
+        free(current_line);
+        free(current_word);
+        fclose(input_file);
+        return MEM_ALLOCATION_ERROR;
       }
       else if (FAILURE == res) {
         ++total_errors;
