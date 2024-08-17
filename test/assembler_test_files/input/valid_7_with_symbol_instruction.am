@@ -4,5 +4,4 @@ stop
 inc r6
 bne *r4
 symbol2: mov #4, r3
-cmp symbol3, *r2
-.extern symbol3, symbol4
+cmp symbol1, *r2

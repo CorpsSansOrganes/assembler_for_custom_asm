@@ -238,10 +238,13 @@ bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
 bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config);
 
 /*
- * @brief Checks if an operand is an immediate operand who contains a valid number that exceed max size to encode (2^11).
+ * @brief Checks if an an immediate operand contains a valid number that exceed
+ *        maximum size to encode (2^11).
  *
  * @param operand - The operand
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ *        NOTE: if the operand isn't immediate behaviour is undefined.
  *        
  * @return TRUE if its too big. FALSE otherwise.
  */

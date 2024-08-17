@@ -55,7 +55,7 @@ void DestroySymbolTable(symbol_table_t *table);
  * @param table - The table we wish to add a symbol to.
  *        symbol_name - The symbol's key.
  *        address - Memory address of the symbol.
- *        area - memory area of the code (Data/Code)
+ *        area - memory area of the symbol (Data/Code)
  *
  * @return SUCCESS if successful, or an error code upon failure.
  */
