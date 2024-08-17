@@ -277,7 +277,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
   symbol_t *symbol = NULL;
   int total_errors = 0;
   int vector_counter = 0;
-  int instruction_counter = 0;
+  int bitmap_counter = 0;/*counts the overall number of bitmaps*/
   bitmap_t *opcode_bitmap; 
   char *current_word = NULL; 
   char *current_line = NULL;
@@ -332,9 +332,8 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
         /*nothing to do, continue to the next line*/
     }
      if (0 == strcmp (current_word, ".string")){
-        current_word = strtok (current_line, delimiters);/*TODO !! not good, to change*/
-        vector_counter += strlen (current_word)-2; /*the length of the string without the quotation marks pl*/
-        instruction_counter += strlen (current_word)-2; /*TO check !! instruction counter or data counter?*/
+        vector_counter += strlen (current_line)-2; /*the length of the string without the quotation marks pl*/
+        bitmap_counter += strlen (current_line)-2; 
      }
     if (0 == strcmp (current_word, ".entry")){
        current_line += strlen (current_word) +1; 
@@ -380,7 +379,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
                 external_symbol_data->occurences = CreateVector (0,sizeof(int));
                 AddNode (external_symbol_data_list,external_symbol_data);
                }
-               AppendVector (external_symbol_data->occurences,instruction_counter+INITIAL_IC_VALUE);/*bit_map counts the memory words that been used, so thats give the address*/
+               AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE);/*bit_map counts the memory words that been used, so thats give the address*/
 
             }
           } 
@@ -394,7 +393,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
               *opcode_bitmap = GetSymbolAddress (symbol);
             } 
         }
-        instruction_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
+        bitmap_counter += GetCapacityVector( GetElementVector(opcode,vector_counter));/*adds the number of bitmaps in the current element*/
         vector_counter++;
     }
   
