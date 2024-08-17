@@ -169,3 +169,15 @@ static int OperandToOpcode(operand_t *operand){
   }
 return opcode;
 }
+
+static int CountParameters(char *line) {
+    int counter = 1;
+    while ('\0' != *line){
+      line++; 
+      if (*line == ','){
+        counter++;
+      }
+    }
+    return counter;
+}
+

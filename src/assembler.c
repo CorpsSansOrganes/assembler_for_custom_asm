@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> /* fopen, fclose */
 #include <string.h> 
 #include <stdlib.h>
 #include "assembler.h"
@@ -13,12 +13,15 @@
 #include "string_utils.h"
 #include "generate_output_files.h"
 
-static bool_t FirstWordEndsWithColon(char *line);
+const char *DELIMITERS = ", \t\n\r";
 
-static int SymbolErrorUnite(char *symbol_name,
-                            syntax_check_config_t *syntax_check_config_print,
-                            macro_table_t *macro_table,
-                            symbol_table_t *symbol_table);
+
+static bool_t IsSymbolDefinition(char *line);
+
+static bool_t SymbolNameErrorOccurred(const char *symbol_name,
+                                  macro_table_t *macro_table,
+                                  symbol_table_t *symbol_table,
+                                  syntax_check_config_t *cfg);
 
 static result_t FirstPass(char *file_path,
                           macro_table_t *macro_table,
@@ -152,6 +155,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
  *
  * @return SUCCESS if no syntax error or other fault occurred.
  *         FAILURE if one or more syntax errors occurred.
+ *         MEM_ALLOCATION_ERROR if a memory allocataion error occurred.
  */
 
 static result_t FirstPass(char *file_path,
@@ -159,21 +163,18 @@ static result_t FirstPass(char *file_path,
                           symbol_table_t *symbol_table,
                           vector_t *code_table,
                           vector_t *data_table) {
-  int line_counter = 0;
   int total_errors = 0;
   char *current_word = NULL; 
   char *current_line = NULL;
-  char *symbol_name=NULL;
+  char *symbol_name = NULL;
   FILE *input_file = NULL;
   operand_t *first_operand = NULL;
   operand_t *second_operand = NULL;
   int num_of_operands;
   int num_of_parameters;
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
 
-  syntax_check_config_t syntax_check_config_print = CreateSyntaxCheckConfig (file_path,
-                                                 0,
-                                                 TRUE);
-  /*allocate resources*/
+  /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
     fprintf(stderr,"Couldn't open input file");
@@ -187,170 +188,205 @@ static result_t FirstPass(char *file_path,
             "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;
   }
-  current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
-  if (NULL == current_word) {
-    fclose (input_file);
-    free (current_line);
-    fprintf(stderr,
-            "Memory allocation error: couldn't allocate a buffer\n");
-    return MEM_ALLOCATION_ERROR;
-  }
 
-  char *symbol_name = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
-  if (NULL == symbol_name) {
-    fclose (input_file);
-    free (current_line);
-    free (current_word);
-    fprintf(stderr,
-            "Memory allocation error: couldn't allocate a buffer\n");
-    return MEM_ALLOCATION_ERROR;
-  }
 
-  /*iterates on every line in the file*/
+  /* ~ * ~ ------------------------------ ~ * ~
+   * Performing syntax analysis for each line.
+   * ~ * ~ ------------------------------ ~ * ~
+   */
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
-      line_counter++;
-      symbol_name = '\0';/*clear symbol_name*/
-      syntax_check_config_print.line_number = line_counter;
+    ++cfg.line_number;
+    symbol_name = NULL;
 
-      /* check symbol definition*/
-      if (FirstWordEndsWithColon(current_line)) {
-        current_word = strtok(current_line, ": \t\n\r");/*extract the symbol*/
-        symbol_name = StrDup (current_word);
-        if ( 0 < SymbolErrorUnite(symbol_name, &syntax_check_config_print, macro_table, symbol_table)){
-          total_errors++;
-          continue;
-        }
-        current_line += strlen(current_word) + 2; /*skip the colon and space*/
-        if (NoDefinitionForSymbol(current_line,&syntax_check_config_print)){
-          total_errors++;
-          continue;
-        }
-        current_word = strtok(NULL,delimiters);/*next word*/
-      }        
-      current_word = strtok(current_line,delimiters);/*first word because no symbol definition*/
+    /* 
+     * Does the line begin with a symbol definition?
+     * e.g. "SYMBOL: ..."
+     */
+    if (IsSymbolDefinition(current_line)) {
+      /* Extract symbol name */
+      current_word = strtok(current_line, ": \t\n\r");
+      symbol_name = StrDup(current_word);
 
-      if (0 == strcmp(current_word,".string") ){
-        current_line += strlen(current_word) + 1;
-        if (IsIllegalString(current_line,&syntax_check_config_print)){ 
-          total_errors++;
-          continue; 
-        }
-        if (StringIsNotPrintable(current_line,&syntax_check_config_print)){ 
-          total_errors++;
-          continue; 
-        }
-        if (symbol_name[0] != '\0'){/*there was a symbol definition*/
-            if (SUCCESS != AddSymbol (symbol_table, symbol_name,*DC,DATA)){
-              fclose (input_file);
-              free (current_line);
-              free (current_word);
-              free (symbol_name);
-              return FAILURE;
-            } 
-        }
-        opcode = StringLineToMachineCode(opcode, current_line); /*computes opcode*/
-        *DC += strlen(current_line) - 1; /*the length of the string without the quation marks plus '/0' */
-      }  
-      else if (0 == strcmp(current_word,".data")) {
-          current_line += strlen(current_word)+1;
-          if (IsIllegalDataParameter(current_line,&syntax_check_config_print)){
-                total_errors++;
-                continue;
-          }
-          num_of_parameters = CountParameters (current_line);
-          if (DataParameterTooBig (current_line,&syntax_check_config_print)){
-            total_errors++;
-            continue;
-          }
-          if (symbol_name[0] != '\0'){
-            if (SUCCESS != AddSymbol (symbol_table, symbol_name,*DC,DATA)){
-              fclose (input_file);
-              free (current_line);
-              free (current_word);
-              free (symbol_name);
-              return FAILURE;
-            } 
-          }
-          opcode = DataLineToMachineCode(opcode, current_line, DC,num_of_parameters);
-          *DC += num_of_parameters;
-
+      if (NULL == symbol_name) {
+        // TODO - handle mem error.
       }
-      else if (0 == strcmp(current_word,".extern")){
-        current_line += strlen(current_word) + 1;
-        if (IsIllegalExternOrEntryParameter(current_line, &syntax_check_config_print)){
+      
+      if (SymbolNameErrorOccurred(symbol_name,
+                                  macro_table,
+                                  symbol_table,
+                                  &cfg)) {
+        total_errors++;
+        continue;
+      }
+
+      /* Skip the colon and space*/
+      current_line += strlen(current_word) + 2; 
+      if (NoDefinitionForSymbol(current_line, &cfg)){
+        total_errors++;
+        continue;
+      }
+
+      /* Next word after symbol definition */
+      current_word = strtok(NULL, DELIMITERS);
+    }        
+
+    else {
+      /* First word (no symbol definition) */
+      current_word = strtok(current_line,DELIMITERS);
+    }
+
+    /*
+     * Is it a .string directive?
+     * e.g. "SYMBOL: .string ..."
+     *      ".string ..."
+     */
+    if (0 == strcmp(current_word,".string")) {
+      /* Skip to .string parameter */
+      current_line += strlen(current_word) + 1;
+      if (IsIllegalString(current_line, &cfg)) { 
+        total_errors++;
+        continue; 
+      }
+
+      if (StringIsNotPrintable(current_line,&cfg)) { 
+        total_errors++;
+        continue; 
+      }
+
+      /* There was a symbol definition */
+      if (NULL != symbol_name){
+        if (SUCCESS != AddSymbol(symbol_table, symbol_name, DC, DATA)) {
+          fclose(input_file);
+          free(current_line);
+          free(symbol_name);
+          return MEM_ALLOCATION_ERROR;
+        } 
+      }
+
+      /* Computes machine code for the directive */
+      if (SUCCESS != StringDirectiveToMachinecode(data_table, current_line)) {
+        fclose(input_file);
+        free(current_line);
+        return MEM_ALLOCATION_ERROR;
+      }
+
+      DC = GetSizeVector(data_table);
+    }  
+
+    /*
+     * Is it a .string directive?
+     * e.g. "SYMBOL: .data ..."
+     *      ".data ..."
+     */
+    else if (0 == strcmp(current_word,".data")) {
+      /* Skip to .data parameters */
+      current_line += strlen(current_word) + 1;
+
+      if (IsIllegalDataParameter(current_line, &cfg)) {
+        total_errors++;
+        continue;
+      }
+
+      if (DataParametersTooBig(current_line, &cfg)) {
+        total_errors++;
+        continue;
+      }
+
+      /* There was a symbol definition */
+      if (NULL != symbol_name){
+        if (SUCCESS != AddSymbol(symbol_table, symbol_name, DC, DATA)) {
+          fclose(input_file);
+          free(current_line);
+          free(symbol_name);
+          return MEM_ALLOCATION_ERROR;
+        } 
+      }
+
+      /* Computes machine code for the directive */
+      if (SUCCESS != DataDirectiveToMachinecode(data_table, current_line)) {
+        fclose(input_file);
+        free(current_line);
+        return MEM_ALLOCATION_ERROR;
+      }
+
+      DC = GetSizeVector(data_table);
+    }
+    else if (0 == strcmp(current_word,".extern")){
+      current_line += strlen(current_word) + 1;
+      if (IsIllegalExternOrEntryParameter(current_line, &cfg)){
+        total_errors++;
+        continue;
+      }
+      symbol_name = strtok (NULL,DELIMITERS);
+      while (NULL != symbol_name){/*for every symbol in the line*/
+        if (0 < SymbolNameErrorOccurred(symbol_name,&cfg,macro_table,symbol_table)){
           total_errors++;
-          continue;
+           continue;
         }
-        symbol_name = strtok (NULL,delimiters);
-        while (NULL != symbol_name){/*for every symbol in the line*/
-          if (0 < SymbolErrorUnite(symbol_name,&syntax_check_config_print,macro_table,symbol_table)){
-            total_errors++;
-             continue;
-          }
-          if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &syntax_check_config_print)){
-            total_errors++;
-             continue;
-          }
-          if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+        if (SymbolAlreadyDefinedAsEntry(symbol_name,symbol_table, &cfg)){
+          total_errors++;
+           continue;
+        }
+        if (SUCCESS != AddExternalSymbol(symbol_table, symbol_name)){
+          fclose (input_file);
+          free (current_line);
+          free (current_word);
+          free (symbol_name);
+          return FAILURE;
+        }
+        symbol_name = strtok (NULL,DELIMITERS);
+      }
+    }
+    else if (0 == strcmp(current_word,".entry")) {
+      /* Do nothing: will handle in 2nd pass */
+    }
+    /*instruction exist*/
+    else if (FALSE == InstructionDoesntExist(current_word,&cfg)){
+          if (symbol_name[0] != '\0'){
+           if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
             fclose (input_file);
             free (current_line);
             free (current_word);
             free (symbol_name);
-            return FAILURE;
+             return FAILURE;
+           }
           }
-          symbol_name = strtok (NULL,delimiters);
-        }
-      }
-      else if (0 == strcmp(current_word,".entry")) {
-        /* Do nothing: will handle in 2nd pass */
-      }
-      /*instruction exist*/
-      else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){
-            if (symbol_name[0] != '\0'){
-             if (SUCCESS != AddSymbol (symbol_table, symbol_name,*IC+INITIAL_IC_VALUE, CODE)){
-              fclose (input_file);
-              free (current_line);
-              free (current_word);
-              free (symbol_name);
-               return FAILURE;
-             }
-            }
-            current_line += strlen (current_word)+1;
-            num_of_operands = SplitOperands (current_line, first_operand,second_operand);
+          current_line += strlen (current_word)+1;
+          num_of_operands = SplitOperands (current_line, first_operand,second_operand);
 
-            if (ImmediateOperandTooBig(first_operand,&syntax_check_config_print)){
-              total_errors++;
-              continue;
-            }
-            if (ImmediateOperandTooBig(second_operand,&syntax_check_config_print)){
-              total_errors++;
-              continue;
-            }
-            if (WrongNumberOfOperands(current_word,num_of_operands,&syntax_check_config_print)){
-              total_errors++;
-              continue;
-            }
-            if (IncorrectAddressingMethod(current_word,first_operand,&syntax_check_config_print)){
-              total_errors++;
-              continue;
-            }
-            if (IncorrectAddressingMethod(current_word,second_operand,&syntax_check_config_print)){
-              total_errors++;
-              continue;
-            }
-              VectorAppend (opcode, InstructionLineToMachineCode (first_operand, second_operand, num_of_operands, current_word, IC));
-      }
-      /*instruction doesnt exist*/
-      else {
-        total_errors++;
-        continue;
-      }
+          if (ImmediateOperandTooBig(first_operand,&cfg)){
+            total_errors++;
+            continue;
+          }
+          if (ImmediateOperandTooBig(second_operand,&cfg)){
+            total_errors++;
+            continue;
+          }
+          if (WrongNumberOfOperands(current_word,num_of_operands,&cfg)){
+            total_errors++;
+            continue;
+          }
+          if (IncorrectAddressingMethod(current_word,first_operand,&cfg)){
+            total_errors++;
+            continue;
+          }
+          if (IncorrectAddressingMethod(current_word,second_operand,&cfg)){
+            total_errors++;
+            continue;
+          }
+            VectorAppend (opcode, InstructionLineToMachineCode (first_operand, second_operand, num_of_operands, current_word, IC));
+    }
+    /*instruction doesnt exist*/
+    else {
+      total_errors++;
+      continue;
+    }
   }
 
-  free (current_line);
-  free (current_word);
-  free (symbol_name);
-  fclose (input_file);
+  free(current_line);
+  free(current_word);
+  fclose(input_file);
+
   if (0 == total_errors){
     if (SUCCESS != UpdateAdresses (symbol_table, *IC)){
       return FAILURE;
@@ -413,11 +449,11 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
     line_counter++;
     symbol_name = '/0';
     vector_t *opcode_line;
-    if (FirstWordEndsWithColon(current_line)) {
-        current_word = strtok (current_line, delimiters);
+    if (IsSymbolDefinition(current_line)) {
+        current_word = strtok (current_line, DELIMITERS);
         current_line += strlen (current_word) +1;               
     }
-    current_word = strtok (current_line, delimiters);
+    current_word = strtok (current_line, DELIMITERS);
     current_line += strlen (current_word) +1;      
     if (0 == strcmp (current_word, ".extern") || 0 == strcmp (current_word, ".data")){
         /*nothing to do, continue to the next line*/
@@ -432,7 +468,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
           total_errors++;
           continue;
        }
-       current_word = strtok (current_line,delimiters);
+       current_word = strtok (current_line,DELIMITERS);
        while (NULL != current_line){
           if (SymbolWasntDefined(current_word, symbol_table, &syntax_check_config_print)){
             total_errors++;
@@ -449,14 +485,14 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             free (symbol_name);
             return FAILURE;
          }
-          current_word = strtok (NULL,delimiters);
+          current_word = strtok (NULL,DELIMITERS);
 
        }
 
 
     }
     else if (FALSE == InstructionDoesntExist(current_word,&syntax_check_config_print)){/* silent config?*/
-        current_word = strtok (NULL,delimiters);
+        current_word = strtok (NULL,DELIMITERS);
         if (NULL != current_word){
           symbol = FindSymbol (symbol_table,current_word);
           if (NULL != symbol){/*first operand is a symbol*/
@@ -475,7 +511,7 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
             }
           } 
         }
-        current_word = strtok (NULL,delimiters);
+        current_word = strtok (NULL,DELIMITERS);
           if (NULL != current_word){
             symbol = FindSymbol (symbol_table,current_word);
             if (NULL != symbol){
@@ -513,8 +549,8 @@ static result_t SecondPass(char *file_path, symbol_table_t *symbol_table, vector
 *  @param - line: the line
    @return - true if ends with colon, otherwise, false.
 */
-static bool_t FirstWordEndsWithColon(char *line) {
-    while (*(line+1) != '\t' || *(line+1) != ' ' || *(line+1) != '\0'){
+static bool_t IsSymbolDefinition(char *line) {
+    while (!IsBlank(*(line + 1))) {
        line++;
     }
     if (*line == ':'){
@@ -523,23 +559,31 @@ static bool_t FirstWordEndsWithColon(char *line) {
     return FALSE;
 }
 
-/* @brief - count parameters which seperated by ',';
-*  @param - line: the line
-*  @return - the number of parameters detected
+/*
+ * @brief Checks all possible syntax errors of symbols.
+ *
+ * @param symbol_name - The name of the symbol, e.g. "SYMBOL".
+ *        macro_table - Macro table of the file.
+ *        symbol_table - Symbol table of the file.
+ *        cfg - Syntax error configurations, see in syntax_errors.h.
 */
 
-static int SymbolErrorUnite (char *symbol_name,syntax_check_config_t *syntax_check_config_print, macro_table_t *macro_table, symbol_table_t *symbol_table){
-      int internal_counter =0;
-      if (SymbolNameIsIllegal (symbol_name,syntax_check_config_print)){
-          internal_counter++;
-      }
-      if (SymbolUsedAsAMacro (symbol_name, macro_table, syntax_check_config_print)){
-          internal_counter++;
-      }
-      if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, syntax_check_config_print)){
-          internal_counter++;
-      }
-      return internal_counter;
+static bool_t SymbolNameErrorOccurred(const char *symbol_name,
+                                  macro_table_t *macro_table,
+                                  symbol_table_t *symbol_table,
+                                  syntax_check_config_t *cfg) {
+  int internal_counter = 0;
+  if (SymbolNameIsIllegal(symbol_name,cfg)) {
+    internal_counter++;
+  }
+  if (SymbolUsedAsAMacro(symbol_name, macro_table, cfg)) {
+    internal_counter++;
+  }
+  if (SymbolDefinedMoreThanOnce(symbol_name,symbol_table, cfg)) {
+    internal_counter++;
+  }
+
+  return internal_counter ? TRUE : FALSE;
 }
 
 /* @brief - generating the opcode of an operand, according to its adressing method.
@@ -568,14 +612,14 @@ static result_t UpdateAdresses (symbol_table_t *symbol_table, int IC){
 
 static int SplitOperands(char *line, operand_t *first_operand, operand_t *second_operand) {
     int counter = 0;
-    char *current_word = strtok (line,delimiters);
+    char *current_word = strtok (line,DELIMITERS);
     if (current_word != NULL){
       first_operand->name = StrDup (current_word);
       first_operand->addressing_method =DetectAddressingMethod(first_operand->name);
       first_operand->type = DESTINATION_OPERAND;
       counter++;
     }
-    current_word = strtok (NULL, delimiters);
+    current_word = strtok (NULL, DELIMITERS);
     if (current_word != NULL){
       second_operand->name =StrDup (current_word);
       second_operand->addressing_method =DetectAddressingMethod(second_operand->name);
@@ -594,15 +638,3 @@ static int SplitOperands(char *line, operand_t *first_operand, operand_t *second
 static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
   return (0 == strcmp (external_symbol_data->symbol_name, key));
 }
-static int CountParameters(char *line) {
-    int counter = 1;
-    while ('\0' != *line){
-      line++; 
-      if (*line == ','){
-        counter++;
-      }
-    }
-    return counter;
-}
-
-

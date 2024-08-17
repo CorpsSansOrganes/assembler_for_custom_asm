@@ -1,9 +1,6 @@
 #ifndef __STRING_UTILS__
 #define __STRING_UTILS__
 
-#define  delimiters ", \t\n\r"
-
-
 /*
  * Functions for manipulating & analysing strings, which aren't present in <string.h>
  */
