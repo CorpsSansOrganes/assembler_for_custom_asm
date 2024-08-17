@@ -51,7 +51,7 @@ symbol_table_t *CreateSymbolTable(void);
 void DestroySymbolTable(symbol_table_t *table);
 
 /*
- * @brief Add a new symbol to the table.
+ * @brief Add a new symbol to the table with deep copy of the name.
  * @param table - The table we wish to add a symbol to.
  *        symbol_name - The symbol's key.
  *        address - Memory address of the symbol.
@@ -65,7 +65,7 @@ result_t AddSymbol(symbol_table_t *table,
                    symbol_memory_area_t area);
 
 /*
- * @brief Add a symbol to the table as an external symbol.
+ * @brief Add a symbol to the table as an external symbol with deep copy of the name.
  * @param table - The table we wish to add a symbol to.
  *        symbol_name - The symbol's key.
  *

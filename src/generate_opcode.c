@@ -23,18 +23,18 @@ vector_t *DataLineToMachineCode(vector_t *full_opcode, char *string, int *DC, in
     return full_opcode;
 }
 
-vector_t *StringLineToMachineCode(vector_t *full_opcode, char *string){
+result_t StringDirectiveToMachinecode(vector_t *data_table, char *string){
     bitmap_t char_opcode;
     string++; /*skip the begining quoation marks*/
     while ('\0' != *string+1)/*skip the end quoation marks*/
     {
         char_opcode = *string;
         string++;
-        VectorAppend (full_opcode, char_opcode); 
+        VectorAppend (data_table, char_opcode); 
     }
     char_opcode = 0;
-    VectorAppend (full_opcode, char_opcode); 
-    return full_opcode;
+    VectorAppend (data_table, char_opcode); 
+    return data_table;
 }
 
 

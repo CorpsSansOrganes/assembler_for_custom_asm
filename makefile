@@ -15,6 +15,7 @@ OBJ_DEBUG := ./obj/debug
 INCLUDE := ./include
 
 # Dependencies
+MAIN_OBJ := macro_table.o utils.o assembler.o preprocessing.o
 LIST_OBJ := list.o
 FILE_HANDLING_OBJ := file_handling.o file_handling_test.o 
 LINTING_OBJ := linting.o file_handling.o

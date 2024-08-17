@@ -10,6 +10,7 @@
 #include "string_utils.h"
 
 #define BASE_10 (10)
+#define delimiters ", \n\t\r"
 
 static bool_t TakesOperand(instruction_t instruction, operand_type_t type);
 static bool_t AddressingMethodIsLegal(instruction_t instruction,

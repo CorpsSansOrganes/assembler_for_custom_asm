@@ -4,6 +4,7 @@
 #include "symbol_table.h"
 #include "utils.h"
 #include "string.h"
+#include "string_utils.h"
 
 struct symbol_struct {
   const char *symbol_name;
@@ -170,7 +171,7 @@ static result_t AddSymbolWithType(symbol_table_t *table,
                          address_t address,
                          symbol_type_t type,
                          symbol_memory_area_t area) {
-  symbol_t *symbol = CreateSymbol(symbol_name, address, type, area);
+  symbol_t *symbol = CreateSymbol(StrDup (symbol_name), address, type, area);
   
   if (NULL == symbol) {
     return MEM_ALLOCATION_ERROR;

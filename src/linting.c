@@ -16,8 +16,8 @@ char *CleanLine(char *line) {
   /* Collapse multiple whitespaces between words */
   while ('\n' != *src) {
     if (*src == '"'){
-      if (TRUE == inside_string){
-        inside_string == TRUE;
+      if (FALSE == inside_string){
+        inside_string = TRUE;
       }
     }
     /* Copy characters from src to dest if non-blanks */

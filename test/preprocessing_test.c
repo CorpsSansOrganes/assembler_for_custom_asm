@@ -81,7 +81,7 @@ int main(void) {
 
   char *invalid_names[] = {
     "invalid_1_extra_characters",
-    /*"invalid_2_macro_is_reserved_name"*/
+    "invalid_2_macro_is_reserved_name"
   };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {

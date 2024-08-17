@@ -59,7 +59,7 @@ result_t AddMacro(macro_table_t *table,
                   const char *macro_name,
                   const char *macro_definition) {
 
-  macro_t *macro = CreateMacro(macro_name, macro_definition);
+  macro_t *macro = CreateMacro(StrDup (macro_name), StrDup (macro_definition));
 
   if (NULL == macro) {
     return MEM_ALLOCATION_ERROR;
