@@ -8,15 +8,23 @@ typedef enum {
 } encoding_type_t;
 
 /* 
-*@brief produce the opcode of an instruction line, and adds the correct number to the instruction counter
-*
-*@param parameters: the operands of the instruction
-*       instruction_word: the instruction word
-*
-*@return  vector containing 1-3 bitmap words 
-*/
+ * @brief Produce the machine code for an instruction statement.
+ *
+ * @param code_table - The vector that contains the code segment.
+ *        instruction - The instruction to encode.
+ *        source_operand - Pointer to the source operand, or NULL if the
+ *          instruction doesn't take one.
+ *        dest_operand - Pointer to the destination operand, or NULL if
+ *          the instruction doesn't take one.
+ *
+ * @return SUCCESS if the memory machine were added to the code segment, 
+ *         or MEM_ALLOCATION_ERROR upon a failure.
+ */
 
-vector_t *InstructionLineToMachinecode(operand_t *first_operand, operand_t *second_operand, unsigned int num_of_operands, char *instruction_name, int *IC);
+result_t InstructionStatementToMachinecode(vector_t *code_table,
+                                           const char *instruction,
+                                           operand_t *source_operand,
+                                           operand_t *dest_operand);
 
 /* 
  * @brief Produce the memory encoding of an .string directive statement and add 

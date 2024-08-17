@@ -23,10 +23,10 @@ instruction_t reserved_instructions [NUM_OF_INSTRUCTIONS] = {
 };
 
 char *reserved_directives[NUM_OF_DIRECTIVES] = {
-  ".data",
-  ".entry",
   ".string",
-  ".extern"
+  ".data",
+  ".extern",
+  ".entry"
 };
 
 char *register_names[NUM_OF_REGISTERS] = {

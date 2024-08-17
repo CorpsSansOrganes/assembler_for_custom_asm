@@ -103,6 +103,18 @@ bool_t WrongNumberOfOperands(const char *instruction,
                           int num_of_operands,
                           syntax_check_config_t *config);
 
+
+/*
+ * @brief Checks if an operand is invalid.
+ *
+ * @param operand - The operand to check.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *  
+ * @return TRUE if the operand is invalid, FALSE otherwise.
+ */
+
+bool_t IsOperandInvalid(const operand_t *operand,
+                        syntax_check_config_t *config);
 /*
  * @brief Tell if an operand addressing method is viable for a given instruction.
  *
@@ -143,7 +155,7 @@ bool_t IncorrectAddressingMethod(const char *instruction,
  * @return TRUE if the symbol never been defined previously, or FALSE otherwise.
  */
 
-bool_t SymbolWasntDefined(char *symbol,
+bool_t SymbolWasntDefined(const char *symbol,
                           symbol_table_t *table,
                           syntax_check_config_t *config);
 
@@ -176,7 +188,7 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
  *
  * @return TRUE if the symbol has already been defined, or FALSE otherwise.
  */
-bool_t SymbolDefinedMoreThanOnce(char *symbol,
+bool_t SymbolDefinedMoreThanOnce(const char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config);
 
@@ -239,7 +251,7 @@ bool_t SymbolNameIsIllegal(const char *symbol, syntax_check_config_t *config);
  * @return TRUE if symbol was already used as a macro. FALSE otherwise.
  */
 
-bool_t SymbolUsedAsAMacro(char *symbol, macro_table_t *macros,
+bool_t SymbolUsedAsAMacro(const char *symbol, macro_table_t *macros,
                           syntax_check_config_t *config);
 /*
  * @brief Checks if a symbol definition was called without any definition.
@@ -261,18 +273,6 @@ bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *co
 */
 
 /*
- * @brief Checks if one of the data parameters is too big to encode (2^14).
- *
- * @param params - The parameters passed to a .data directive (e.g. "+34, 18,-7").
- *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig).
- *        
- * @return TRUE if one of the data parameters is too big. FALSE otherwise.
- */
-
-bool_t DataParametersTooBig (const char *params, syntax_check_config_t *config);
-
-
-/*
  * @brief Check if the directive that has been called does not exist. 
  * the existing directive are : .data , .string , .entry , .extern
  *
@@ -281,11 +281,11 @@ bool_t DataParametersTooBig (const char *params, syntax_check_config_t *config);
  *
  *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
  *
- * @return TRUE if the directive doesn't exist, or FALSE otherwise.
+ * @return INVALID_DIRECTIVE if the directive doesn't exists, or the directive type.
  */
 
-bool_t DirectiveDoesntExist(const char *directive,
-                            syntax_check_config_t *config);
+directive_t DirectiveDoesntExist(const char *directive,
+                                syntax_check_config_t *config);
 
 /**
  * @brief Checks if `.data` definitions is correct. 
@@ -309,6 +309,8 @@ bool_t DirectiveDoesntExist(const char *directive,
  *
  *        4. There is atleast one parameter.
  *
+ *        5. None of the data parameters are too big to encode (2^14).
+ *
  * @param data - A pointer to the string containing the `.data` values to be checked.
  *               e.g.: "13, 143, 12".
  *        config - A pointer to the syntax checking configuration, which may include options 
@@ -320,7 +322,10 @@ bool_t DirectiveDoesntExist(const char *directive,
 bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 
 /*
- * @brief Checks if a string is illegal. a string is legal if it has ' " ' (quation marks) in the beginning and ending of the string.
+ * @brief Checks if a string is illegal.
+ *        A string is legal if:
+ *        1. it has ' " ' (quation marks) in the beginning and ending of the string.
+ *        2. All of its characters are printable.
  *
  * @param str - The string to check.
  *        config - Pointer the configurations about the syntax check.
@@ -331,20 +336,8 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
 /*
- * @brief Checks if a string that begins and ends with '"' contains not-printable chars (not ascii valid)
- *
- * @param str - The string to check, including quotation marks. (e.g. "\"abcd\"")
- *        config - Pointer the configurations about the syntax check.
- *
- * @return TRUE if the string is not printable, FALSE otherwise.
- */
-
-bool_t StringIsNotPrintable (const char *str, syntax_check_config_t *config);
-
-/*
  * @brief Checks if a parameter line passed to .extern or .entry directive
  *        is legal, i.e  each parameter recieved is a legal symbol name.
- *        
  *
  *        Function assumes no leading or trailing whitespaces.
  *

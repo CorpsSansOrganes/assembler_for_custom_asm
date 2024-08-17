@@ -101,6 +101,15 @@ typedef struct {
   operand_type_t type;
 } operand_t;
 
+typedef enum {
+  STRING_DIRECTIVE,
+  DATA_DIRECTIVE,
+  EXTERN_DIRECTIVE,
+  ENTRY_DIRECTIVE,
+  INVALID_DIRECTIVE
+} directive_t;
+  
+
 extern instruction_t reserved_instructions[NUM_OF_INSTRUCTIONS];
 
 extern char *reserved_directives[NUM_OF_DIRECTIVES];
