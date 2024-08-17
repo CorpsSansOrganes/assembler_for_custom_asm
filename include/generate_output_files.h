@@ -14,6 +14,10 @@ typedef struct external_symbol_data {
   vector_t *occurences;
 } external_symbol_data_t;
 
+typedef struct {
+  list_t *external_symbols;
+} ext_symbol_occurences_t;
+
 /* 
 *@brief creating the obj file, entry file and extern file after the assembling process.
 *@param code_opcode: the opcode of the code segment.
@@ -26,10 +30,19 @@ typedef struct external_symbol_data {
 *@return SUCCESS if the function finished the job successfullly. Otherwise, FAILURE;
 */
 
-result_t GenerateOutputFiles (vector_t *code_table,
-                              vector_t *data_table,
-                              symbol_table_t *symbol_table,
-                              char *input_path,
-                              list_t* ext_symbol_occurrences);
+result_t GenerateOutputFiles(vector_t *code_table,
+                             vector_t *data_table,
+                             symbol_table_t *symbol_table,
+                             char *input_path,
+                             list_t* ext_symbol_occurrences);
+
+ext_symbol_occurences_t *CreateExternalSymbolList();
+void DestroyExternSymbolList(ext_symbol_occurences_t *list);
+
+/*
+ * If the symbol exists in the list, add line to occurences vector.
+ * Otherwise, create it & add a first occurence.
+ */
+result_t AddExternalSymbolOccurence(ext_symbol_occurences_t *list, const char *symbol_name, unsigned int line);
 
 #endif /* __GENERATE_OUTPUT_FILES__ */

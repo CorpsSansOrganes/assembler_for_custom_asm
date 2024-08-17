@@ -1,8 +1,9 @@
+#include <string.h>
+#include <stdlib.h> /* atoi */
 #include "assembler.h"
 #include "macro_table.h"
 #include "generate_opcode.h"
 #include "vector.h"
-#include <string.h>
 #define delimiters ", /n/t/r" 
 
 static instruction_t FindInstruction (char *instruction_name, int *instruction_number);
@@ -14,8 +15,8 @@ static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
 
 result_t DataDirectiveToMachinecode(vector_t *data_table, char *params){
     char *current_word = strtok (params, delimiters);
-    bitmap_t parameter = atoi (current_word);/* parameter into number*/
-    VectorAppend (data_table,parameter);
+    bitmap_t parameter = atoi(current_word);/* parameter into number*/
+    VectorAppend(data_table,parameter);
     while (NULL != current_word) {
       current_word =strtok (NULL, ", /n/t/r");  
       parameter = atoi (current_word);
@@ -63,7 +64,7 @@ if (AppendVector (line_machine_code, instruction_opcode)){
 if (source_operand != NULL && dest_operand != NULL){
     src_operand_opcode = OperandToOpcode (source_operand);
     dest_operand_opcode = OperandToOpcode (dest_operand);
-  if (IsTwoRegitserOperands(source_operand, dest_operand)){
+  if (AreTwoRegitserOperands(source_operand, dest_operand)){
     if (AppendVector (code_table, UnifyRegisterOpcode (src_operand_opcode,dest_operand_opcode))){
       return FAILURE;
     }
@@ -186,7 +187,7 @@ static int CountParameters(char *line) {
     }
     return counter;
 }
-static bool_t IsTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand){
+static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand){
    if ((src_operand->addressing_method == DIRECT_REGISTER || src_operand->addressing_method == INDIRECT_REGISTER) &&
         (dest_operand->addressing_method == DIRECT_REGISTER || dest_operand->addressing_method == INDIRECT_REGISTER)){
           return TRUE;

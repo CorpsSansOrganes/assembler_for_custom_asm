@@ -107,10 +107,6 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
   return counter;
 }  
 
-static int ExternalSymbolCompare (external_symbol_data_t *external_symbol_data, char *key) {
-  return (0 == strcmp (external_symbol_data->symbol_name, key));
-}
-
 static result_t HandleInstructionStatement(char *instruction,
                                            char *params,
                                            symbol_table_t *symbol_table,
@@ -316,6 +312,12 @@ static result_t HandleDirectiveStatement(char *current_word,
   return SUCCESS;
 }
 
+static int ExternalSymbolCompare (void *value, void *key) {
+  char *symbol_name = (char *)key;
+  external_symbol_data_t *external_symbol_data = (external_symbol_data_t *)value;
+
+  return (0 == strcmp(external_symbol_data->symbol_name, key));
+}
 
 /*
  * @brief Performs a first pass on the code:
@@ -525,6 +527,10 @@ static result_t SecondPass(char *file_path,
     current_word = strtok(current_line, DELIMITERS);
     current_line += strlen(current_word) + 1;      
 
+    /*
+     * Handle directives. 
+     * The only one left to handle is .entry.
+     */
     if ('.' == *current_word && ENTRY_DIRECTIVE == IdentifyDirective(current_word, &cfg)) {
       char *param = NULL;
 
@@ -551,6 +557,7 @@ static result_t SecondPass(char *file_path,
     }
 
     /* 
+     * Handle instructions.
      * Guaranteed to be an instruction statement.
      */
     else {
@@ -563,6 +570,7 @@ static result_t SecondPass(char *file_path,
       if (NULL != current_word) {
         addressing_method_t method = DetectAddressingMethod(current_word);
         symbol_t *symbol = FindSymbol(symbol_table, current_word);
+        unsigned register_operands_num = 0;
         
         /* Symbol used but wasn't defined */
         if (DIRECT == method && SymbolWasntDefined(current_word, symbol_table, &cfg)) {
@@ -571,13 +579,16 @@ static result_t SecondPass(char *file_path,
         }
 
         /* Check if first operand is a symbol, if so update accordingly */
-        if (NULL != symbol) {
-          opcode_line = GetElementVector (opcode, vector_counter);
-            opcode_bitmap = GetElementVector (opcode_line,1);/*find his bitmap*/
-            *opcode_bitmap = GetSymbolAddress (symbol);/*put the address*/
-            if (EXTERN == GetSymbolType (symbol)){/*if its extern add the occurence to the list for the .ext file*/
-               external_symbol_data = Find(ext_symbol_occurrences, ExternalSymbolCompare, GetSymbolName(symbol));
-               if (NULL == external_symbol_data){/*if thats the first occurence*/
+        else if (DIRECT == method && NULL != symbol) {
+
+          /* If its extern add the occurence to the list for the .ext file */
+          if (EXTERN == GetSymbolType (symbol)) {
+            node_t *node = Find(ext_symbol_occurrences,
+                                ExternalSymbolCompare,
+                                (void *)GetSymbolName(symbol));
+
+            /* if thats the first occurence */
+            if (NULL == node) {
                 external_symbol_data->symbol_name = GetSymbolName(symbol);
                 external_symbol_data->occurences = CreateVector (0,sizeof(int));
                 AddNode (ext_symbol_occurrences,external_symbol_data);
@@ -585,7 +596,14 @@ static result_t SecondPass(char *file_path,
                AppendVector (external_symbol_data->occurences,bitmap_counter+INITIAL_IC_VALUE+1);/*bit_map counts the memory words that been used, so thats give the address*/
 
             }
+          else {
+            bitmap_t *opcode_block_2 = (bitmap_t *)GetElementVector(code_table, IC);
+            *opcode_block_2 = GetSymbolAddress(symbol);
+          }
           } 
+        else if (DIRECT_REGISTER == method || INDIRECT_REGISTER == method) {
+          ++register_operands_num;
+        }
         }
         current_word = strtok (NULL,DELIMITERS);
           if (NULL != current_word){
