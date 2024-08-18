@@ -237,10 +237,21 @@ bool_t IncorrectAddressingMethod(const char *instruction,
 bool_t NoSpaceAfterColon(const char *line,
                          syntax_check_config_t *config) {
   char *colon = strchr(line, ':');
+  if (NULL == colon) {
+    return FALSE;
+  }
   if (' ' == *(colon + 1)) {
     return FALSE;
   }
 
+  if (config->verbose) {
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n No space after symbol name definition '%s'.\n\n",
+            config->file_name,
+            config->line_number,
+            line);
+  }
+
+  return TRUE;
 }
 
 bool_t SymbolDefinedMoreThanOnce(const char *symbol,

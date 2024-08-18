@@ -440,6 +440,11 @@ static result_t FirstPass(char *file_path,
      */
     if (IsSymbolDefinition(current_line)) {
       /* Check if there's space after : */
+      if (NoSpaceAfterColon(current_line, &cfg)) {
+        total_errors++;
+        continue;
+      }
+
       /* Extract symbol name */
       current_word = strtok(current_line, ": \t\n\r");
       symbol_name = StrDup(current_word);
