@@ -59,7 +59,7 @@ result_t AddExternalSymbolOccurence(ext_symbol_occurrences_t *ext_symbol_occurre
 
   /* If this is the first occurrence */
   if (NULL == node) {
-    external_symbol_data = malloc(sizeof(external_symbol_data_t *));
+    external_symbol_data = malloc(sizeof(external_symbol_data_t));
     if (NULL == external_symbol_data) {
       return MEM_ALLOCATION_ERROR;
     }
