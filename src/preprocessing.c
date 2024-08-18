@@ -310,6 +310,8 @@ static result_t ParseMacro(FILE *file,
   }
 
   macro_name = CopySubstring(macro_name_start, macro_name_end, macro_name);
+  /* Remove \n if it exists */
+  macro_name = strtok(macro_name, "\n");
   
   /*
    * SYNTAX CHECK:
