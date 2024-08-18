@@ -17,14 +17,14 @@ const char *DELIMITERS = ", \t\n\r";
  * @return TRUE if ends with colon, otherwise FALSE.
  */
 
-static bool_t IsSymbolDefinition(char *line) {
-    while (!IsBlank(*(line + 1))) {
-       line++;
-    }
-    if (*line == ':'){
-	      return TRUE;
-    }
-    return FALSE;
+static bool_t IsSymbolDefinition(const char *line) {
+  while ('\0' != *(line + 1) && !IsBlank(*(line + 1))) {
+    line++;
+  }
+  if (*line == ':') {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /*
@@ -410,17 +410,13 @@ static result_t FirstPass(char *file_path,
         continue;
       }
 
-      /* Skip the colon and space*/
-      current_line += strlen(current_word) + 2; 
-      current_word = strtok(NULL, ":");
+      /* Skip after the label */
+      current_word = strtok(NULL, ": \t");
       if (NoDefinitionForSymbol(current_word, &cfg)){
         total_errors++;
         free(symbol_name); symbol_name = NULL;
         continue;
       }
-
-      /* Next word after symbol definition */
-      current_word = strtok(NULL, DELIMITERS);
     }        
 
     else {
