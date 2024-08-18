@@ -37,9 +37,9 @@ test_info_t ValidAssemblingingTest(const char *file_name) {
   macro_table_t *default_macro_table = CreateMacroTable();
 
   ProduceFilePath(input_dir, file_name, ".am", input_path);
-  ProduceFilePath(output_dir, file_name, ".ob", ob_output_path);
-  ProduceFilePath(output_dir, file_name, ".ent", ent_output_path);
-  ProduceFilePath(output_dir, file_name, ".ext", ext_output_path);
+  ProduceFilePath(input_dir, file_name, ".ob", ob_output_path);
+  ProduceFilePath(input_dir, file_name, ".ent", ent_output_path);
+  ProduceFilePath(input_dir, file_name, ".ext", ext_output_path);
 
   if (SUCCESS != AssembleFile(input_path, default_macro_table)){
     printf("%s failed to assemble \n", file_name);

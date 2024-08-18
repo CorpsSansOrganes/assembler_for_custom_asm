@@ -238,17 +238,16 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
   char *str_to_write = NULL;
   node_t *iter = (node_t *)GetHead(AsList(symbol_table));
 
+  /* No symbols, no files to write */
+  if (NULL == iter) {
+    return SUCCESS;
+  }
+
   /* Allocate resources */
   str_to_write = (char *) malloc (MAX_LINE_LENGTH*sizeof(char));
   if (NULL == str_to_write) {
     fprintf(stderr, "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;   
-  }
-
-  /* No symbols, no files to write */
-  if (NULL == iter) {
-    free(str_to_write);
-    return SUCCESS;
   }
 
   /* Find first .entry symbol (if one exists), and create .ent file only then */
@@ -296,20 +295,19 @@ static result_t GenerateExternFile(symbol_table_t *symbol_table,
   FILE *extern_file = NULL;
   char *str_to_write = NULL;
   node_t *iter = GetHead(external_symbol_data_list->external_symbols);
-  external_symbol_data_t *external_symbol = GetValue(iter);
+  external_symbol_data_t *external_symbol = NULL;
   int i = 0;
+
+  /* No external symbols, and thus no need to write a file */
+  if (NULL == iter) {
+    return SUCCESS; 
+  }
 
   /* Allocate resources */
   str_to_write = (char *) malloc (MAX_LINE_LENGTH*sizeof(char));
-  if (NULL == str_to_write){
+  if (NULL == str_to_write) {
     fprintf(stderr, "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;   
-  }
-
-  /* No external symbols, and thus no need to write a file */
-  if (NULL == external_symbol){
-    free(str_to_write);
-    return SUCCESS; 
   }
 
   extern_file = fopen(output_path, "a");

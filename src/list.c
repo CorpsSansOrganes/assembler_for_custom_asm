@@ -73,7 +73,7 @@ void DestroyList(list_t *list) {
 }
 
 node_t *GetHead(list_t *list) {
-  return list->head->next; /* list->head is dummy */
+  return (list->head)->next; /* list->head is dummy */
 }
 
 node_t *GetNext(node_t *node) {
