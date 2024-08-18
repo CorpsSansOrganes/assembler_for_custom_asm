@@ -3,24 +3,19 @@
  * The main module that processes command-line arguments and initiates the assembling process.
  */
 
-
-
-#include "macro_table.h"
-#include "utils.h"
-#include "assembler.h"
-#include "preprocessing.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
-
+#include "macro_table.h"
+#include "utils.h"
+#include "assembler.h"
+#include "preprocessing.h"
 
 static const char *ProduceFilePath(const char *dir_path,
                                    const char *file_name,
                                    const char *extension,
                                    char *full_path);
-
 
 int main(int argc, char *argv[]) {
    char *input_path[256];

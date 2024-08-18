@@ -26,6 +26,7 @@ BITMAP_OBJ := bitmap.o
 SYNTAX_ERROR_OBJ := $(SYMBOL_TABLE_OBJ) $(MACRO_TABLE_OBJ) $(BITMAP_OBJ) syntax_errors.o string_utils.o language_definitions.o
 PREPROCESSING_OBJ := $(SYNTAX_ERROR_OBJ) preprocessing.o linting.o
 ASSEMBLER_OBJ := $(SYNTAX_ERROR_OBJ) $(VECTOR_OBJ) assembler.o generate_opcode.o generate_output_files.o
+MAIN_OBJ := $(ASSEMBLER_OBJ) $(PREPROCESSING_OBJ) main.o
 
 TEST_LIST_OBJ := $(LIST_OBJ) list_test.o test_utils.o
 TEST_FILE_HANDLING_OBJ := $(FILE_HANDLING_OBJ) file_handling_test.o 
@@ -39,6 +40,15 @@ TEST_ASSEMBLER_OBJ := $(PREPROCESSING_OBJ) $(ASSEMBLER_OBJ) assembler_test.o tes
 
 # ----------
 # Executables
+#  ---------
+main: $(addprefix $(OBJ_RELEASE)/, $(MAIN_OBJ))
+	$(CC) $(CFLAGS_RELEASE) -o $@ $^ -I$(INCLUDE)
+
+test_main: $(addprefix $(OBJ_DEBUG)/, $(MAIN_OBJ))
+	$(CC) $(CFLAGS_DEBUG) -o $@ $^ -I$(INCLUDE)
+
+# ----------
+# Tests
 #  ---------
 # File Handling test rule
 test_file_handling: $(addprefix $(OBJ_DEBUG)/, $(TEST_FILE_HANDLING_OBJ))
@@ -79,7 +89,15 @@ test_assembler: $(addprefix $(OBJ_DEBUG)/, $(TEST_ASSEMBLER_OBJ))
 # ----------
 # Object files 
 #  ---------
-# Pattern for compiling source .o files
+# Pattern for compiling main.o
+$(OBJ_RELEASE)/%.o: $(SRC)/%.c 
+	$(CC) $(CFLAGS_RELEASE) -c $< -o $@ -I$(INCLUDE)
+
+# Pattern for compiling release .o files
+$(OBJ_RELEASE)/%.o: $(SRC)/%.c $(INCLUDE)/%.h
+	$(CC) $(CFLAGS_RELEASE) -c $< -o $@ -I$(INCLUDE)
+
+# Pattern for compiling debug .o files
 $(OBJ_DEBUG)/%.o: $(SRC)/%.c $(INCLUDE)/%.h
 	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
 
