@@ -414,7 +414,7 @@ static result_t FirstPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file\n");
+    fprintf(stderr,"Couldn't open input file '%s'.\n", file_path);
     return ERROR_OPENING_FILE; 
   }
 
@@ -466,7 +466,7 @@ static result_t FirstPass(char *file_path,
       }
 
       /* Skip after the label */
-      current_word = strtok(NULL, ": \t");
+      current_word = strtok(NULL, ": \t\n");
       if (NoDefinitionForSymbol(current_word, &cfg)){
         total_errors++;
         free(symbol_name); symbol_name = NULL;
@@ -565,7 +565,7 @@ static result_t SecondPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file\n");
+    fprintf(stderr,"Couldn't open input file '%s'.\n", file_path);
     return ERROR_OPENING_FILE; 
   }
 

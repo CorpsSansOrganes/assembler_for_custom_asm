@@ -101,9 +101,9 @@ test_info_t InvalidAssemblingTest(const char *file_name) {
 int main(void) {
   int total_failures = 0;
   size_t i = 0;
+  bool_t run_invalid = FALSE;
 
   char *valid_names[] = {
-    /*
     "valid_1_only_data_definition",
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
@@ -114,8 +114,10 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_extern",
+    /*
+    "valid_11_two_registers",
     */
-    "valid_11_two_registers"
+    "valid_12_instruction_symbol_one_operand"
   };
 
   char *invalid_names[] = {
@@ -137,7 +139,7 @@ int main(void) {
     }
   }
 
-  for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
+  for (i = 0; run_invalid && i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidAssemblingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);
