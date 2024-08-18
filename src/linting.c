@@ -1,3 +1,10 @@
+/* linting.c
+ *
+ * This module performs linting on input lines during preprocessing,
+ * such as removing extraneous blank chars and checking if the line is blank.
+ */
+
+
 #include <string.h> /* strlen, strcmp */
 #include "linting.h"
 #include "string_utils.h"

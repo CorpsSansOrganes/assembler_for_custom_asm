@@ -1,3 +1,10 @@
+/* main.c
+ *
+ * The main module that processes command-line arguments and initiates the assembling process.
+ */
+
+
+
 #include "macro_table.h"
 #include "utils.h"
 #include "assembler.h"
@@ -23,7 +30,7 @@ int main(int argc, char *argv[]) {
    int total_failures = 0; 
 
    if (NULL == getcwd (directory, sizeof(directory))){
-        perror ("error in geetcwd");
+        perror ("error in getcwd");
         return 1;
    }
    strcat (directory, "./");

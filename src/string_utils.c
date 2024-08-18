@@ -1,3 +1,11 @@
+/* string_utils.c
+ *
+ * This module implements various useful string functions,
+ * such as stripping white spaces, copying, duplicating, and more.
+ */
+
+
+
 #include <string.h> /* strncmp, strlen */
 #include <stdlib.h> /* malloc, free */
 #include "string_utils.h"

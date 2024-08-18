@@ -1,3 +1,10 @@
+/* language_definitions.c
+ *
+ * this module holds the reserved words of the language.
+ * 
+ */
+
+
 #include "language_definitions.h"
 #include <string.h> /* strlen */
 #include <ctype.h> /* isdigit */

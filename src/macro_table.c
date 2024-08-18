@@ -1,3 +1,12 @@
+/* macro_table.c
+ *
+ * This module implements the macro_table data structure along with its associated utilities, 
+ * which are similar to those of the list data structure.
+ */
+
+
+
+
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strlen, strcpy */
 #include <stdio.h> /* fprintf */

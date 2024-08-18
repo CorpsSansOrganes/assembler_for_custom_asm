@@ -1,3 +1,10 @@
+/* list.c
+ *
+ * This module implements a list data structure along with its associated utilities.
+ */
+
+
+
 #include "list.h"
 #include <stdlib.h> /* malloc, free */
 
