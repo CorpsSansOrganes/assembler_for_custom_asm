@@ -7,7 +7,7 @@ stop r1, #5
 mov #7
 ; incorrect addressing method
 lea *r1
-; symbol wasnt defined
-inc symbol
 ; immeadiate operand too big
 cmp #3451435434, r2
+; symbol wasnt defined
+inc symbol

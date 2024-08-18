@@ -75,13 +75,18 @@ test_info_t InvalidAssemblingTest(const char *file_name) {
   macro_table_t *macro_table = NULL;
 
   ProduceFilePath(input_dir, file_name, ".as", preprocessing_path);
-  ProduceFilePath(input_dir, file_name, ".am", assembler_input_path);/*TO check input dir*/
-  ProduceFilePath(output_dir, file_name, ".ob", output_path);
+  ProduceFilePath(input_dir, file_name, ".am", assembler_input_path);
+  ProduceFilePath(input_dir, file_name, ".ob", output_path);
+
   macro_table = PreprocessFile(preprocessing_path, assembler_input_path);
 
   if (NULL == macro_table) {
     printf("Preprocessing failed for '%s'\n", preprocessing_path);
     RETURN_ERROR(TECHNICAL_ERROR);
+  }
+
+  if (FAILURE != AssembleFile(assembler_input_path, macro_table)) {
+    RETURN_ERROR(TEST_FAILED);
   }
 
   if (FALSE == FileDoesntExist(output_path)) {
@@ -98,6 +103,7 @@ int main(void) {
 
   char *valid_names[] = {
     "valid_1_only_data_definition",
+    /*
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
     "valid_4_with_instruction_1operand",
@@ -107,15 +113,17 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_extern"
+    */
   };
 
-    /*
   char *invalid_names[] = {
     "invalid_1_instruction_errors",
+    /*
     "invalid_2_symbol_errors",
-    "invalid_3_instruction_errors"
-  };
+    "invalid_3_instruction_errors",
+    "invalid_4_symbol_wasnt_defined"
     */
+  };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
     test_info_t test_info = ValidAssemblingingTest(valid_names[i]);
@@ -125,7 +133,6 @@ int main(void) {
     }
   }
 
-  /*
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidAssemblingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
@@ -133,7 +140,6 @@ int main(void) {
       ++total_failures;
     }
   }
-  */
 
   if (0 == total_failures) {
     printf(BOLD_GREEN "Test successful: " COLOR_RESET "Assembler\n");

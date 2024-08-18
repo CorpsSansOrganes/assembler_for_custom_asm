@@ -648,7 +648,6 @@ static result_t SecondPass(char *file_path,
         /* Symbol used but wasn't defined */
         if (DIRECT == method && SymbolWasntDefined(current_word, symbol_table, &cfg)) {
           total_errors++;
-          continue;
         }
 
         /* Check if first operand is a symbol, if so update accordingly */
@@ -748,8 +747,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
     no_errors = FALSE;
   }
 
-  if (no_errors && 
-    SUCCESS != SecondPass(file_path,
+  if (SUCCESS != SecondPass(file_path,
                           symbol_table,
                           code_table,
                           ext_list)) {

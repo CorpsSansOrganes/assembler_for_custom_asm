@@ -1,0 +1,6 @@
+boolbool r3, r2
+stop r1, #5
+mov #7
+lea *r1
+cmp #3451435434, r2
+inc symbol
