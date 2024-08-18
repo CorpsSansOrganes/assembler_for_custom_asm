@@ -20,15 +20,14 @@ static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_op
 
 result_t DataDirectiveToMachinecode(vector_t *data_table, char *params) {
   char *current_word = strtok(params, delimiters);
-  bitmap_t parameter = atoi(current_word);
+  bitmap_t parameter = 0;
 
-  AppendVector(data_table, &parameter);
   while (NULL != current_word) {
-    current_word = strtok (NULL, delimiters);  
     parameter = atoi (current_word);
     if (MEM_ALLOCATION_ERROR == AppendVector(data_table, &parameter)) {
       return MEM_ALLOCATION_ERROR;
     }
+    current_word = strtok (NULL, delimiters);  
   }
 
   return SUCCESS;

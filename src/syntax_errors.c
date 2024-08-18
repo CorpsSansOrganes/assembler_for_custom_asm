@@ -331,6 +331,10 @@ bool_t SymbolUsedAsAMacro(const char *symbol,
 }
 
 bool_t NoDefinitionForSymbol(const char *after_symbol, syntax_check_config_t *config) {
+  if (NULL == after_symbol) {
+    return TRUE;
+  }
+
   if (TRUE == DetectExtraCharacters(after_symbol, &silent_syntax_cfg)) {
     return FALSE;
   }

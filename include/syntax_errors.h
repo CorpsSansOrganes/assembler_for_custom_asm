@@ -319,6 +319,19 @@ bool_t IsIllegalDataParameter(const char *data, syntax_check_config_t *config);
 bool_t IsIllegalString(const char *str, syntax_check_config_t *config);
 
 /*
+ * @brief Check if .extern or .entry parameters have been placed with commas well-placed.
+ *        For example, "S1, S2, S3" is legal
+ *                     "S1 S2, S3" is illegal
+ *                     ",S1, S2" is illegal.
+ *
+ * @param params - The parameters which have been passed to the directives (e.g. "S1, S2, S3").
+ *        config - Pointer the configurations about the syntax check.
+ *
+ * @return TRUE if the commas are misplaced, FALSE otherwise
+ */
+bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config);
+
+/*
 // ~~--~~--~~--~~--~~
 // General syntax
 // ~~--~~--~~--~~--~~
