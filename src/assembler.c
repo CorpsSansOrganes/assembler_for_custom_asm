@@ -26,14 +26,14 @@ const char *DELIMITERS = ", \t\n\r";
  * @return TRUE if ends with colon, otherwise FALSE.
  */
 
-static bool_t IsSymbolDefinition(char *line) {
-    while (!IsBlank(*(line + 1))) {
-       line++;
-    }
-    if (*line == ':'){
-	      return TRUE;
-    }
-    return FALSE;
+static bool_t IsSymbolDefinition(const char *line) {
+  while ('\0' != *(line + 1) && !IsBlank(*(line + 1))) {
+    line++;
+  }
+  if (*line == ':') {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /*
@@ -277,7 +277,7 @@ static result_t HandleDirectiveStatement(char *current_word,
   else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
       return HandleStringOrData(
         directive,
-        current_line,
+        current_word,
         symbol_table,
         symbol_name,
         data_table,
@@ -419,17 +419,13 @@ static result_t FirstPass(char *file_path,
         continue;
       }
 
-      /* Skip the colon and space*/
-      current_line += strlen(current_word) + 2; 
-      current_word = strtok(NULL, ":");
+      /* Skip after the label */
+      current_word = strtok(NULL, ": \t");
       if (NoDefinitionForSymbol(current_word, &cfg)){
         total_errors++;
         free(symbol_name); symbol_name = NULL;
         continue;
       }
-
-      /* Next word after symbol definition */
-      current_word = strtok(NULL, DELIMITERS);
     }        
 
     else {
@@ -530,12 +526,14 @@ static result_t SecondPass(char *file_path,
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     ++cfg.line_number;
 
-    /* Read first word (after symbol definition, if one exists) */
-    current_word = strtok(current_line, DELIMITERS);
-
-    if (IsSymbolDefinition(current_word)) {
-    /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
-      current_word = strtok(NULL, DELIMITERS);
+    if (IsSymbolDefinition(current_line)) {
+      /* If we have a symbol definition, e.g. "SYMBOL: ...", skip after the label */
+      current_word = strtok(current_line, ": \t\n\r");
+      current_word = strtok(NULL, ": \t");
+    }
+    else {
+      /* Get the first word */
+      current_word = strtok(current_line, DELIMITERS);
     }
 
     /*

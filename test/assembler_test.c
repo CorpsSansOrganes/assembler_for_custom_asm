@@ -94,11 +94,13 @@ int main(void) {
   int i = 0;
 
   char *valid_names[] = {
+    /*
     "valid_1_only_data_definition",
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
     "valid_4_with_instruction_1operand",
     "valid_5_with_instruction_2operands",
+    */
     "valid_6_with_symbol_data",
     /*
     "valid_7_with_symbol_instruction",

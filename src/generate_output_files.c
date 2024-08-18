@@ -155,7 +155,7 @@ result_t GenerateOutputFiles(vector_t *code_table,
   }
 
   /* Generate .ent file */
-  strcpy(path + (length - 2), "ext");
+  strcpy(path + (length - 2), "ent");
   if (SUCCESS != GenerateEntriesFile(symbol_table, path)) {
     error_occurred = TRUE;
   }
@@ -296,7 +296,10 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
     iter = GetNext(iter);
   }
 
-  fclose(entry_file);
+  /* File will be opened only if there are .entry symbols */
+  if (NULL != entry_file) {
+    fclose(entry_file);
+  }
   free (str_to_write);
   return SUCCESS;
 }
