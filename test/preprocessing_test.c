@@ -16,8 +16,8 @@ static const char *ProduceFilePath(const char *dir_path,
 
 static bool_t FileDoesntExist(const char *path);
 const char *expected_dir = "./test/preprocessing_test_files/expected";
-const char *input_dir = "./test./preprocessing_test_files/input";
-const char *output_dir = "./test./preprocessing_test_files/output";
+const char *input_dir = "./test/preprocessing_test_files/input";
+const char *output_dir = "./test/preprocessing_test_files/output";
 
 /*
  * TESTS
@@ -78,10 +78,12 @@ int main(void) {
     "valid_4_w_blank_line" */
   };
 
+  /*
   char *invalid_names[] = {
     /*"invalid_1_extra_characters",
     "invalid_2_macro_is_reserved_name"*/
   };
+  */
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
     test_info_t test_info = ValidPreprocessingTest(valid_names[i]);
@@ -91,6 +93,7 @@ int main(void) {
     }
   }
 
+  /*
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidPreprocessingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
@@ -98,6 +101,7 @@ int main(void) {
       ++total_failures;
     }
   }
+  */
 
   if (0 == total_failures) {
     printf(BOLD_GREEN "Test successful: " COLOR_RESET "Preprocessing\n");
