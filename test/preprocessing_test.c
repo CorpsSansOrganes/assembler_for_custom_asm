@@ -16,9 +16,9 @@ static const char *ProduceFilePath(const char *dir_path,
 
 static bool_t FileDoesntExist(const char *path);
 
-const char *expected_dir = "./test/preprocessing_test_files/expected";
-const char *input_dir = "./test/preprocessing_test_files/input";
-const char *output_dir = "./test/preprocessing_test_files/output";
+const char *expected_dir = "./preprocessing_test_files/expected";
+const char *input_dir = "./preprocessing_test_files/input";
+const char *output_dir = "./preprocessing_test_files/output";
 
 /*
  * TESTS

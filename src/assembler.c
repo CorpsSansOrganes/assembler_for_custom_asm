@@ -490,7 +490,7 @@ static result_t FirstPass(char *file_path,
 static result_t SecondPass(char *file_path,
                            symbol_table_t *symbol_table,
                            vector_t *code_table,
-                           ext_symbol_occurences_t *ext_list) {
+                           ext_symbol_occurrences_t *ext_list) {
 
   syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
   unsigned int IC = 0;
@@ -642,7 +642,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   vector_t *data_table = NULL;
 
   /* List which will holds all places where an external symbol is used */
-  ext_symbol_occurences_t *ext_list = NULL;
+  ext_symbol_occurrences_t *ext_list = NULL;
 
   /*
    * Acquiring resources 

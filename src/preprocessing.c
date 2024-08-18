@@ -2,6 +2,7 @@
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strcpy */
 #include <ctype.h> /* IsBlank */
+#include <errno.h>
 #include "preprocessing.h"
 #include "syntax_errors.h"
 #include "string_utils.h"
