@@ -290,28 +290,25 @@ static result_t HandleDirectiveStatement(char *current_word,
     }
 
     if (EXTERN_DIRECTIVE == directive) {
-      char *param = NULL;
-
-      current_line += strlen(".extern") + 1;
 
       /* Adding each symbol passed as a parameter to .extern to the symbol
        * table as an external table.
        */
-      param = strtok(current_line, DELIMITERS);
-      while (NULL != param) {
+      current_word = strtok(NULL, DELIMITERS);
+      while (NULL != current_word) {
         /* Check syntax errors for each symbol name */
-        if (TRUE == SymbolNameErrorOccurred(symbol_name,
+        if (TRUE == SymbolNameErrorOccurred(current_word,
                                             macro_table,
                                             symbol_table,
                                             cfg)) {
           return FAILURE;
         }
 
-        if (SUCCESS != AddExternalSymbol(symbol_table, param)) {
+        if (SUCCESS != AddExternalSymbol(symbol_table, current_word)) {
           return MEM_ALLOCATION_ERROR;
         }
 
-        param = strtok(NULL,DELIMITERS);
+        current_word = strtok(NULL,DELIMITERS);
       }
     }
 
@@ -394,7 +391,6 @@ static result_t FirstPass(char *file_path,
       if (NULL == symbol_name) {
         perror("Error: memory allocation error\n");
         free(current_line);
-        free(current_word);
         fclose(input_file);
         return MEM_ALLOCATION_ERROR;
       }
@@ -410,7 +406,8 @@ static result_t FirstPass(char *file_path,
 
       /* Skip the colon and space*/
       current_line += strlen(current_word) + 2; 
-      if (NoDefinitionForSymbol(current_line, &cfg)){
+      current_word = strtok(NULL, ":");
+      if (NoDefinitionForSymbol(current_word, &cfg)){
         total_errors++;
         free(symbol_name); symbol_name = NULL;
         continue;
@@ -422,7 +419,7 @@ static result_t FirstPass(char *file_path,
 
     else {
       /* First word (no symbol definition) */
-      current_word = strtok(current_line,DELIMITERS);
+      current_word = strtok(current_line, DELIMITERS);
     }
 
     /* 
@@ -441,7 +438,6 @@ static result_t FirstPass(char *file_path,
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
         free(current_line);
-        free(current_word);
         fclose(input_file);
         return MEM_ALLOCATION_ERROR;
       }
@@ -465,7 +461,6 @@ static result_t FirstPass(char *file_path,
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
         free(current_line);
-        free(current_word);
         fclose(input_file);
         return MEM_ALLOCATION_ERROR;
       }
@@ -476,7 +471,6 @@ static result_t FirstPass(char *file_path,
   }
 
   free(current_line);
-  free(current_word);
   fclose(input_file);
 
   if (total_errors) {
@@ -490,9 +484,9 @@ static result_t FirstPass(char *file_path,
 static result_t SecondPass(char *file_path,
                            symbol_table_t *symbol_table,
                            vector_t *code_table,
-                           ext_symbol_occurences_t *ext_list) {
+                           ext_symbol_occurrences_t *ext_list) {
 
-  syntax_check_config_t cfg = CreateSyntaxCheckConfig (file_path, 0, TRUE);
+  syntax_check_config_t cfg = CreateSyntaxCheckConfig(file_path, 0, TRUE);
   unsigned int IC = 0;
   int total_errors = 0;
   char *current_word = NULL; 
@@ -501,7 +495,7 @@ static result_t SecondPass(char *file_path,
   
   /* Acquire resources */
   input_file = fopen(file_path, "r");
-    if (NULL == input_file) {
+  if (NULL == input_file) {
     fprintf(stderr,"Couldn't open input file");
     return ERROR_OPENING_FILE; 
   }
@@ -509,14 +503,6 @@ static result_t SecondPass(char *file_path,
   current_line = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
   if (NULL == current_line) {
     fclose(input_file);
-    fprintf(stderr,
-            "Memory allocation error: couldn't allocate a buffer\n");
-    return MEM_ALLOCATION_ERROR;
-  }
-  current_word = (char *)malloc(MAX_LINE_LENGTH * sizeof(char));
-  if (NULL == current_word) {
-    fclose (input_file);
-    free (current_line);
     fprintf(stderr,
             "Memory allocation error: couldn't allocate a buffer\n");
     return MEM_ALLOCATION_ERROR;
@@ -529,40 +515,39 @@ static result_t SecondPass(char *file_path,
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     ++cfg.line_number;
 
-    /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
-    if (IsSymbolDefinition(current_line)) {
-      current_word = strtok(current_line, DELIMITERS);
-      current_line += strlen(current_word) + 1;               
-    }
-
     /* Read first word (after symbol definition, if one exists) */
     current_word = strtok(current_line, DELIMITERS);
-    current_line += strlen(current_word) + 1;      
+
+    if (IsSymbolDefinition(current_word)) {
+    /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
+      current_word = strtok(NULL, DELIMITERS);
+    }
 
     /*
      * Handle directives. 
      * The only one left to handle is .entry.
      */
-    if ('.' == *current_word && ENTRY_DIRECTIVE == IdentifyDirective(current_word, &cfg)) {
-      char *param = NULL;
-
-      current_line += strlen(".entry") + 1;
+    if ('.' == *current_word) {
+      if (ENTRY_DIRECTIVE != IdentifyDirective(current_word, &cfg)) {
+        /* Other directive have been handled in FirstPass */
+        continue;
+      }
 
       /* Update each symbol passed as a parameter to .entry as an .entry symbol.
        * Check syntax errors for each symbol.
        */
 
-      param = strtok(current_line, DELIMITERS);
-      while (NULL != current_line) {
-        if (SymbolWasntDefined(param, symbol_table, &cfg)) {
+      current_word = strtok(NULL, DELIMITERS);
+      while (NULL != current_word) {
+        if (SymbolWasntDefined(current_word, symbol_table, &cfg)) {
           total_errors++;
         }
 
-        else if (SymbolAlreadyDefinedAsExtern(param, symbol_table, &cfg)) {
+        else if (SymbolAlreadyDefinedAsExtern(current_word, symbol_table, &cfg)) {
           total_errors++;
         }
         else {
-          ChangeSymbolToEntry(symbol_table, param);
+          ChangeSymbolToEntry(symbol_table, current_word);
         }
         current_word = strtok (NULL,DELIMITERS);
       }
@@ -623,8 +608,7 @@ static result_t SecondPass(char *file_path,
 
   fclose (input_file);
   free (current_line);
-  free (current_word);
-  if (0 == total_errors){
+  if (0 == total_errors) {
     return SUCCESS;
   }
   return FAILURE;
@@ -642,7 +626,7 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   vector_t *data_table = NULL;
 
   /* List which will holds all places where an external symbol is used */
-  ext_symbol_occurences_t *ext_list = NULL;
+  ext_symbol_occurrences_t *ext_list = NULL;
 
   /*
    * Acquiring resources 
