@@ -473,22 +473,25 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   return TRUE;
 }
 
-bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config){
+bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config) {
+  const char *ptr = param;
   bool_t comma_is_legal = FALSE;
+  bool_t last_char_legal = TRUE;
   bool_t char_is_legal = TRUE;
-  bool_t last_char_legal = FALSE;
   bool_t error = FALSE;
 
-  while (NULL != param){
-    /*handle blank char - if it comes after a name, no char is legal after (needs comma)*/
-    if (IsBlank(*param)){
-      if (TRUE == char_is_legal && TRUE == comma_is_legal ){
+  while ('\0' != *ptr) {
+    /* Handle whitespaces - if they come after a name, comma is expected */
+    if (IsBlank(*ptr)) {
+      if (TRUE == char_is_legal && TRUE == comma_is_legal) {
+        /* If we have a blank space after a parameter, only comma is legal */
         char_is_legal = FALSE;
       }
     }
-    /*handle commas - after comma only chars are legal, and cannot finish woth comma*/
-    else if (0 == strcmp(param,",")){
-      if (FALSE == comma_is_legal){
+
+    /*Handle commas - after comma only chars are legal, and cannot finish woth comma*/
+    else if (',' == *ptr) {
+      if (FALSE == comma_is_legal) {
         error = TRUE;
         break;
       }
@@ -498,7 +501,7 @@ bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config){
     }  
     /*after char everything legal, and its legal to finish here*/
     else {
-      if (FALSE == char_is_legal){
+      if (FALSE == char_is_legal) {
         error = TRUE;
         break;
       }
@@ -506,17 +509,21 @@ bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config){
       comma_is_legal = TRUE;
       last_char_legal = TRUE;
     }
-    param++;
+    ptr++;
   }
-  if (FALSE == last_char_legal){
-      error = TRUE;
+
+  if (FALSE == error && TRUE == last_char_legal) {
+    return FALSE;
   }
-  if (TRUE == error && config->verbose) {
-      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n commas placed in parameters are invalid \n\n",
+
+  if (config->verbose) {
+      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Commas placed in parameters '%s' are misplaced \n\n",
               config->file_name,
-              config->line_number);
+              config->line_number,
+              param);
   }
-  return error;
+
+  return TRUE;
 }
 
 

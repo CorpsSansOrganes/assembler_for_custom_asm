@@ -101,10 +101,10 @@ int main(void) {
     "valid_4_with_instruction_1operand",
     "valid_5_with_instruction_2operands",
     "valid_6_with_symbol_data",
-    */
     "valid_7_with_symbol_instruction",
-    /*
+    */
     "valid_8_with_external_symbol",
+    /*
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_external"
     */

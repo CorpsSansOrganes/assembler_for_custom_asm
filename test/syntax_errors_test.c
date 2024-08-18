@@ -276,42 +276,6 @@ test_info_t SymbolWasntDefinedTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
-test_info_t SymbolAlreadyDefinedAsEntryTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("SymbolAlreadyDefinedAsEntry");
-  symbol_table_t *table = CreateSymbolTable();
-
-  if (SUCCESS != AddExternalSymbol(table,"aaaa")) {
-    RETURN_ERROR(TECHNICAL_ERROR);
-  }
-
-  if (SUCCESS != AddSymbol(table,"bbbb", 100, CODE)) {
-    RETURN_ERROR(TECHNICAL_ERROR);
-  }
-
-  if (SUCCESS != ChangeSymbolToEntry(table,"bbbb")) {
-    RETURN_ERROR(TECHNICAL_ERROR);
-  }
-
-  if (SUCCESS != AddSymbol(table,"cccc",100, DATA)) {
-    RETURN_ERROR(TECHNICAL_ERROR);
-  }
-
-  if (FALSE != SymbolAlreadyDefinedAsEntry("aaaa", table, cfg)){
-     RETURN_ERROR(TEST_FAILED);
-  }
-
-  if (FALSE != SymbolAlreadyDefinedAsEntry("cccc",table, cfg)){
-     RETURN_ERROR(TEST_FAILED);
-  }
-
-  if (TRUE != SymbolAlreadyDefinedAsEntry("bbbb",table, cfg)){
-     RETURN_ERROR(TEST_FAILED);
-  }
-
-  DestroySymbolTable(table);
-  return test_info;
-}
-
 test_info_t SymbolAlreadyDefinedAsExternTest(syntax_check_config_t *cfg) {
   test_info_t test_info = InitTestInfo("SymbolAlreadyDefinedAsExtern");
   symbol_table_t *table = CreateSymbolTable();
@@ -432,23 +396,23 @@ test_info_t NoDefinitionForSymbolTest(syntax_check_config_t *cfg) {
 
   return test_info;
 }
-test_info_t DirectiveDoesntExistTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("DirectiveDoesntExist");
+test_info_t IdentifyDirectiveTest(syntax_check_config_t *cfg) {
+  test_info_t test_info = InitTestInfo("IdentifyDirective");
   const char *exist = ".entry";
   const char *without_dot = "entry";
   const char *not_exist = "aaaa";
   const char *uppercase_directive = ".dAta";
 
-  if (FALSE != DirectiveDoesntExist(exist, cfg)) {
+  if (ENTRY_DIRECTIVE != IdentifyDirective(exist, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE != DirectiveDoesntExist(without_dot, cfg)) {
+  if (INVALID_DIRECTIVE != IdentifyDirective(without_dot, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE != DirectiveDoesntExist(not_exist, cfg)) {
+  if (INVALID_DIRECTIVE != IdentifyDirective(not_exist, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
-  if (TRUE != DirectiveDoesntExist(uppercase_directive, cfg)) {
+  if (INVALID_DIRECTIVE != IdentifyDirective(uppercase_directive, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
 
@@ -511,32 +475,6 @@ test_info_t IsIllegalStringTest(syntax_check_config_t *cfg) {
   }
 
   if (TRUE != IsIllegalString(illegal2, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-
-  return test_info;
-}
-
-test_info_t IsIllegalExternOrEntryParameterTest(syntax_check_config_t *cfg) {
-  test_info_t test_info = InitTestInfo("IsIllegalStringTest");
-  const char *legal_param = "InnocentSymbol";
-  const char *illegal_param1 = "1InnocentSymbol";
-  const char *illegal_param2= "InnocentSymbol, Another One";
-  const char *illegal_param3= "InnocentSymbol Another One";
-
-  if (FALSE != IsIllegalExternOrEntryParameter(legal_param, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-
-  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param1, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-
-  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param2, cfg)) {
-    RETURN_ERROR(TEST_FAILED);
-  }
-
-  if (TRUE != IsIllegalExternOrEntryParameter(illegal_param3, cfg)) {
     RETURN_ERROR(TEST_FAILED);
   }
 
@@ -630,6 +568,50 @@ test_info_t DetectAddressingMethodTest(syntax_check_config_t *cfg) {
   return test_info;
 }
 
+test_info_t AreCommasMisplacedTest(syntax_check_config_t *cfg) { 
+  test_info_t test_info = InitTestInfo("AreCommasMisplaced");
+  char *valid1 = "S1, S2";
+  char *valid2 = " S1,    S2   ";
+  char *valid3 = "S1";
+  char *valid4 = "";
+  char *invalid1 = ",S1";
+  char *invalid2 = "S1,";
+  char *invalid3 = "S1, S1 a  , X";
+  char *invalid4 = "S1,  , X";
+  char *invalid5 = ",";
+
+  if (FALSE != AreCommasMisplaced(valid1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != AreCommasMisplaced(valid2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != AreCommasMisplaced(valid3, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (FALSE != AreCommasMisplaced(valid4, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  if (TRUE != AreCommasMisplaced(invalid1, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != AreCommasMisplaced(invalid2, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != AreCommasMisplaced(invalid3, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != AreCommasMisplaced(invalid4, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+  if (TRUE != AreCommasMisplaced(invalid5, cfg)) {
+    RETURN_ERROR(TEST_FAILED);
+  }
+
+  return test_info;
+}
+
 int main(int argc, char *argv[]) {
   int total_failures = 0;
   syntax_check_config_t cfg;
@@ -647,16 +629,14 @@ int main(int argc, char *argv[]) {
     IncorrectAddressingMethodTest,
     SymbolDefinedMoreThanOnceTest,
     SymbolWasntDefinedTest,
-    SymbolAlreadyDefinedAsEntryTest,
     SymbolAlreadyDefinedAsExternTest,
     SymbolNameIsIllegalTest,
     SymbolUsedAsAMacroTest,
     NoDefinitionForSymbolTest,
-    DirectiveDoesntExistTest,
     IsIllegalDataParameterTest,
     IsIllegalStringTest,
-    IsIllegalExternOrEntryParameterTest,
-    RegisterNameDoesntExistTest
+    RegisterNameDoesntExistTest,
+    AreCommasMisplacedTest
   };
 
   /* Check if -v has been passed to enable verbose mode */

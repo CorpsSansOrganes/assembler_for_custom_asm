@@ -6,7 +6,6 @@
  * and finally calls 'generate_output_files' to produce the output.
  */
 
-
 #include <stdio.h> /* fopen, fclose */
 #include <string.h> /* strlen */
 #include <stdlib.h> /* malloc, free */
