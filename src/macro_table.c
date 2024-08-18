@@ -56,6 +56,8 @@ void DestroyMacroTable(macro_table_t *table) {
   node_t *node = GetHead(table->list);
   while (NULL != node) {
     macro_t *macro = GetValue(node);
+    free((void *)(macro->macro_name));
+    free((void *)(macro->macro_definition));
     free(macro);
     node = GetNext(node);
   }

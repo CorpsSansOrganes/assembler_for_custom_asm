@@ -279,6 +279,7 @@ static result_t ParseMacro(FILE *file,
                            char *line,
                            syntax_check_config_t *cfg) {
 
+  result_t res = SUCCESS;
   char *macro_name_start = NULL;
   char *macro_name_end = NULL;
   char *macro_name = NULL;
@@ -354,7 +355,12 @@ static result_t ParseMacro(FILE *file,
   if (TRUE == was_error){
     return FAILURE;
   }
-  return AddMacro(table, macro_name, macro_definition);
+
+  res = AddMacro(table, macro_name, macro_definition);
+  free(macro_name);
+  free(macro_definition);
+
+  return res;
 }
 
 /*
