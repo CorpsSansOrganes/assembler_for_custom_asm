@@ -291,6 +291,7 @@ static result_t HandleDirectiveStatement(char *current_word,
 
     if (EXTERN_DIRECTIVE == directive) {
 
+      If (
       /* Adding each symbol passed as a parameter to .extern to the symbol
        * table as an external table.
        */
