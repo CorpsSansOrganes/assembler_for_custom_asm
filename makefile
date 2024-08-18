@@ -93,6 +93,9 @@ test_assembler: $(addprefix $(OBJ_DEBUG)/, $(TEST_ASSEMBLER_OBJ))
 $(OBJ_RELEASE)/%.o: $(SRC)/%.c 
 	$(CC) $(CFLAGS_RELEASE) -c $< -o $@ -I$(INCLUDE)
 
+$(OBJ_DEBUG)/%.o: $(SRC)/%.c 
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@ -I$(INCLUDE)
+
 # Pattern for compiling release .o files
 $(OBJ_RELEASE)/%.o: $(SRC)/%.c $(INCLUDE)/%.h
 	$(CC) $(CFLAGS_RELEASE) -c $< -o $@ -I$(INCLUDE)
