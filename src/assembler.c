@@ -662,16 +662,12 @@ static result_t SecondPass(char *file_path,
 
         /* Check if first operand is a symbol, if so update accordingly */
         else if (DIRECT == method && NULL != symbol) {
+          bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
+          *opcode_block = GetSymbolAddress(symbol);
 
           /* If its extern add the occurence to the list for the .ext file */
           if (EXTERN == GetSymbolType (symbol)) {
             AddExternalSymbolOccurence(ext_list, GetSymbolName(symbol), IC + INITIAL_IC_VALUE);
-          }
-
-          /* If its a non-extern symbol we update the missing addresses in the code segment */
-          else {
-            bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
-            *opcode_block = GetSymbolAddress(symbol);
           }
         } 
 

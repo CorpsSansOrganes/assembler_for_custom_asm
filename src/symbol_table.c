@@ -89,7 +89,7 @@ result_t AddExternalSymbol(symbol_table_t *table,
 
   return AddSymbolWithType(table,
                            symbol_name,
-                           0,  /* Address doesn't matter w/ external symbols */
+                           1,  /* (E) bits is on, everything else off */
                            EXTERN,
                            0); /* Code/data segment doesn't matter also. */
 }

@@ -22,13 +22,13 @@
 #include "language_definitions.h"
 #include "generate_output_files.h"
 
+#define BIT_MASK_15_BITS (0x7FFF)
+
 static result_t WriteHeader(char *output_path, int IC, int DC);
 static result_t GenerateEntriesFile(symbol_table_t *symbol_table, char *output_path);
 static result_t GenerateOBJFile(vector_t *code_opcode, vector_t *data_opcode, char *output_path);
 static result_t GenerateExternFile(char *output_path,ext_symbol_occurrences_t *external_symbol_data_list);
 static int ExternalSymbolCompare(void *value, void *key);
-
-#define BIT_MASK_15_BITS (0x7FFF)
 
 ext_symbol_occurrences_t *CreateExternalSymbolList(void) {
   ext_symbol_occurrences_t *ext_list = malloc(sizeof(ext_symbol_occurrences_t));
@@ -186,7 +186,7 @@ static result_t GenerateOBJFile (vector_t *code_table,
     return FAILURE;
   }
 
-  obj_file = fopen(output_path, "w");
+  obj_file = fopen(output_path, "a");
   if (NULL == obj_file) {
     free(address);
     free(bitmap);

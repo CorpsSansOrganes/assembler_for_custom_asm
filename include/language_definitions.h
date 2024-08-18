@@ -4,11 +4,14 @@
 #include "utils.h"
 #include "bitmap.h"
 
-#define NUM_OF_INSTRUCTIONS 16
-#define NUM_OF_DIRECTIVES 4
-#define NUM_OF_REGISTERS 8
+#define NUM_OF_INSTRUCTIONS (16)
+#define NUM_OF_DIRECTIVES (4)
+#define NUM_OF_REGISTERS (8)
 
-#define SYMBOL_CHARACTER_LIMIT 31
+#define SYMBOL_CHARACTER_LIMIT (31)
+
+#define STARTING_BIT_SRC_OPERAND (7)
+#define STARTING_BIT_DEST_OPERAND (3)
 
 /*
  * The value of an immediate operand are stored in bits 3 - 15 of the word.
