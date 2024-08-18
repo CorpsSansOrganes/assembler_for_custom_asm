@@ -179,6 +179,8 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
 // ~~--~~--~~--~~--~~
 */
 
+bool_t NoSpaceAfterColon(const char *line,
+                         syntax_check_config_t *config);
 /*
  * @briefTell if theres been an attempt to define a symbol that have been defined previously 
  *

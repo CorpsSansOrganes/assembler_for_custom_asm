@@ -234,6 +234,15 @@ bool_t IncorrectAddressingMethod(const char *instruction,
   return TRUE;
 }
 
+bool_t NoSpaceAfterColon(const char *line,
+                         syntax_check_config_t *config) {
+  char *colon = strchr(line, ':');
+  if (' ' == *(colon + 1)) {
+    return FALSE;
+  }
+
+}
+
 bool_t SymbolDefinedMoreThanOnce(const char *symbol,
                                  symbol_table_t *table,
                                  syntax_check_config_t *config) {
@@ -243,9 +252,10 @@ bool_t SymbolDefinedMoreThanOnce(const char *symbol,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempted to define a symbol that was already defined \n\n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n The symbol '%s' was already defined.\n\n",
             config->file_name,
-            config->line_number);
+            config->line_number,
+            symbol);
   }
   return TRUE;
 }

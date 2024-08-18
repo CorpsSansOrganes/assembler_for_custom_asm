@@ -1,0 +1,3 @@
+S:ymbol: .data 7
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: .data 7
+1symbol: .string "notok"

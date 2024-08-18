@@ -1,0 +1,9 @@
+SYMBOL1: .data 3, 4
+SYMBOL1: .string "asf"
+.extern SYMBOL2
+.entry SYMBOL2
+.entry SYMBOL3
+.extern SYMBOL3
+S:ymbol: .data 7
+macroname: cmp #5, #4
+SYMBOL4;

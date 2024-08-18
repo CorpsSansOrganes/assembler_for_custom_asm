@@ -439,6 +439,7 @@ static result_t FirstPass(char *file_path,
      * e.g. "SYMBOL: ..."
      */
     if (IsSymbolDefinition(current_line)) {
+      /* Check if there's space after : */
       /* Extract symbol name */
       current_word = strtok(current_line, ": \t\n\r");
       symbol_name = StrDup(current_word);
