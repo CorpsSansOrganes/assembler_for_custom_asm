@@ -5,6 +5,7 @@
 !test/
 !include/
 !src/
+!screenshots/
 !.gitignore
 !makefile
 
@@ -12,6 +13,7 @@
 !test/**
 !include/**
 !src/**
+!screenshots/**
 
 # Ignore .vscode
 src/.vscode/

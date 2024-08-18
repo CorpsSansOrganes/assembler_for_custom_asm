@@ -114,4 +114,4 @@ $(OBJ_DEBUG)/test_utils.o: $(TEST)/test_utils.c $(INCLUDE)/test_utils.h
 
 # Clean up build artifacts
 clean:
-	rm -rf $(OBJ_RELEASE)/*.o $(OBJ_DEBUG)/*.o test_* ./test/preprocessing_test_files/output/* ./test/assembler_test_files/input/*.ob ./test/assembler_test_files/input/*.ext ./test/assembler_test_files/input/*.ent
+	rm -rf $(OBJ_RELEASE)/*.o $(OBJ_DEBUG)/*.o test_* ./test/preprocessing_test_files/output/* ./test/assembler_test_files/input/*.ob ./test/assembler_test_files/input/*.ext ./test/assembler_test_files/input/*.ent main
