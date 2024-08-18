@@ -275,6 +275,7 @@ static result_t ParseMacro(FILE *file,
   char *macro_name_end = NULL;
   char *macro_name = NULL;
   char *macro_definition = NULL;
+  bool_t was_error = FALSE;
 
   /*
    * Reading macro name
@@ -300,7 +301,7 @@ static result_t ParseMacro(FILE *file,
    * e.g.: "macr m_name asd" 
    */
   if (DetectExtraCharacters(macro_name_end, cfg)) {
-    return FAILURE;
+    was_error = TRUE;
   }
 
   macro_name = (char *)malloc(macro_name_end - macro_name_start + 1);
@@ -320,7 +321,7 @@ static result_t ParseMacro(FILE *file,
    */
   if (IsReservedName(macro_name, cfg)) {
     free(macro_name);
-    return FAILURE;
+    was_error = TRUE;
   }
   
   /*
@@ -330,7 +331,7 @@ static result_t ParseMacro(FILE *file,
 
   if (MacroDefinedMoreThanOnce(macro_name, table, cfg)) {
     free(macro_name);
-    return FAILURE;
+    was_error = TRUE;
   }
 
   /*
@@ -339,9 +340,12 @@ static result_t ParseMacro(FILE *file,
 
   macro_definition = ReadMacroDefinition(file, line, cfg);
   if (NULL == macro_definition) {
-    return FAILURE; /* Either syntax or memory */
-  }
+    was_error = TRUE; /* Either syntax or memory */
 
+  }
+  if (TRUE == was_error){
+    return FAILURE;
+  }
   return AddMacro(table, macro_name, macro_definition);
 }
 
@@ -371,15 +375,15 @@ static char *ReadMacroDefinition(FILE *file,
     perror("Couldn't save file starting_position");
     return NULL;
   }
-
+  cfg->line_number++;
   /* Sum up definition size */
   while (fgets(line, MAX_LINE_LENGTH, file) && 
     FALSE == IsPrefix(CleanLine(line), "endmacr")) {
     if (!IsBlankLine(line)) {
       definition_size += strlen(line);
     }
+    cfg->line_number++;
   }
-
   /*
    * SYNTAX CHECK: 
    * extra characters after endmacr 
