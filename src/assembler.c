@@ -114,12 +114,18 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
   return counter;
 }  
 
+/*
+ * @param instruction - Instruction name (e.g. "mov")
+ *        params - String containing the operands passed to the instruction.
+ *                 If NULL, there are 0 parameters (e.g. "#+3, SYM1").
+ */
 static result_t HandleInstructionStatement(char *instruction,
                                            char *params,
                                            symbol_table_t *symbol_table,
                                            char *symbol_name,
                                            vector_t *code_table,
                                            syntax_check_config_t *cfg) {
+
   size_t operand_num = 0;
   operand_t operands[2];
   bool_t invalid_operands = FALSE;
@@ -131,9 +137,9 @@ static result_t HandleInstructionStatement(char *instruction,
     return FAILURE;
   }
 
-  /* Skip to operands */
-  params += strlen(instruction) + 1;
-  operand_num = SplitOperands(params, &operands[0], &operands[1]);
+  if (params) {
+    operand_num = SplitOperands(params, &operands[0], &operands[1]);
+  }
 
   if (-1 == operand_num) {
     return MEM_ALLOCATION_ERROR;
@@ -454,12 +460,13 @@ static result_t FirstPass(char *file_path,
      *      "mov ..." 
      */
     else {
-        result_t res = HandleInstructionStatement(current_word,
-                                               current_line,
-                                               symbol_table,
-                                               symbol_name,
-                                               code_table,
-                                               &cfg);
+      char *params = strtok(NULL, "\n\0");
+      result_t res = HandleInstructionStatement(current_word,
+                                                params,
+                                                symbol_table,
+                                                symbol_name,
+                                                code_table,
+                                                &cfg);
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
         free(current_line);

@@ -100,10 +100,10 @@ int main(void) {
     "valid_3_with_instruction_0operand",
     "valid_4_with_instruction_1operand",
     "valid_5_with_instruction_2operands",
-    */
     "valid_6_with_symbol_data",
-    /*
+    */
     "valid_7_with_symbol_instruction",
+    /*
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_external"
@@ -137,7 +137,7 @@ int main(void) {
   */
 
   if (0 == total_failures) {
-    printf(BOLD_GREEN "Test successful: " COLOR_RESET "assembling\n");
+    printf(BOLD_GREEN "Test successful: " COLOR_RESET "Assembler\n");
   }
 
   return total_failures;
