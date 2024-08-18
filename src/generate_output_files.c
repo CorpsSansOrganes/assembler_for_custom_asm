@@ -18,6 +18,7 @@ static result_t GenerateOBJFile (vector_t *code_opcode, vector_t *data_opcode, c
 static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,ext_symbol_occurrences_t *external_symbol_data_list);
 static int ExternalSymbolCompare (void *value, void *key);
 
+#define BIT_MASK_15_BITS (0x7FFF)
 
 ext_symbol_occurrences_t *CreateExternalSymbolList() {
   ext_symbol_occurrences_t *ext_list = malloc(sizeof(ext_symbol_occurrences_t));
@@ -107,45 +108,52 @@ void DestroyExternSymbolList(ext_symbol_occurrences_t *ext_symbol_occurrences) {
 }
 
 result_t GenerateOutputFiles(vector_t *code_table,
-                              vector_t *data_table,
-                              symbol_table_t *symbol_table,
-                              char *input_path,
-                              ext_symbol_occurrences_t* ext_symbol_occurrences){
-    char *obj_path = StrDup(input_path);
-    char *extern_path = StrDup(input_path);
-    char *entry_path = StrDup(input_path);
-    /*add the correct finish*/
-    strcpy(obj_path + strlen(input_path), ".ob");
-    strcpy(entry_path + strlen(input_path), ".ent");
-    strcpy(extern_path + strlen(input_path), ".ext");
-    if (SUCCESS != GenerateOBJFile(code_table,data_table, obj_path)){
-        free (obj_path);
-        free (extern_path);
-        free (entry_path);
-        return FAILURE;
-    }
-    if (SUCCESS != GenerateExternFile(symbol_table, extern_path,ext_symbol_occurrences)){
-        free (obj_path);
-        free (extern_path);
-        free (entry_path);        
-        return FAILURE;
-    }
-    DestroyExternSymbolList (ext_symbol_occurrences);
-    if (SUCCESS != GenerateEntriesFile(symbol_table,entry_path)){
-        free (obj_path);
-        free (extern_path);
-        free (entry_path);
-        return FAILURE;
-    }
-    free (obj_path);
-    free (extern_path);
-    free (entry_path);
-    return SUCCESS;
+                             vector_t *data_table,
+                             symbol_table_t *symbol_table,
+                             const char *input_path,
+                             ext_symbol_occurrences_t* ext_symbol_occurrences) {
+
+  bool_t error_occurred = FALSE;
+  char *path = NULL;
+  size_t length = strlen(input_path);
+
+  path = (char *)malloc((length + 1) * sizeof(char));
+  if (NULL == path) {
+    perror("Couldn't allocate string for output paths\n");
+    return MEM_ALLOCATION_ERROR;
+  }
+
+  /* Copy path except file extension */
+  strncpy(path, input_path, length - 2);
+
+  /* Generate .ob file */
+  strcpy(path + (length - 2), "ob");
+
+  if (SUCCESS != GenerateOBJFile(code_table, data_table, path)) {
+    error_occurred = TRUE;
+  }
+
+  /* Generate .ext file */
+  strcpy(path + (length - 2), "ext");
+  if (SUCCESS != GenerateExternFile(symbol_table,
+                                         path,
+                                         ext_symbol_occurrences)) {
+    error_occurred = TRUE;
+  }
+
+  /* Generate .ent file */
+  strcpy(path + (length - 2), "ext");
+  if (SUCCESS != GenerateEntriesFile(symbol_table, path)) {
+    error_occurred = TRUE;
+  }
+
+  free(path);
+  return error_occurred ? FAILURE :SUCCESS;
 }
 
 static result_t GenerateOBJFile (vector_t *code_table,
                                  vector_t *data_table,
-                               char *output_path) {
+                                 char *output_path) {
   int cur_mem_address = INITIAL_IC_VALUE;
   int i = 0;
   /* .ob format is mainly 2 columns:
@@ -156,6 +164,7 @@ static result_t GenerateOBJFile (vector_t *code_table,
   char *bitmap =  (char *) malloc (6 * sizeof(char));
   char *str_to_write = (char *) malloc (15 * sizeof(char));
   FILE *obj_file = NULL;
+  bitmap_t opcode_line = 0;
 
   /* Before the 2 columns, we write total code & data symbols. */
   if (SUCCESS != WriteHeader(output_path,
@@ -169,18 +178,20 @@ static result_t GenerateOBJFile (vector_t *code_table,
 
   obj_file = fopen(output_path, "a");
   if (NULL == obj_file) {
-    free (address);
-    free (bitmap);
-    free (str_to_write);
+    free(address);
+    free(bitmap);
+    free(str_to_write);
     perror("Couldn't open obj file");
     return ERROR_OPENING_FILE; 
   }
 
   /* First comes the code segment... */
   for (i = 0; i < GetSizeVector(code_table); i++) {
-    bitmap_t *opcode_line = GetElementVector(code_table, i);
+    opcode_line = *(bitmap_t *)GetElementVector(code_table, i);
+    /* Ignoring bits bigger than word size */
+    opcode_line &= BIT_MASK_15_BITS;
     sprintf(address, "%04d", cur_mem_address);
-    sprintf(bitmap, "%05lo", *opcode_line);
+    sprintf(bitmap, "%05o", (unsigned int)opcode_line);
     sprintf(str_to_write, "%s %s\n", address, bitmap);
     if (EOF == fputs(str_to_write, obj_file)) {
       perror("Error writing to file");
@@ -196,9 +207,11 @@ static result_t GenerateOBJFile (vector_t *code_table,
 
   /* ... then comes data segment */
   for (i = 0; i < GetSizeVector(data_table); i++) {
-    bitmap_t *opcode_line = GetElementVector(data_table, i);
+    opcode_line = *(bitmap_t *)GetElementVector(data_table, i);
+    /* Ignoring bits bigger than word size */
+    opcode_line &= BIT_MASK_15_BITS;
     sprintf(address, "%04d", cur_mem_address);
-    sprintf(bitmap, "%05lo", *opcode_line);
+    sprintf(bitmap, "%05o", (unsigned int)opcode_line);
     sprintf(str_to_write, "%s %s\n", address, bitmap);
     if (EOF == fputs(str_to_write, obj_file)) {
       perror("Error writing to file");

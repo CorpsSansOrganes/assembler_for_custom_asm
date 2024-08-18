@@ -221,6 +221,7 @@ static result_t HandleStringOrData(directive_t directive,
   param += to_skip;
   
   /* Check syntax errors in parameters */
+  param = strtok(param, "\n"); 
   if (syntax_check_func(param, cfg)) {
     return FAILURE; 
   }
@@ -291,7 +292,7 @@ static result_t HandleDirectiveStatement(char *current_word,
 
     if (EXTERN_DIRECTIVE == directive) {
       /* Check if commas are misplaced in the parameters passed to .extern */
-      if (AreCommasMisplaced(strstr(current_line, ".extern") + strlen(".extern"),
+      if (AreCommasMisplaced(strstr(current_line, ".extern") + strlen(".extern "),
                              cfg)) {
         return FAILURE;
       }
@@ -536,6 +537,12 @@ static result_t SecondPass(char *file_path,
       if (ENTRY_DIRECTIVE != IdentifyDirective(current_word, &cfg)) {
         /* Other directive have been handled in FirstPass */
         continue;
+      }
+
+      /* Check if commas are misplaced in the parameters passed to .entry*/
+      if (AreCommasMisplaced(strstr(current_line, ".entry") + strlen(".entry "),
+                             &cfg)) {
+        return FAILURE;
       }
 
       /* Update each symbol passed as a parameter to .entry as an .entry symbol.

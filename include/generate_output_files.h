@@ -33,7 +33,7 @@ typedef struct {
 result_t GenerateOutputFiles(vector_t *code_table,
                              vector_t *data_table,
                              symbol_table_t *symbol_table,
-                             char *input_path,
+                             const char *input_path,
                              ext_symbol_occurrences_t* ext_symbol_occurrences);
 
 ext_symbol_occurrences_t *CreateExternalSymbolList();

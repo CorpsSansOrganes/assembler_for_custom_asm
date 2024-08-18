@@ -467,6 +467,10 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   return TRUE;
 }
 
+bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config) {
+  return FALSE;
+}
+
 static bool_t StringIsNotPrintable (const char *str,
                                     syntax_check_config_t *config) {
   const char *ptr = str;
