@@ -9,6 +9,7 @@
 #include "assembler.h"
 #include "macro_table.h"
 #include "generate_opcode.h"
+#include "language_definitions.h"
 #include "vector.h"
 
 #define delimiters (", /n/t/r")
@@ -23,13 +24,13 @@ static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand);
 static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand);
 
 #define MOVE_OPCODE_TO_PLACE(X) ((X) << 11)
+#define BIT_MASK_15_BITS (0x7FFF)
 
 result_t DataDirectiveToMachinecode(vector_t *data_table, char *params) {
   char *current_word = strtok(params, delimiters);
-  bitmap_t data_to_write = 0;
 
   while (NULL != current_word) {
-    data_to_write = atoi (current_word);
+    bitmap_t data_to_write = atoi(current_word) & BIT_MASK_15_BITS;
     if (MEM_ALLOCATION_ERROR == AppendVector(data_table, &data_to_write)) {
       return MEM_ALLOCATION_ERROR;
     }
@@ -44,7 +45,8 @@ result_t StringDirectiveToMachinecode(vector_t *data_table, char *string) {
   /* Skip the begining quoation marks */
   string++; 
   while ('\0' != *(string + 1)) { /* Skip the end quoation marks */
-    if (MEM_ALLOCATION_ERROR == AppendVector(data_table, string)) {
+    bitmap_t data_to_write = *string & BIT_MASK_15_BITS;
+    if (MEM_ALLOCATION_ERROR == AppendVector(data_table, &data_to_write)) {
       return MEM_ALLOCATION_ERROR;
     }
     string++;
@@ -76,6 +78,7 @@ result_t InstructionStatementToMachinecode(vector_t *code_table,
   instruction_opcode = SetBitOfARE(instruction_opcode, A);
   instruction_opcode = SetBitAddressingMethod(instruction_opcode, source_operand); 
   instruction_opcode = SetBitAddressingMethod(instruction_opcode, dest_operand);
+  instruction_opcode &= BIT_MASK_15_BITS;
 
   if (MEM_ALLOCATION_ERROR == AppendVector(code_table, &instruction_opcode)) {
     return MEM_ALLOCATION_ERROR;
@@ -88,7 +91,8 @@ result_t InstructionStatementToMachinecode(vector_t *code_table,
 
     /* If we have two registers as operands, they are encoded in a single block */
     if (AreTwoRegitserOperands(source_operand, dest_operand)) {
-      int registers_block = UnifyRegisterOpcode(src_operand_opcode, dest_operand_opcode);
+      bitmap_t registers_block = UnifyRegisterOpcode(src_operand_opcode, dest_operand_opcode);
+      registers_block &= BIT_MASK_15_BITS;
 
       if (MEM_ALLOCATION_ERROR == AppendVector(code_table, &registers_block)) {
         return MEM_ALLOCATION_ERROR;
@@ -96,9 +100,11 @@ result_t InstructionStatementToMachinecode(vector_t *code_table,
     }
     /* At least one isn't a register, we encode two blocks. */
     else {
+      src_operand_opcode &= BIT_MASK_15_BITS;
       if (MEM_ALLOCATION_ERROR == AppendVector (code_table, &src_operand_opcode)) {
         return MEM_ALLOCATION_ERROR;
       }
+      dest_operand_opcode &= BIT_MASK_15_BITS;
       if (MEM_ALLOCATION_ERROR == AppendVector (code_table, &dest_operand_opcode)) {
         return MEM_ALLOCATION_ERROR;
       }
@@ -131,10 +137,10 @@ static bitmap_t SetBitAddressingMethod (bitmap_t bitmap, operand_t *operand){
   }
 
   if (SOURCE_OPERAND == operand->type) {
-    bitmap = SetBitOn(bitmap, 3 + operand->addressing_method);
+    bitmap = SetBitOn(bitmap, STARTING_BIT_SRC_OPERAND + operand->addressing_method);
   }
   else {
-    bitmap = SetBitOn (bitmap, 7 + operand->addressing_method);
+    bitmap = SetBitOn (bitmap, STARTING_BIT_DEST_OPERAND + operand->addressing_method);
   }
 
   return bitmap;

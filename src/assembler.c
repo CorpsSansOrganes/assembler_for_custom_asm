@@ -414,7 +414,7 @@ static result_t FirstPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file\n");
+    fprintf(stderr,"Couldn't open input file '%s'.\n", file_path);
     return ERROR_OPENING_FILE; 
   }
 
@@ -466,7 +466,7 @@ static result_t FirstPass(char *file_path,
       }
 
       /* Skip after the label */
-      current_word = strtok(NULL, ": \t");
+      current_word = strtok(NULL, ": \t\n");
       if (NoDefinitionForSymbol(current_word, &cfg)){
         total_errors++;
         free(symbol_name); symbol_name = NULL;
@@ -565,7 +565,7 @@ static result_t SecondPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file\n");
+    fprintf(stderr,"Couldn't open input file '%s'.\n", file_path);
     return ERROR_OPENING_FILE; 
   }
 
@@ -662,16 +662,12 @@ static result_t SecondPass(char *file_path,
 
         /* Check if first operand is a symbol, if so update accordingly */
         else if (DIRECT == method && NULL != symbol) {
+          bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
+          *opcode_block = GetSymbolAddress(symbol);
 
           /* If its extern add the occurence to the list for the .ext file */
           if (EXTERN == GetSymbolType (symbol)) {
             AddExternalSymbolOccurence(ext_list, GetSymbolName(symbol), IC + INITIAL_IC_VALUE);
-          }
-
-          /* If its a non-extern symbol we update the missing addresses in the code segment */
-          else {
-            bitmap_t *opcode_block = (bitmap_t *)GetElementVector(code_table, IC);
-            *opcode_block = GetSymbolAddress(symbol);
           }
         } 
 

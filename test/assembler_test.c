@@ -101,9 +101,9 @@ test_info_t InvalidAssemblingTest(const char *file_name) {
 int main(void) {
   int total_failures = 0;
   size_t i = 0;
+  bool_t run_invalid = TRUE;
 
   char *valid_names[] = {
-    /*
     "valid_1_only_data_definition",
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
@@ -114,18 +114,15 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_extern",
-    */
     "valid_11_two_registers"
   };
 
   char *invalid_names[] = {
-    /*
     "invalid_1_instruction_errors",
     "invalid_2_symbol_errors",
     "invalid_3_directive_errors",
     "invalid_4_symbol_wasnt_defined",
     "invalid_5_illegal_symbol_name",
-    */
     "invalid_6_no_definition_for_symbol"
   };
 
@@ -137,7 +134,7 @@ int main(void) {
     }
   }
 
-  for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
+  for (i = 0; run_invalid && i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidAssemblingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);
@@ -211,7 +208,7 @@ static result_t RunComparisonOb(const char *file_name) {
 
   ProduceFilePath(input_dir, file_name, ".ob", output_file_path_ob);
   ProduceFilePath(expected_dir, file_name, ".ob", expected_file_path_ob); 
-  return CompareFiles(output_file_path_ob, output_file_path_ob);
+  return CompareFiles(output_file_path_ob, expected_file_path_ob);
 }
 
 static result_t RunComparisonExt (const char *file_name) {
