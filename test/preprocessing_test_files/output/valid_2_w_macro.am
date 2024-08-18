@@ -4,8 +4,7 @@ lea STR, r6
 inc r6
 mov *r6,K
 sub r1,r4
-cmp r3, #-6
-bne END
+m_macr
 dec K
 jmp LOOP
 END: stop

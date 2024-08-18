@@ -289,14 +289,17 @@ static result_t ParseMacro(FILE *file,
 
   /* Skipping "macr " in the beginning, and "\n\0" in the end. */
   macro_name_start = line + 5; /* strlen("macr "); */
-  macro_name_end = (char *)EndOfString(macro_name_start) - 1;
+  macro_name_end = macro_name_start;
+  while (FALSE == IsBlank(*macro_name_end) && '\0' != *macro_name_end){
+    macro_name_end++;
+  }
 
   /*
    * SYNTAX CHECK:
    * extra characters after macro's name 
    * e.g.: "macr m_name asd" 
    */
-  if (DetectExtraCharacters(macro_name_end + 1, cfg)) {
+  if (DetectExtraCharacters(macro_name_end, cfg)) {
     return FAILURE;
   }
 
