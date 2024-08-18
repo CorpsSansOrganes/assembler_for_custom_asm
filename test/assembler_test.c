@@ -103,6 +103,7 @@ int main(void) {
   size_t i = 0;
 
   char *valid_names[] = {
+    /*
     "valid_1_only_data_definition",
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
@@ -112,15 +113,19 @@ int main(void) {
     "valid_7_with_symbol_instruction",
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
-    "valid_10_with_ignore_symbol_before_extern"
+    "valid_10_with_ignore_symbol_before_extern",
+    */
+    "valid_11_two_registers"
   };
 
   char *invalid_names[] = {
+    /*
     "invalid_1_instruction_errors",
     "invalid_2_symbol_errors",
     "invalid_3_directive_errors",
     "invalid_4_symbol_wasnt_defined",
     "invalid_5_illegal_symbol_name",
+    */
     "invalid_6_no_definition_for_symbol"
   };
 

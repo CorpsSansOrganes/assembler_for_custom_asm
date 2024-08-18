@@ -414,7 +414,7 @@ static result_t FirstPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file");
+    fprintf(stderr,"Couldn't open input file\n");
     return ERROR_OPENING_FILE; 
   }
 
@@ -565,7 +565,7 @@ static result_t SecondPass(char *file_path,
   /* Acquire resources */
   input_file = fopen(file_path, "r");
   if (NULL == input_file) {
-    fprintf(stderr,"Couldn't open input file");
+    fprintf(stderr,"Couldn't open input file\n");
     return ERROR_OPENING_FILE; 
   }
 
@@ -700,6 +700,7 @@ static result_t SecondPass(char *file_path,
 
 
 result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
+  result_t res = SUCCESS;
   bool_t no_errors = TRUE;
 
   /* Symbol table which will be populated with symbols in first pass */
@@ -749,11 +750,20 @@ result_t AssembleFile(char *file_path, macro_table_t *macro_table) {
   /*
    * Assembler performing first & second pass
    */
-  if (SUCCESS != FirstPass(file_path,
-                           macro_table,
-                           symbol_table,
-                           code_table, 
-                           data_table)) {
+  res = FirstPass(file_path,
+                  macro_table,
+                  symbol_table,
+                  code_table, 
+                  data_table);
+  if (ERROR_OPENING_FILE == res) {
+    DestroyExternSymbolList(ext_list);
+    DestroySymbolTable(symbol_table);
+    DestroyVector(code_table);
+    DestroyVector(data_table);
+    return ERROR_OPENING_FILE;
+  }
+
+  if (SUCCESS != res)  {
     no_errors = FALSE;
   }
 
