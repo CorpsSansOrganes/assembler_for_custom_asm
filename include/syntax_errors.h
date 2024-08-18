@@ -179,10 +179,20 @@ bool_t ImmediateOperandTooBig (operand_t *operand, syntax_check_config_t *config
 // ~~--~~--~~--~~--~~
 */
 
+/*
+ * @brief Tell if a colon exist without space after.
+ *        This function is used for checking that there is a space after defining symbol.
+ *
+ * @param line - The line.
+ *        config - Configurations about the syntax check (see CreateSyntaxCheckConfig)
+ *
+ * @return TRUE if a colon exist without space after, or FALSE otherwise.
+ */
+
 bool_t NoSpaceAfterColon(const char *line,
                          syntax_check_config_t *config);
 /*
- * @briefTell if theres been an attempt to define a symbol that have been defined previously 
+ * @brief Tell if theres been an attempt to define a symbol that have been defined previously 
  *
  * @param symbol - The symbol which now defined
  *        table - The symbol table.
