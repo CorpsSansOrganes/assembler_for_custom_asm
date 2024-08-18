@@ -475,13 +475,13 @@ bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config){
 
   while (NULL != param){
     /*handle blank char - if it comes after a name, no char is legal after (needs comma)*/
-    if (isblank(param)){
+    if (isblank(*param)){
       if (TRUE == char_is_legal && TRUE == comma_is_legal ){
-        char_is_legal == FALSE;
+        char_is_legal = FALSE;
       }
     }
     /*handle commas - after comma only chars are legal, and cannot finish woth comma*/
-    else if (0 == strcmp(*param,',')){
+    else if (0 == strcmp(param,",")){
       if (FALSE == comma_is_legal){
         error = TRUE;
         break;
