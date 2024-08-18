@@ -467,9 +467,52 @@ bool_t IsIllegalString(const char *str, syntax_check_config_t *config) {
   return TRUE;
 }
 
-bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config) {
-  return FALSE;
+bool_t AreCommasMisplaced(const char *param, syntax_check_config_t *config){
+  bool_t comma_is_legal = FALSE;
+  bool_t char_is_legal = TRUE;
+  bool_t last_char_legal = FALSE;
+  bool_t error = FALSE;
+
+  while (NULL != param){
+    /*handle blank char - if it comes after a name, no char is legal after (needs comma)*/
+    if (isblank(*param)){
+      if (TRUE == char_is_legal && TRUE == comma_is_legal ){
+        char_is_legal = FALSE;
+      }
+    }
+    /*handle commas - after comma only chars are legal, and cannot finish woth comma*/
+    else if (0 == strcmp(param,",")){
+      if (FALSE == comma_is_legal){
+        error = TRUE;
+        break;
+      }
+      comma_is_legal = FALSE;
+      char_is_legal = TRUE;
+      last_char_legal = FALSE;
+    }  
+    /*after char everything legal, and its legal to finish here*/
+    else {
+      if (FALSE == char_is_legal){
+        error = TRUE;
+        break;
+      }
+      char_is_legal = TRUE;
+      comma_is_legal = TRUE;
+      last_char_legal = TRUE;
+    }
+    param++;
+  }
+  if (FALSE == last_char_legal){
+      error = TRUE;
+  }
+  if (TRUE == error && config->verbose) {
+      printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n commas placed in parameters are invalid \n\n",
+              config->file_name,
+              config->line_number);
+  }
+  return error;
 }
+
 
 static bool_t StringIsNotPrintable (const char *str,
                                     syntax_check_config_t *config) {
