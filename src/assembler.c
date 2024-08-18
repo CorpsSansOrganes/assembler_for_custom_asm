@@ -134,7 +134,7 @@ static result_t HandleInstructionStatement(char *instruction,
                                            vector_t *code_table,
                                            syntax_check_config_t *cfg) {
 
-  size_t operand_num = 0;
+  int operand_num = 0;
   operand_t operands[2];
   bool_t invalid_operands = FALSE;
   operand_t *src_operand = NULL;

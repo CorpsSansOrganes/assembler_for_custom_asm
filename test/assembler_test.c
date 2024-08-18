@@ -7,7 +7,7 @@
 #include "test_utils.h"
 #include "macro_table.h"
 
-result_t static CompareFiles(const char *file1_path, const char *file2_path);
+static result_t CompareFiles(const char *file1_path, const char *file2_path);
 
 static const char *ProduceFilePath(const char *dir_path,
                                    const char *file_name,
@@ -91,7 +91,7 @@ test_info_t InvalidAssemblingTest(const char *file_name) {
 
 int main(void) {
   int total_failures = 0;
-  int i = 0;
+  size_t i = 0;
 
   char *valid_names[] = {
     /*
@@ -146,7 +146,7 @@ int main(void) {
 /* 
  * STATIC FUNCTIONS
  */
-result_t static CompareFiles(const char *output_file_path, const char *expected_file_path) {
+static result_t CompareFiles(const char *output_file_path, const char *expected_file_path) {
   FILE *output_file = fopen(output_file_path, "r");
   FILE *expected_file = NULL;
   char line1[MAX_LINE_LENGTH];

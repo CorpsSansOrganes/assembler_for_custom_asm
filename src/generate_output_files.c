@@ -9,8 +9,6 @@
  * that holds occurrences of external symbols for the .ext file.
  */
 
-
-
 #include <string.h> 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,12 +22,11 @@
 #include "language_definitions.h"
 #include "generate_output_files.h"
 
-
-static result_t WriteHeader (char *output_path, int IC, int DC);
-static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_path);
-static result_t GenerateOBJFile (vector_t *code_opcode, vector_t *data_opcode, char *output_path);
-static result_t GenerateExternFile (symbol_table_t *symbol_table, char *output_path,ext_symbol_occurrences_t *external_symbol_data_list);
-static int ExternalSymbolCompare (void *value, void *key);
+static result_t WriteHeader(char *output_path, int IC, int DC);
+static result_t GenerateEntriesFile(symbol_table_t *symbol_table, char *output_path);
+static result_t GenerateOBJFile(vector_t *code_opcode, vector_t *data_opcode, char *output_path);
+static result_t GenerateExternFile(char *output_path,ext_symbol_occurrences_t *external_symbol_data_list);
+static int ExternalSymbolCompare(void *value, void *key);
 
 #define BIT_MASK_15_BITS (0x7FFF)
 
@@ -148,9 +145,7 @@ result_t GenerateOutputFiles(vector_t *code_table,
 
   /* Generate .ext file */
   strcpy(path + (length - 2), "ext");
-  if (SUCCESS != GenerateExternFile(symbol_table,
-                                         path,
-                                         ext_symbol_occurrences)) {
+  if (SUCCESS != GenerateExternFile(path, ext_symbol_occurrences)) {
     error_occurred = TRUE;
   }
 
@@ -168,7 +163,7 @@ static result_t GenerateOBJFile (vector_t *code_table,
                                  vector_t *data_table,
                                  char *output_path) {
   int cur_mem_address = INITIAL_IC_VALUE;
-  int i = 0;
+  size_t i = 0;
   /* .ob format is mainly 2 columns:
    * (1) address - memory address, one word at a time */
   char *address = (char *) malloc (6 * sizeof(char));
@@ -305,14 +300,13 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
 }
 
 
-static result_t GenerateExternFile(symbol_table_t *symbol_table,
-                                   char *output_path,
+static result_t GenerateExternFile(char *output_path,
                                    ext_symbol_occurrences_t *external_symbol_data_list) {
   FILE *extern_file = NULL;
   char *str_to_write = NULL;
   node_t *iter = GetHead(external_symbol_data_list->external_symbols);
   external_symbol_data_t *external_symbol = NULL;
-  int i = 0;
+  size_t i = 0;
 
   /* No external symbols, and thus no need to write a file */
   if (NULL == iter) {
