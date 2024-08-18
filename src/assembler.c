@@ -297,8 +297,8 @@ static result_t HandleStringOrData(directive_t directive,
   return SUCCESS;
 }
 
-static result_t HandleDirectiveStatement(char *current_word,
-                                         char *current_line,
+static result_t HandleDirectiveStatement(char *directive_name,
+                                         char *params,
                                          macro_table_t *macro_table,
                                          symbol_table_t *symbol_table,
                                          vector_t *data_table,
@@ -308,7 +308,7 @@ static result_t HandleDirectiveStatement(char *current_word,
   /*
    * First, check if that directive even exists
    */
-  directive_t directive = IdentifyDirective(current_word, cfg);
+  directive_t directive = IdentifyDirective(directive_name, cfg);
   if (INVALID_DIRECTIVE == directive) {
     return FAILURE;
   }
@@ -320,7 +320,7 @@ static result_t HandleDirectiveStatement(char *current_word,
   else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
       return HandleStringOrData(
         directive,
-        current_word,
+        directive_name,
         symbol_table,
         symbol_name,
         data_table,
@@ -338,35 +338,32 @@ static result_t HandleDirectiveStatement(char *current_word,
       printf(BOLD_YELLOW "WARNING: " COLOR_RESET "(file %s, line %u):\n label before .extern or .entry is invalid\n\n",
              cfg->file_name,
              cfg->line_number);
-
-      free(symbol_name);
     }
 
     if (EXTERN_DIRECTIVE == directive) {
       /* Check if commas are misplaced in the parameters passed to .extern */
-      if (AreCommasMisplaced(strstr(current_line, ".extern") + strlen(".extern "),
-                             cfg)) {
+      if (AreCommasMisplaced(params, cfg)) {
         return FAILURE;
       }
 
       /* Adding each symbol passed as a parameter to .extern to the symbol
        * table as an external table.
        */
-      current_word = strtok(NULL, DELIMITERS);
-      while (NULL != current_word) {
+      params = strtok(params, DELIMITERS);
+      while (NULL != params) {
         /* Check syntax errors for each symbol name */
-        if (TRUE == SymbolNameErrorOccurred(current_word,
+        if (TRUE == SymbolNameErrorOccurred(params,
                                             macro_table,
                                             symbol_table,
                                             cfg)) {
           return FAILURE;
         }
 
-        if (SUCCESS != AddExternalSymbol(symbol_table, current_word)) {
+        if (SUCCESS != AddExternalSymbol(symbol_table, params)) {
           return MEM_ALLOCATION_ERROR;
         }
 
-        current_word = strtok(NULL,DELIMITERS);
+        params = strtok(NULL,DELIMITERS);
       }
     }
 
@@ -482,8 +479,9 @@ static result_t FirstPass(char *file_path,
      *      ".extern ..."
      */
     if ('.' == *current_word) {
+      char *params = strtok(NULL, "\n\0");
       result_t res = HandleDirectiveStatement(current_word,
-                                              current_line,
+                                              params,
                                               macro_table,
                                               symbol_table,
                                               data_table,
