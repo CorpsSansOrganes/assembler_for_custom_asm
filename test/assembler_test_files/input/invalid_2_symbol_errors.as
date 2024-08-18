@@ -1,4 +1,4 @@
-; should print 6 errors
+; should print 7 errors
 ; symbol already defined
 SYMBOL1: .data 3, 4
 SYMBOL1: .string "asf"
@@ -10,6 +10,7 @@ SYMBOL1: .string "asf"
 .extern SYMBOL3
 ; symbol name is illegal
 S:ymbol: .data 7 
+S:m
 ; symbol used as macro
 macr macroname
 stop

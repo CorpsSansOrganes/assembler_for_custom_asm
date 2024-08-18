@@ -234,14 +234,20 @@ bool_t IncorrectAddressingMethod(const char *instruction,
   return TRUE;
 }
 
-bool_t NoSpaceAfterColon(const char *line,
-                         syntax_check_config_t *config) {
+bool_t DefinitionStartsImmediatelyAfterColon(const char *line,
+                                             syntax_check_config_t *config) {
   char *colon = strchr(line, ':');
   if (NULL == colon) {
     return FALSE;
   }
+
   if (' ' == *(colon + 1)) {
     return FALSE;
+  }
+  /* No definition */
+  else if ('\n' == *(colon + 1)) {
+    /* Skip :\n */
+    return NoDefinitionForSymbol(colon + 2, config);
   }
 
   if (config->verbose) {
@@ -279,9 +285,10 @@ bool_t SymbolWasntDefined(const char *symbol,
   }
 
   if (config->verbose) {
-    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempted to call a symbol that wasn't defined \n\n",
+    printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Attempted to call a symbol '%s' that wasn't defined \n\n",
             config->file_name,
-            config->line_number);
+            config->line_number,
+            symbol);
   }
   return TRUE;
 }

@@ -1,0 +1,8 @@
+.data 4, -3, -123321321312
+.data -13, boolbool
+.string "sdvsdv
+.string f"fdfd"
+.string ""
+.extern symbol5, sym:bol1
+.entry symbol6, sym:bol1
+.boolbool "asxsf"

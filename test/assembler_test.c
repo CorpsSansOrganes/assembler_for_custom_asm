@@ -119,24 +119,22 @@ int main(void) {
   char *invalid_names[] = {
     /*
     "invalid_1_instruction_errors",
-    */
-    /*
     "invalid_2_symbol_errors",
-    "invalid_3_instruction_errors",
+    */
+    "invalid_3_directive_errors",
+    /*
     "invalid_4_symbol_wasnt_defined",
     "invalid_5_illegal_symbol_name",
-    */
     "invalid_6_no_definition_for_symbol"
+    */
   };
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
-    /*
     test_info_t test_info = ValidAssemblingingTest(valid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);
       ++total_failures;
     }
-    */
   }
 
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {

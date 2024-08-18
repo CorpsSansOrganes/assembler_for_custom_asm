@@ -440,7 +440,7 @@ static result_t FirstPass(char *file_path,
      */
     if (IsSymbolDefinition(current_line)) {
       /* Check if there's space after : */
-      if (NoSpaceAfterColon(current_line, &cfg)) {
+      if (DefinitionStartsImmediatelyAfterColon(current_line, &cfg)) {
         total_errors++;
         continue;
       }
@@ -599,7 +599,8 @@ static result_t SecondPass(char *file_path,
      * The only one left to handle is .entry.
      */
     if ('.' == *current_word) {
-      if (ENTRY_DIRECTIVE != IdentifyDirective(current_word, &cfg)) {
+      syntax_check_config_t silent_cfg = CreateSyntaxCheckConfig(NULL, 0, FALSE);
+      if (ENTRY_DIRECTIVE != IdentifyDirective(current_word, &silent_cfg)) {
         /* Other directive have been handled in FirstPass */
         continue;
       }
@@ -616,7 +617,10 @@ static result_t SecondPass(char *file_path,
 
       current_word = strtok(NULL, DELIMITERS);
       while (NULL != current_word) {
-        if (SymbolWasntDefined(current_word, symbol_table, &cfg)) {
+        if (SymbolNameIsIllegal(current_word, &cfg)) {
+          total_errors++;
+        }
+        else if (SymbolWasntDefined(current_word, symbol_table, &cfg)) {
           total_errors++;
         }
 
