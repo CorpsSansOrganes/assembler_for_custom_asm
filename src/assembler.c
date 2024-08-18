@@ -290,8 +290,12 @@ static result_t HandleDirectiveStatement(char *current_word,
     }
 
     if (EXTERN_DIRECTIVE == directive) {
+      /* Check if commas are misplaced in the parameters passed to .extern */
+      if (AreCommasMisplaced(strstr(current_line, ".extern") + strlen(".extern"),
+                             cfg)) {
+        return FAILURE;
+      }
 
-      If (
       /* Adding each symbol passed as a parameter to .extern to the symbol
        * table as an external table.
        */
