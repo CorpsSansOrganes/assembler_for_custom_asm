@@ -5,7 +5,7 @@
 #include "language_definitions.h"
 #include "test_utils.h"
 
-result_t static CompareFiles(const char *file1_path, const char *file2_path);
+static result_t CompareFiles(const char *file1_path, const char *file2_path);
 
 static result_t RunComparison(const char *file_name);
 
@@ -69,7 +69,7 @@ test_info_t InvalidPreprocessingTest(const char *file_name) {
 
 int main(void) {
   int total_failures = 0;
-  int i = 0;
+  size_t i = 0;
 
   char *valid_names[] = {
     "valid_1_wo_macro",
@@ -113,7 +113,8 @@ int main(void) {
 /* 
  * STATIC FUNCTIONS
  */
-result_t static CompareFiles(const char *output_file_path, const char *expected_file_path) {
+static result_t CompareFiles(const char *output_file_path,
+                             const char *expected_file_path) {
   FILE *output_file = fopen(output_file_path, "r");
   FILE *expected_file = NULL;
   char line1[MAX_LINE_LENGTH];

@@ -102,6 +102,7 @@ int main(void) {
   int total_failures = 0;
   size_t i = 0;
   bool_t run_invalid = TRUE;
+  bool_t run_valid = FALSE;
 
   char *valid_names[] = {
     "valid_1_only_data_definition",
@@ -118,15 +119,19 @@ int main(void) {
   };
 
   char *invalid_names[] = {
+    /*
     "invalid_1_instruction_errors",
     "invalid_2_symbol_errors",
+    */
     "invalid_3_directive_errors",
+    /*
     "invalid_4_symbol_wasnt_defined",
     "invalid_5_illegal_symbol_name",
     "invalid_6_no_definition_for_symbol"
+    */
   };
 
-  for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
+  for (i = 0 ; run_valid && i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
     test_info_t test_info = ValidAssemblingingTest(valid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);

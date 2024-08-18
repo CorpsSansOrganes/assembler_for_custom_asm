@@ -1,6 +1,6 @@
 ; should print 6 errors
 ; instruction doesnt exist
-boolbool r3, r2
+bird r3, r2
 ; wrong number of operands
 stop r1, #5
 ; wrong number of operands

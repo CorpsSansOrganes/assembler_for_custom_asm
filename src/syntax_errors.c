@@ -55,10 +55,19 @@ bool_t DetectExtraCharacters(const char *starting_from,
   }
 
   else if (config->verbose) {
+    char *extra_chars = (char *)starting_from;
+    char *dup = StrDup(starting_from);
+    if (NULL != dup) {
+      extra_chars = dup;
+      strtok(extra_chars, "\n");
+    }
     printf (BOLD_RED "ERROR " COLOR_RESET "(file %s, line %u):\n Extraneous characters detected ('%s')\n\n",
             config->file_name,
             config->line_number,
-            starting_from);
+            extra_chars);
+    if (NULL != dup) {
+      free(dup);
+    }
   }
   return TRUE;
 }

@@ -1,4 +1,4 @@
-boolbool r3, r2
+bird r3, r2
 stop r1, #5
 mov #7
 lea *r1
