@@ -268,7 +268,7 @@ static result_t HandleDirectiveStatement(char *current_word,
   else if (STRING_DIRECTIVE == directive || DATA_DIRECTIVE == directive) {
       return HandleStringOrData(
         directive,
-        current_line,
+        current_word,
         symbol_table,
         symbol_name,
         data_table,
@@ -517,12 +517,14 @@ static result_t SecondPass(char *file_path,
   while (NULL != fgets(current_line, MAX_LINE_LENGTH, input_file)) {
     ++cfg.line_number;
 
-    /* Read first word (after symbol definition, if one exists) */
-    current_word = strtok(current_line, DELIMITERS);
-
-    if (IsSymbolDefinition(current_word)) {
-    /* If we have a symbol definition, e.g. "SYMBOL: ...", skip one word forward. */
-      current_word = strtok(NULL, DELIMITERS);
+    if (IsSymbolDefinition(current_line)) {
+      /* If we have a symbol definition, e.g. "SYMBOL: ...", skip after the label */
+      current_word = strtok(current_line, ": \t\n\r");
+      current_word = strtok(NULL, ": \t");
+    }
+    else {
+      /* Get the first word */
+      current_word = strtok(current_line, DELIMITERS);
     }
 
     /*
