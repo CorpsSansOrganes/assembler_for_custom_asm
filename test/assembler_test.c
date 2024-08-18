@@ -104,6 +104,7 @@ int main(void) {
   bool_t run_invalid = FALSE;
 
   char *valid_names[] = {
+    /*
     "valid_1_only_data_definition",
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
@@ -114,10 +115,11 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_extern",
-    /*
-    "valid_11_two_registers",
     */
-    "valid_12_instruction_symbol_one_operand"
+    "valid_11_two_registers",
+    /*
+    "valid_12_instruction_symbol_no_operands"
+    */
   };
 
   char *invalid_names[] = {
