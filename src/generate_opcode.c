@@ -1,3 +1,10 @@
+/* generate_opcode.c
+ *
+ * This module provides utilities for computing the opcodes 
+ * of various language components.
+ */
+
+
 #include <string.h>
 #include <stdlib.h> /* atoi */
 #include "assembler.h"

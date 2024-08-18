@@ -1,3 +1,16 @@
+/* generate_output_files.c
+ *
+ * This module generates the following output files:
+ * - .ob
+ * - .ext (if needed)
+ * - .ent (if needed)
+ *
+ * Additionally, it defines and implements the structure 
+ * that holds occurrences of external symbols for the .ext file.
+ */
+
+
+
 #include <string.h> 
 #include <stdlib.h>
 #include <stdio.h>

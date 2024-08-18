@@ -1,3 +1,9 @@
+/* vector.c
+ *
+ * This module implements a vector, which is a dynamic array.
+ */
+
+
 #include <stdlib.h> /* malloc, free */
 #include <stdio.h> /* perror */
 #include <string.h> /* memcpy */

@@ -1,3 +1,11 @@
+/* symbol_table.c
+ *
+ * This module implements the 'symbol' and 'symbol_table' structures. It provides essential utilities 
+ * for managing the symbol table, such as adding and finding symbols, converting to a list, retrieving symbol data, and more.
+ */
+
+
+
 #include <stdlib.h> /* malloc */
 #include <stdio.h> /* perror */
 #include <assert.h> /* assert */

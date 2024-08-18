@@ -1,3 +1,9 @@
+/* bitmap.c
+ * This module implements the 'struct bitmap' and provides 
+ * utilities such as setting bits on and off, converting the 
+ * bitmap to a string, and a 'getbit' function.
+ */
+
 #include "bitmap.h"
 
 #define BIT_AT(N) ((bitmap_t)1 << (N))

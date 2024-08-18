@@ -1,3 +1,9 @@
+/* syntax_errors.c
+ *
+ * This module contains all error checking functionalities. 
+ * It gives the option to decide whether to print error message.
+ */
+
 #include <string.h> /* strchr */
 #include <ctype.h> /* isalpha */
 #include <stdio.h> /* printf */

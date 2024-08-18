@@ -1,3 +1,11 @@
+/* preprocessing.c
+ *
+ * This module performs the first stage of the assembling process: preprocessing.
+ * This stage includes identifying and parsing macros, as well as performing linting.
+ */
+
+
+
 #include <stdio.h> /* perror */
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strcpy */

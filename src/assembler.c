@@ -1,3 +1,12 @@
+/* assembler.c
+ *
+ * This module handles the main process of the assembler,
+ * including the first and second passes.
+ * It utilizes the 'generate_opcode' module to compute opcodes,
+ * and finally calls 'generate_output_files' to produce the output.
+ */
+
+
 #include <stdio.h> /* fopen, fclose */
 #include <string.h> /* strlen */
 #include <stdlib.h> /* malloc, free */
