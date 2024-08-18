@@ -101,9 +101,9 @@ int main(void) {
   int total_failures = 0;
   size_t i = 0;
 
-    /*
   char *valid_names[] = {
     "valid_1_only_data_definition",
+    /*
     "valid_2_with_string_definition",
     "valid_3_with_instruction_0operand",
     "valid_4_with_instruction_1operand",
@@ -113,8 +113,8 @@ int main(void) {
     "valid_8_with_external_symbol",
     "valid_9_with_entry",
     "valid_10_with_ignore_symbol_before_extern"
-  };
     */
+  };
 
   char *invalid_names[] = {
     /*
@@ -124,19 +124,20 @@ int main(void) {
     "invalid_2_symbol_errors",
     "invalid_3_instruction_errors",
     "invalid_4_symbol_wasnt_defined",
+    "invalid_5_illegal_symbol_name",
     */
-    "invalid_5_illegal_symbol_name"
+    "invalid_6_no_definition_for_symbol"
   };
 
-  /*
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
+    /*
     test_info_t test_info = ValidAssemblingingTest(valid_names[i]);
     if (!WasTestSuccessful(test_info)) {
       PrintTestInfo(test_info);
       ++total_failures;
     }
+    */
   }
-  */
 
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidAssemblingTest(invalid_names[i]);
@@ -145,6 +146,8 @@ int main(void) {
       ++total_failures;
     }
   }
+  /*
+  */
 
   if (0 == total_failures) {
     printf(BOLD_GREEN "Test successful: " COLOR_RESET "Assembler\n");

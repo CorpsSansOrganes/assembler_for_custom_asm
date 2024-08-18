@@ -6,4 +6,4 @@ SYMBOL1: .string "asf"
 .extern SYMBOL3
 S:ymbol: .data 7
 macroname: cmp #5, #4
-SYMBOL4;
+SYMBOL4:

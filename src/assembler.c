@@ -26,7 +26,7 @@ const char *DELIMITERS = ", \t\n\r";
  */
 
 static bool_t IsSymbolDefinition(const char *line) {
-  while ('\0' != *(line + 1) && !IsBlank(*(line + 1))) {
+  while ('\n' != *(line + 1) && !IsBlank(*(line + 1))) {
     line++;
   }
   if (*line == ':') {

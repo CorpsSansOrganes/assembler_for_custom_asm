@@ -5,7 +5,7 @@ SYMBOL1: .string "asf"
 ; symbol already define as extern
 .extern SYMBOL2
 .entry SYMBOL2
-; symbol already define as entry
+; symbol already define as extern 
 .entry SYMBOL3
 .extern SYMBOL3
 ; symbol name is illegal
@@ -16,4 +16,4 @@ stop
 endmacr
 macroname: cmp #5, #4
 ; no definition for symbol
-SYMBOL4;
+SYMBOL4:
