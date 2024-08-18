@@ -20,7 +20,7 @@ static const char *ProduceFilePath(const char *dir_path,
 int main(int argc, char *argv[]) {
    char *input_path[256];
    char *assembler_input_path[256];
-   char *directory [1024];
+   char directory [1024];
    macro_table_t *macro_table; 
    int total_failures = 0; 
 
@@ -30,15 +30,15 @@ int main(int argc, char *argv[]) {
    }
    strcat (directory, "./");
    while (--argc > 0) {
-      ProduceFilePath(directory, argv[argc], ".as", input_path);
-      ProduceFilePath(directory, argv[argc], ".am", assembler_input_path);
-      macro_table = PreprocessFile (input_path,assembler_input_path);
+      ProduceFilePath(directory, argv[argc], ".as", *input_path);
+      ProduceFilePath(directory, argv[argc], ".am", *assembler_input_path);
+      macro_table = PreprocessFile (*input_path,*assembler_input_path);
       if (NULL == macro_table){
         perror ("error in preprocessing");
         total_failures++;
         continue;
       }
-    if (SUCCESS != AssembleFile(assembler_input_path,macro_table)){
+    if (SUCCESS != AssembleFile(*assembler_input_path,macro_table)){
         perror ("error in processing");
         total_failures++;
         continue;

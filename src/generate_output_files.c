@@ -171,10 +171,10 @@ static result_t GenerateOBJFile (vector_t *code_table,
   int i = 0;
   /* .ob format is mainly 2 columns:
    * (1) address - memory address, one word at a time */
-  char *address = (char *) malloc (6 * sizeof(char));
+  char *address = (char *) malloc (15 * sizeof(char));
 
   /* (2) bitmap - content of that memory address */
-  char *bitmap =  (char *) malloc (6 * sizeof(char));
+  char *bitmap =  (char *) malloc (15 * sizeof(char));
   char *str_to_write = (char *) malloc (15 * sizeof(char));
   FILE *obj_file = NULL;
   bitmap_t opcode_line = 0;
