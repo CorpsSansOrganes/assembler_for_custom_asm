@@ -36,13 +36,14 @@ result_t GenerateOutputFiles(vector_t *code_table,
                              const char *input_path,
                              ext_symbol_occurrences_t* ext_symbol_occurrences);
 
-ext_symbol_occurrences_t *CreateExternalSymbolList();
+ext_symbol_occurrences_t *CreateExternalSymbolList(void);
+
 void DestroyExternSymbolList(ext_symbol_occurrences_t *ext_symbol_occurences);
 
 /*
  * If the symbol exists in the list, add line to occurrences vector.
  * Otherwise, create it & add a first occurence.
  */
-result_t AddExternalSymbolOccurence(ext_symbol_occurrences_t *ext_symbol_occurences, const char *symbol_name, unsigned int line);
+result_t AddExternalSymbolOccurence(ext_symbol_occurrences_t *ext_symbol_occurences, const char *symbol_name, unsigned int IC);
 
 #endif /* __GENERATE_OUTPUT_FILES__ */

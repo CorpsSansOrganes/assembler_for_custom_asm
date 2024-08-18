@@ -105,6 +105,7 @@ static int SplitOperands(char *line, operand_t *operand1, operand_t *operand2) {
     operand2->name = StrDup (current_word);
     if (NULL == operand2->name) {
       free((void *)operand1->name);
+      operand1->name = NULL;
       return -1;
     }
     operand2->addressing_method = DetectAddressingMethod(operand2->name);
@@ -135,7 +136,11 @@ static result_t HandleInstructionStatement(char *instruction,
                                            syntax_check_config_t *cfg) {
 
   int operand_num = 0;
-  operand_t operands[2];
+  operand_t operands[2] = {
+    {NULL, INVALID, SOURCE_OPERAND},
+    {NULL, INVALID, SOURCE_OPERAND}
+  };
+
   bool_t invalid_operands = FALSE;
   operand_t *src_operand = NULL;
   operand_t *dest_operand = NULL;
@@ -145,7 +150,7 @@ static result_t HandleInstructionStatement(char *instruction,
     return FAILURE;
   }
 
-  if (params) {
+  if (NULL != params) {
     operand_num = SplitOperands(params, &operands[0], &operands[1]);
   }
 
@@ -155,6 +160,12 @@ static result_t HandleInstructionStatement(char *instruction,
 
   /* Syntax errors for operands */
   if (WrongNumberOfOperands(instruction, operand_num, cfg)) {
+    if (NULL != operands[0].name) {
+      free((void *)operands[0].name);
+    }
+    if (NULL != operands[1].name) {
+      free((void *)operands[1].name);
+    }
     return FAILURE;
   }
 
@@ -174,6 +185,12 @@ static result_t HandleInstructionStatement(char *instruction,
   }
 
   if (invalid_operands) {
+    if (NULL != operands[0].name) {
+      free((void *)operands[0].name);
+    }
+    if (NULL != operands[1].name) {
+      free((void *)operands[1].name);
+    }
     return FAILURE;
   }
 
@@ -183,6 +200,13 @@ static result_t HandleInstructionStatement(char *instruction,
                              symbol_name,
                              GetSizeVector(code_table) + INITIAL_IC_VALUE,
                              CODE)) {
+
+    if (NULL != operands[0].name) {
+      free((void *)operands[0].name);
+    }
+    if (NULL != operands[1].name) {
+      free((void *)operands[1].name);
+    }
       return MEM_ALLOCATION_ERROR;
     }
   }
@@ -200,7 +224,21 @@ static result_t HandleInstructionStatement(char *instruction,
                                                    instruction,
                                                    src_operand,
                                                    dest_operand)) {
+
+    if (NULL != operands[0].name) {
+      free((void *)operands[0].name);
+    }
+    if (NULL != operands[1].name) {
+      free((void *)operands[1].name);
+    }
     return MEM_ALLOCATION_ERROR;
+  }
+
+  if (NULL != operands[0].name) {
+    free((void *)operands[0].name);
+  }
+  if (NULL != operands[1].name) {
+    free((void *)operands[1].name);
   }
 
   return SUCCESS;
@@ -451,6 +489,12 @@ static result_t FirstPass(char *file_path,
                                               data_table,
                                               symbol_name,
                                               &cfg);
+
+      /* Symbol was added to symbol table, no longer needed */
+      if (NULL != symbol_name) {
+        free(symbol_name);
+      }
+
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
         free(current_line);
@@ -475,6 +519,10 @@ static result_t FirstPass(char *file_path,
                                                 symbol_name,
                                                 code_table,
                                                 &cfg);
+      /* Symbol was added to the symbol table */
+      if (NULL != symbol_name) {
+        free(symbol_name);
+      }
       if (MEM_ALLOCATION_ERROR == res) {
         perror("Error: memory allocation error\n");
         free(current_line);
@@ -610,7 +658,7 @@ static result_t SecondPass(char *file_path,
 
           /* If its extern add the occurence to the list for the .ext file */
           if (EXTERN == GetSymbolType (symbol)) {
-            AddExternalSymbolOccurence(ext_list, GetSymbolName(symbol), cfg.line_number);
+            AddExternalSymbolOccurence(ext_list, GetSymbolName(symbol), IC + INITIAL_IC_VALUE);
           }
 
           /* If its a non-extern symbol we update the missing addresses in the code segment */
@@ -627,6 +675,10 @@ static result_t SecondPass(char *file_path,
         /* Skip to next operand */
         current_word = strtok (NULL,DELIMITERS);
         ++i;
+        ++IC;
+      }
+      if (2 == register_operands_num) {
+        --IC;
       }
     }
   }

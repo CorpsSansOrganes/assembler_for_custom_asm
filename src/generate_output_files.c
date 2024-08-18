@@ -30,7 +30,7 @@ static int ExternalSymbolCompare(void *value, void *key);
 
 #define BIT_MASK_15_BITS (0x7FFF)
 
-ext_symbol_occurrences_t *CreateExternalSymbolList() {
+ext_symbol_occurrences_t *CreateExternalSymbolList(void) {
   ext_symbol_occurrences_t *ext_list = malloc(sizeof(ext_symbol_occurrences_t));
 
   if (NULL == ext_list){
@@ -115,6 +115,7 @@ void DestroyExternSymbolList(ext_symbol_occurrences_t *ext_symbol_occurrences) {
   }
 
   DestroyList(ext_symbol_occurrences->external_symbols);
+  free(ext_symbol_occurrences);
 }
 
 result_t GenerateOutputFiles(vector_t *code_table,
@@ -127,7 +128,8 @@ result_t GenerateOutputFiles(vector_t *code_table,
   char *path = NULL;
   size_t length = strlen(input_path);
 
-  path = (char *)malloc((length + 1) * sizeof(char));
+  /* Allocate memory for path + 4 extra bytes for extensions and \0 */
+  path = (char *)malloc((length + 4) * sizeof(char));
   if (NULL == path) {
     perror("Couldn't allocate string for output paths\n");
     return MEM_ALLOCATION_ERROR;
@@ -184,7 +186,7 @@ static result_t GenerateOBJFile (vector_t *code_table,
     return FAILURE;
   }
 
-  obj_file = fopen(output_path, "a");
+  obj_file = fopen(output_path, "w");
   if (NULL == obj_file) {
     free(address);
     free(bitmap);
@@ -263,7 +265,7 @@ static result_t GenerateEntriesFile (symbol_table_t *symbol_table, char *output_
     symbol_t *symbol = GetValue(iter);
 
     if (ENTRY == GetSymbolType(symbol)) {
-      entry_file = fopen(output_path, "a");
+      entry_file = fopen(output_path, "w");
       if (NULL == entry_file) {
         free(str_to_write);
         perror("Couldn't open entry file");
@@ -320,7 +322,7 @@ static result_t GenerateExternFile(char *output_path,
     return MEM_ALLOCATION_ERROR;   
   }
 
-  extern_file = fopen(output_path, "a");
+  extern_file = fopen(output_path, "w");
   if (NULL == extern_file) {
     free (str_to_write);
     perror("Couldn't open extern file");
@@ -330,7 +332,7 @@ static result_t GenerateExternFile(char *output_path,
   while (NULL != iter) {
     external_symbol = GetValue(iter);
 
-    for (i = 0; i < GetCapacityVector(external_symbol->occurrences); i++) {
+    for (i = 0; i < GetSizeVector(external_symbol->occurrences); i++) {
       sprintf(str_to_write, "%s %04d\n",
               external_symbol->symbol_name,
               *((unsigned int *)GetElementVector(external_symbol->occurrences,i)));

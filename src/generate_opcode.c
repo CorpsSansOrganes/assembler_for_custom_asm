@@ -4,7 +4,6 @@
  * of various language components.
  */
 
-
 #include <string.h>
 #include <stdlib.h> /* atoi */
 #include "assembler.h"
@@ -229,7 +228,7 @@ static bitmap_t OperandToOpcode(operand_t *operand){
   return opcode;
 }
 
-static bool_t AreTwoRegitserOperands (operand_t *src_operand, operand_t *dest_operand) {
+static bool_t AreTwoRegitserOperands(operand_t *src_operand, operand_t *dest_operand) {
    if ((src_operand->addressing_method == DIRECT_REGISTER || src_operand->addressing_method == INDIRECT_REGISTER) &&
        (dest_operand->addressing_method == DIRECT_REGISTER || dest_operand->addressing_method == INDIRECT_REGISTER)) {
     return TRUE;

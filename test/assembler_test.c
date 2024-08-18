@@ -6,6 +6,7 @@
 #include "language_definitions.h"
 #include "test_utils.h"
 #include "macro_table.h"
+#include "generate_output_files.h"
 
 static result_t CompareFiles(const char *file1_path, const char *file2_path);
 
@@ -28,6 +29,7 @@ const char *output_dir = "./test/assembler_test_files/output";
 /*
  * TESTS
  */
+
 test_info_t ValidAssemblingingTest(const char *file_name) {
   test_info_t test_info = InitTestInfo("ValidAssembling");
   char input_path[256];
@@ -61,6 +63,7 @@ test_info_t ValidAssemblingingTest(const char *file_name) {
     RETURN_ERROR(TEST_FAILED);
   }
 
+  DestroyMacroTable(default_macro_table);
   return test_info;
 }
 
@@ -147,7 +150,7 @@ int main(void) {
  * STATIC FUNCTIONS
  */
 static result_t CompareFiles(const char *output_file_path, const char *expected_file_path) {
-  FILE *output_file = fopen(output_file_path, "r");
+  FILE *output_file = NULL;
   FILE *expected_file = NULL;
   char line1[MAX_LINE_LENGTH];
   char line2[MAX_LINE_LENGTH];
@@ -158,6 +161,7 @@ static result_t CompareFiles(const char *output_file_path, const char *expected_
     return SUCCESS;
   }
 
+  output_file = fopen(output_file_path, "r");
   if (NULL == output_file) {
     perror("Error opening file");
     return FILE_HANDLING_ERROR;
@@ -199,27 +203,27 @@ static result_t RunComparisonOb(const char *file_name) {
   char output_file_path_ob[256];
   char expected_file_path_ob[256];
 
-  ProduceFilePath(output_dir, file_name, ".ob", output_file_path_ob);
+  ProduceFilePath(input_dir, file_name, ".ob", output_file_path_ob);
   ProduceFilePath(expected_dir, file_name, ".ob", expected_file_path_ob); 
   return CompareFiles(output_file_path_ob, output_file_path_ob);
 }
 
 static result_t RunComparisonExt (const char *file_name) {
-  char output_file_path[256];
+  char output_file_path_ext[256];
   char expected_file_path[256];
 
-  ProduceFilePath(output_dir, file_name, ".ext", output_file_path);
+  ProduceFilePath(input_dir, file_name, ".ext", output_file_path_ext);
   ProduceFilePath(expected_dir, file_name, ".ext", expected_file_path);
-  return CompareFiles(output_file_path, expected_file_path);
+  return CompareFiles(output_file_path_ext, expected_file_path);
 }
 
 static result_t RunComparisonEnt(const char *file_name) {
-  char output_file_path[256];
+  char output_file_path_ent[256];
   char expected_file_path[256];
 
-  ProduceFilePath(output_dir, file_name, ".ent", output_file_path);
+  ProduceFilePath(input_dir, file_name, ".ent", output_file_path_ent);
   ProduceFilePath(expected_dir, file_name, ".ent", expected_file_path);
-  return CompareFiles(output_file_path, expected_file_path);
+  return CompareFiles(output_file_path_ent, expected_file_path);
 }
 
 static const char *ProduceFilePath(const char *dir_path,

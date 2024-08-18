@@ -62,7 +62,9 @@ void DestroySymbolTable(symbol_table_t *table){
   assert(table); 
   
   while (NULL != node) {
-    free(GetValue(node));
+    symbol_t *symbol = GetValue(node);
+    free((void *)symbol->symbol_name);
+    free(symbol);
     node = GetNext(node);
   }
 
@@ -179,7 +181,7 @@ static result_t AddSymbolWithType(symbol_table_t *table,
                          address_t address,
                          symbol_type_t type,
                          symbol_memory_area_t area) {
-  symbol_t *symbol = CreateSymbol(StrDup (symbol_name), address, type, area);
+  symbol_t *symbol = CreateSymbol(StrDup(symbol_name), address, type, area);
   
   if (NULL == symbol) {
     return MEM_ALLOCATION_ERROR;
