@@ -1,17 +1,20 @@
-#ifndef __PREPROCESSING__
-#define __PREPROCESSING__
+#ifndef __SH_ED_PREPROCESSING__
+#define __SH_ED_PREPROCESSING__
 
 /*
- * @brief Utilities for usage in the preprocessing stage.
+ * @brief Implementation of the preprocessing stage.
  *        The preprocessor receives a .as file, and outputs a
  *        .am file.
  *
- *        The preprocessor:
- *        1. Finds macro usage, and swaps them for their definitions.
- *        2. Removes comments.
- *        3. Removes blank lines.
- *        4. Removes leading & trailing whitespaces (spaces, tabs).
- *        5. Any numeruous continuous whitespaces are replaced w/ only one.
+ *        The preprocessor responsibilities are:
+ *        1. Finding macro usage, and swaps them for their definitions.
+ *        2. Removing comments.
+ *        3. Removing blank lines.
+ *
+ *        Additional, the preprocessor will do some linting:
+ *        4. Removing leading & trailing whitespaces (spaces, tabs).
+ *        5. Any numeruous continuous whitespaces will be replaced w/ a single 
+ *           space.
  */
 
 #include "utils.h"
@@ -44,4 +47,4 @@
  */
 macro_table_t *PreprocessFile(char *input_path, char *output_path);
 
-#endif /* __PREPROCESSING__ */
+#endif /* __SH_ED_PREPROCESSING__ */

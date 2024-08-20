@@ -1,5 +1,5 @@
-#ifndef __TEST_UTILS__
-#define __TEST_UTILS__
+#ifndef __SH_ED_TEST_UTILS__
+#define __SH_ED_TEST_UTILS__
 
 /*
  * Framework and utilities for testing.
@@ -18,7 +18,7 @@
     return info;
   }
 
- * See tests under the "tests" for examples.
+ * See tests under the "tests" directory for examples.
  */
 
 #include "utils.h"
@@ -46,4 +46,4 @@ void PrintTestInfo(test_info_t info);
 test_info_t InitTestInfo(const char *test_name);
 bool_t WasTestSuccessful(test_info_t info);
 
-#endif /* __TEST_UTILS__ */
+#endif /* __SH_ED_TEST_UTILS__ */

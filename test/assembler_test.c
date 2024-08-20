@@ -102,7 +102,7 @@ int main(void) {
   int total_failures = 0;
   size_t i = 0;
   bool_t run_invalid = TRUE;
-  bool_t run_valid = FALSE;
+  bool_t run_valid = TRUE;
 
   char *valid_names[] = {
     "valid_1_only_data_definition",

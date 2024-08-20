@@ -1,5 +1,5 @@
-#ifndef __STRING_UTILS__
-#define __STRING_UTILS__
+#ifndef __SH_ED_STRING_UTILS__
+#define __SH_ED_STRING_UTILS__
 
 /*
  * Functions for manipulating & analysing strings, which aren't present in <string.h>
@@ -101,4 +101,4 @@ char *StrDup(const char *str);
  */
 int IsBlank(int c);
 
-#endif /* __STRING_UTILS__ */
+#endif /* __SH_ED_STRING_UTILS__ */

@@ -1,5 +1,5 @@
-#ifndef __SYMBOL_TABLE__
-#define __SYMBOL_TABLE__
+#ifndef __SH_ED_SYMBOL_TABLE__
+#define __SH_ED_SYMBOL_TABLE__
 
 /*
  * @brief Data structure representing a symbol table.
@@ -140,5 +140,5 @@ address_t GetSymbolAddress(symbol_t *symbol);
 
 list_t *AsList(symbol_table_t *table);
 
-#endif /* __SYMBOL_TABLE__ */
+#endif /* __SH_ED_SYMBOL_TABLE__ */
 

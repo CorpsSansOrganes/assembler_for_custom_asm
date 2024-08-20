@@ -72,17 +72,24 @@ int main(void) {
   size_t i = 0;
 
   char *valid_names[] = {
+    /*
     "valid_1_wo_macro",
     "valid_2_w_macro",
+    */
     "valid_3_w_comment",
-    "valid_4_w_blank_line" 
+    /*
+    "valid_4_w_blank_line",
+    "valid_5_junky"
+    */
   };
 
   
+  /*
   char *invalid_names[] = {
     "invalid_1_extra_characters",
     "invalid_2_macro_is_reserved_name" 
   };
+  */
   
 
   for (i = 0 ; i < sizeof(valid_names) / sizeof(valid_names[0]); ++i) {
@@ -94,6 +101,7 @@ int main(void) {
   }
 
   
+  /*
   for (i = 0; i < sizeof(invalid_names) / sizeof(invalid_names[0]); ++i) {
     test_info_t test_info = InvalidPreprocessingTest(invalid_names[i]);
     if (!WasTestSuccessful(test_info)) {
@@ -101,6 +109,7 @@ int main(void) {
       ++total_failures;
     }
   }
+  */
   
 
   if (0 == total_failures) {

@@ -44,4 +44,3 @@ bool_t IsBlankLine(const char *line);
 char *RemoveNewline(char *line);
 
 #endif /* __SH_ED_LINTING__ */
-

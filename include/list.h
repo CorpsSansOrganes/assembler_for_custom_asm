@@ -1,5 +1,5 @@
-#ifndef __LIST__
-#define __LIST__
+#ifndef __SH_ED_LIST__
+#define __SH_ED_LIST__
 
 /*
  * @brief An impelementation of a singly-linked list.
@@ -63,4 +63,4 @@ node_t *GetNext(node_t *node);
  */
 void *GetValue(node_t *node);
 
-#endif /* __LIST__ */
+#endif /* __SH_ED_LIST__ */

@@ -1,5 +1,5 @@
-#ifndef __UTILS__
-#define __UTILS__
+#ifndef __SH_ED_UTILS__
+#define __SH_ED_UTILS__
 
 
 typedef enum {
@@ -22,4 +22,4 @@ typedef enum {
 #define BOLD_YELLOW "\033[1;33m"
 #define COLOR_RESET "\033[0m"
 
-#endif /* __UTILS__ */
+#endif /* __SH_ED_UTILS__ */

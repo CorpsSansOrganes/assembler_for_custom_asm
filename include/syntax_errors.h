@@ -1,5 +1,5 @@
-#ifndef __SYNTAX_ERRORS__
-#define __SYNTAX_ERRORS__
+#ifndef __SH_ED_SYNTAX_ERRORS__
+#define __SH_ED_SYNTAX_ERRORS__
 
 #include "utils.h"
 #include "language_definitions.h"
@@ -410,5 +410,5 @@ syntax_check_config_t CreateSyntaxCheckConfig(const char *file_name,
 
 addressing_method_t DetectAddressingMethod(const char *operand_name);
 
-#endif /* __SYNTAX_ERRORS__ */
+#endif /* __SH_ED_SYNTAX_ERRORS__ */
 

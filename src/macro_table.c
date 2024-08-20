@@ -4,9 +4,6 @@
  * which are similar to those of the list data structure.
  */
 
-
-
-
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strlen, strcpy */
 #include <stdio.h> /* fprintf */
@@ -116,14 +113,4 @@ static macro_t *CreateMacro(const char *macro_name,
 static int CmpMacro(void *value, void *key) {
   macro_t *macro = (macro_t *)value;
   return (0 == strcmp(macro->macro_name, (const char *)key));
-}
-
-/* TODO: delete */
-void PrintAllMacros(macro_table_t *table) {
-  node_t *iter = GetHead(table->list);
-  while (NULL != iter) {
-    macro_t *macro = GetValue(iter);
-    printf("macro name: %s\n", macro->macro_name);
-    printf("macro definition:\n %s\n\n", macro->macro_definition);
-  }
 }

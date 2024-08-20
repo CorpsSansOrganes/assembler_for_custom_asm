@@ -1,3 +1,6 @@
+#ifndef __SH_ED_GENERATE_OPCODE__
+#define __SH_ED_GENERATE_OPCODE__
+
 #include "vector.h"
 #include "language_definitions.h"
 
@@ -58,3 +61,5 @@ result_t StringDirectiveToMachinecode(vector_t *data_table, char *string);
  */
 
 result_t DataDirectiveToMachinecode(vector_t *data_table, char *params);
+
+#endif /* __SH_ED_GENERATE_OPCODE__ */

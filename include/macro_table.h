@@ -1,5 +1,5 @@
-#ifndef __MACRO_TABLE__
-#define __MACRO_TABLE__
+#ifndef __SH_ED_MACRO_TABLE__
+#define __SH_ED_MACRO_TABLE__
 
 /*
  * @brief Data structure representing a macro table.
@@ -88,7 +88,4 @@ macro_t *FindMacro(macro_table_t *table,
  */
 const char *GetMacroDefinition(macro_t *macro);
 
-/* TODO: delete */
-void PrintAllMacros(macro_table_t *table);
-
-#endif /* __MACRO_TABLE__ */
+#endif /* __SH_ED_MACRO_TABLE__ */
