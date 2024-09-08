@@ -29,18 +29,17 @@ void DestroyList(list_t *list);
  * @return Upon success, returns a pointer to the newly created node.
  *         Upon failure, returns NULL.
  */
-node_t *AddNode(list_t *list, void *value); 
-
+node_t *AddNode(list_t *list, void *value);
 
 /*
  * @brief Searches the list for a specific node.
  * @param list - the list in which we search.
- *        func - a function which return 1 upon a match to key and 0 upon a mismatch key.
- *        key - the key used for the search.
+ *        func - a function which return 1 upon a match to key and 0 upon a
+ * mismatch key. key - the key used for the search.
  * @return Upon success, returns a pointer to the node which matches the key.
  *         Upon failure, returns NULL.
  */
-node_t* Find(list_t *list, cmp_func func, void *key);
+node_t *Find(list_t *list, cmp_func func, void *key);
 
 /*
  * @brief Get the first node in the list.

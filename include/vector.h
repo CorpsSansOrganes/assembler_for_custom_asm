@@ -4,13 +4,14 @@
 /*
  * @brief An impelementation of a dynamic array.
  *
- *      Vector is a continuous block of uniform-sized elements, which grows on demand.
+ *      Vector is a continuous block of uniform-sized elements, which grows on
+ * demand.
  */
 
+#include "utils.h"  /* result_t */
 #include <stddef.h> /* size_t */
-#include "utils.h" /* result_t */
 
-typedef struct vector vector_t;         
+typedef struct vector vector_t;
 
 /*
  * @brief Creates a new empty vector.
@@ -28,7 +29,7 @@ vector_t *CreateVector(size_t initial_capacity, size_t element_size);
 
 /*
  * @brief Deallocates the memory of a vector.
- * 
+ *
  * @param vector - The vector we wish to deallocate.
  */
 
@@ -39,7 +40,7 @@ void DestroyVector(vector_t *vector);
  *
  * @param vector - The vector into which we wish to append an element.
  *
- *        value - Pointer to the element we wish to append. 
+ *        value - Pointer to the element we wish to append.
  *        NOTE: size of value must be the same as the vector's element size!
  *
  * @return SUCCESS if the element was added correctly, or MEM_ALLOCATION_ERROR
@@ -77,7 +78,7 @@ void *GetElementVector(vector_t *vector, size_t index);
  * @return TRUE if vector is empty, FALSE otherwise.
  */
 
-bool_t IsEmptyVector(const vector_t *vector);                    
+bool_t IsEmptyVector(const vector_t *vector);
 
 /*
  * @brief Return the current capacity of a vector.
@@ -116,7 +117,7 @@ result_t ReserveVector(vector_t *vector, size_t new_capacity);
 /*
  * @brief Set capacity to the current size of the vector.
  *
- * @param vector - The vector whose capacity we wish to set to the current 
+ * @param vector - The vector whose capacity we wish to set to the current
  *        size.
  *
  * @return SUCCESS if all goes well, MEM_ALLOCATION_ERROR otherwise.
